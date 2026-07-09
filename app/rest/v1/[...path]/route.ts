@@ -58,6 +58,13 @@ function forceUserIdOnBody(body: unknown, userId: string, mode: "insert" | "upda
 }
 
 async function proxy(req: NextRequest, method: string, pathSegs: string[]) {
+  // RPC ainda não é usado por nenhuma tela do CRM, e forceUserIdOnBody trataria
+  // os argumentos da função como se fossem uma linha pra inserir/atualizar —
+  // errado e sem escopo por tenant. Recusar até existir uma necessidade real.
+  if (pathSegs[0] === "rpc") {
+    return NextResponse.json({ error: "RPC nao suportado pelo proxy" }, { status: 400 });
+  }
+
   const tenant = await getTenantUserId();
   if ("error" in tenant) {
     return NextResponse.json({ error: tenant.error }, { status: tenant.status });
