@@ -614,7 +614,7 @@ const MSGS: Record<string, string> = {
   natal: "Olá, [Nome]\n\nQue esse Natal seja cheio de momentos que voce vai querer guardar para sempre.",
   anoNovo: "Olá, [Nome]\n\nUm novo ano carrega novas histórias. O [ESTUDIO] esta pronto para fazer acontecer.",
   aniversario: "Olá, [Nome]\n\nHoje é um dia muito especial - e o [ESTUDIO] quer fazer parte dele.\n\nComo presente: 50% de desconto na sua próxima tatuagem, válido por 15 dias.\n\nQuando quiser saber mais, e so chamar.",
-  google: "Olá, [Nome]\n\nEspero que sua tatuagem esteja linda e bem cuidada.\n\nSe sua experiencia no [ESTUDIO] foi especial, sua avaliação no Google faz toda a diferença para nós crescermos juntos.\n\nLeva só 1 minutinho: [LINK_GOOGLE]\n\nObrigado de coração.",
+  google: "Olá, [Nome]\n\nEspero que sua tatuagem esteja linda e bem cuidada.\n\nSe sua experiencia no [ESTUDIO] foi especial, sua avaliação no Google faz toda a diferença para nós crescermos juntos.\n\nLeva só 1 minutinho: [LINK_AVALIACAO]\n\nObrigado de coração.",
   diaTatuador: "Olá, [Nome]\n\nHoje é o Dia do Tatuador - e o [ESTUDIO] tem muito a celebrar.\n\nObrigado por fazer parte dessa historia. Cada arte que criamos juntos e uma memoria que voce carrega para sempre.",
   retorno: "Olá, [Nome]\n\nFaz um tempo que não nos vemos por aqui.\n\nO [ESTUDIO] esta com novidades e seria uma honra continuar a sua historia com a gente. Quando quiser conversar, e so chamar.",
 };
@@ -1241,6 +1241,7 @@ export default function CrmClient({
   const [editingEstoqueId, setEditingEstoqueId] = useState<string | null>(null);
   const [editEstoqueForm, setEditEstoqueForm] = useState({ nome: "", grupo: "", subgrupo: "", tamanho: "", quantidade: "", unidade: "un", custo: "", precoVenda: "", estoqueMinimo: "" });
   const [googleLink, setGoogleLink] = useState("");
+  const [googleAvaliacaoLink, setGoogleAvaliacaoLink] = useState("");
   const [studioSite, setStudioSite] = useState("");
   // ── ORIGENS ──
   const [origens, setOrigens] = useState<{id: string; user_id: string; nome: string; slug: string; pago?: boolean; pagina?: string; criado_em: string}[]>([]);
@@ -1727,6 +1728,7 @@ export default function CrmClient({
           if (cfg.dono_email) setDonoEmail(cfg.dono_email);
           if (cfg.aura_name) setAuraName(cfg.aura_name);
           if (cfg.google_link) setGoogleLink(cfg.google_link);
+          if (cfg.google_avaliacao_link) setGoogleAvaliacaoLink(cfg.google_avaliacao_link);
           if (cfg.cnpj) setCnpj(cfg.cnpj);
           if (cfg.meta_mensal) setMetaMensal(cfg.meta_mensal);
           if (cfg.meta_sessoes) setMetaSessoes(cfg.meta_sessoes);
@@ -1966,7 +1968,8 @@ export default function CrmClient({
         .replace(/\[Nome\]/gi, cliente.nome || "")
         .replace(/\{estudio\}/gi, studioName || "INK SYSTEM")
         .replace(/\[ESTUDIO\]/gi, studioName || "INK SYSTEM")
-        .replace(/\[LINK_GOOGLE\]/gi, googleLink || "[link Google não configurado]");
+        .replace(/\[LINK_GOOGLE\]/gi, googleLink || "[link do Google Maps não configurado]")
+        .replace(/\[LINK_AVALIACAO\]/gi, googleAvaliacaoLink || "[link de avaliação não configurado]");
       try {
         if (canal === "email" && resendApiKey && cliente.email) {
           const html = "<div style='font-family:Arial,sans-serif;font-size:14px;line-height:1.8;color:#222;max-width:600px'>" + msg.replace(/\n/g, "<br>") + "</div>";
@@ -4655,9 +4658,14 @@ export default function CrmClient({
                     onChange={e => { const v = e.target.value; setStudioInsta(v && !v.startsWith("@") ? "@" + v : v); }} />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>Link Google Meu Negócio</label>
+                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>Link do Google Maps</label>
                   <input className="fi" value={googleLink} onChange={e => setGoogleLink(e.target.value)} placeholder="https://g.page/..." />
-                  <div style={{ fontSize: 10, color: "#555045", lineHeight: 1.4 }}>Busque seu estúdio no Google Maps, clique em "Compartilhar" e copie o link (começa com g.page ou maps.app.goo.gl).</div>
+                  <div style={{ fontSize: 10, color: "#555045", lineHeight: 1.4 }}>Busque seu estúdio no Google Maps, clique em "Compartilhar" e copie o link. Usado pra indicar o endereço nos lembretes de sessão.</div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>Link de Avaliação do Google</label>
+                  <input className="fi" value={googleAvaliacaoLink} onChange={e => setGoogleAvaliacaoLink(e.target.value)} placeholder="https://g.page/r/.../review" />
+                  <div style={{ fontSize: 10, color: "#555045", lineHeight: 1.4 }}>No Google Meu Negócio, procure "Obter mais avaliações" e copie o link — leva o cliente direto pra tela de avaliar, sem precisar buscar o estúdio. Sem esse link, o convite automático de avaliação fica desligado.</div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>CNPJ</label>
@@ -7624,7 +7632,7 @@ export default function CrmClient({
                                 </>);
                                 if (sid === "pos_venda" || sid === "tatuado") return (<>
                                   <CardSistema ativo={fluxoToggles.nps} toggleKey="nps" label="Avaliação NPS pós-sessão" gatilho="D+1 — após entrada no Pós-venda" preview={"Assunto: Como foi sua sessão, {nome}?\n\nFoi uma alegria ter você no estúdio. Como você avalia sua experiência? [escala 0–10]\n\nNota e comentário salvos na ficha automaticamente."} />
-                                  <CardSistema ativo={fluxoToggles.google_convite} toggleKey="google_convite" label="Convite ao Google" gatilho="D+2 — após avaliação positiva (nota ≥ 7)" preview={"Assunto: Uma última coisa, {nome} — leva 1 minuto\n\nSua opinião no Google faz uma diferença enorme para nós. Clique para avaliar — o seu comentário já aparece pré-preenchido."} />
+                                  <CardSistema ativo={fluxoToggles.google_convite && !!googleAvaliacaoLink} toggleKey={googleAvaliacaoLink ? "google_convite" : undefined} label="Convite ao Google" gatilho={googleAvaliacaoLink ? "D+2 — após avaliação positiva (nota ≥ 7)" : "Desligado até cadastrar o Link de Avaliação do Google em Configurações → Estúdio"} preview={"Assunto: Uma última coisa, {nome} — leva 1 minuto\n\nSua opinião no Google faz uma diferença enorme para nós. Clique para avaliar — o seu comentário já aparece pré-preenchido."} />
                                 </>);
                                 if (sid === "aguard_prox_sessao") return (
                                   <CardSistema ativo={fluxoToggles.recontato_prox_sessao} toggleKey="recontato_prox_sessao" label="E-mail de recontato + link WhatsApp" gatilho="D+60 — sem nova solicitação. Move para Hibernação em D+90 se não houver retorno" preview={"Assunto: A próxima ideia já nasceu, {nome}?\n\nOlá, {nome}! Faz um tempo desde a sua última sessão. Esperamos que sua arte esteja linda e bem cicatrizada.\n\nSabemos que uma boa ideia não tem pressa para nascer. Mas quando ela chegar, queremos ser os primeiros a saber.\n\n[ Tenho uma nova ideia ] → abre WhatsApp\n\nRespeitoso abraço, {estudio}"} />
@@ -13457,7 +13465,8 @@ export default function CrmClient({
                         if (raw.length > 12) fmt = raw.slice(0,2) + "." + raw.slice(2,5) + "." + raw.slice(5,8) + "/" + raw.slice(8,12) + "-" + raw.slice(12);
                         setCnpj(fmt);
                       }} style={{ borderColor: !cnpj ? "rgba(212,130,10,.4)" : undefined }} /></div>
-                      <div className="fi2"><div className="fil">Link Google Meu Negócio{!googleLink && <span style={{ color: "var(--q2)", marginLeft: 4 }}>⚠</span>}</div><input className="ef" value={googleLink} placeholder="maps.app.goo.gl/..." onChange={e => setGoogleLink(e.target.value)} style={{ borderColor: !googleLink ? "rgba(212,130,10,.4)" : undefined }} /></div>
+                      <div className="fi2"><div className="fil">Link do Google Maps{!googleLink && <span style={{ color: "var(--q2)", marginLeft: 4 }}>⚠</span>}</div><input className="ef" value={googleLink} placeholder="maps.app.goo.gl/..." onChange={e => setGoogleLink(e.target.value)} style={{ borderColor: !googleLink ? "rgba(212,130,10,.4)" : undefined }} /></div>
+                      <div className="fi2"><div className="fil">Link de Avaliação do Google{!googleAvaliacaoLink && <span style={{ color: "var(--q2)", marginLeft: 4 }}>⚠</span>}</div><input className="ef" value={googleAvaliacaoLink} placeholder="g.page/r/.../review" onChange={e => setGoogleAvaliacaoLink(e.target.value)} style={{ borderColor: !googleAvaliacaoLink ? "rgba(212,130,10,.4)" : undefined }} /></div>
                       <div className="fi2"><div className="fil">Site do Estúdio</div><input className="ef" value={studioSite} placeholder="https://seusite.com.br" onChange={e => setStudioSite(e.target.value)} /></div>
                     </div>
                   </div>
@@ -14314,6 +14323,7 @@ export default function CrmClient({
                     dono_nome: donoNome, dono_whats: donoWhats, dono_email: donoEmail,
                     aura_name: auraName,
                     google_link: googleLink,
+                    google_avaliacao_link: googleAvaliacaoLink,
                     cnpj, meta_mensal: metaMensal,
                     meta_sessoes: metaSessoes, meta_leads: metaLeads, meta_nps: metaNPS,
                     desconto_aniversario: descontoAniversario,
