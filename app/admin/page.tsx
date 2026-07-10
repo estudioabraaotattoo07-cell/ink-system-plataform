@@ -22,12 +22,14 @@ function diasParaVencimento(dataVenc: string | null) {
 
 export default async function AdminPage() {
   const sbAdmin = getAdminClient();
-  const { data: clientes } = await sbAdmin
+  const { data: clientes, error: erroClientes } = await sbAdmin
     .from("ink_clientes")
     .select("*")
     .order("criado_em", { ascending: false });
 
-  const { data: chamados } = await sbAdmin.from("ink_chamados").select("ink_cliente_id, status");
+  const { data: chamados, error: erroChamados } = await sbAdmin
+    .from("ink_chamados")
+    .select("ink_cliente_id, status");
 
   const chamadosPorCliente = new Map<string, { total: number; abertos: number }>();
   for (const c of chamados ?? []) {
@@ -38,10 +40,16 @@ export default async function AdminPage() {
   }
 
   const linhas = clientes ?? [];
+  const erro = erroClientes || erroChamados;
 
   return (
     <main className="min-h-screen bg-neutral-950 text-neutral-100 p-8">
       <h1 className="text-xl font-semibold mb-6">INK SYSTEM — Painel Admin</h1>
+      {erro && (
+        <div className="mb-6 text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-4 py-3">
+          Erro ao buscar dados do Supabase: {erro.message}
+        </div>
+      )}
       <div className="overflow-x-auto">
         <table className="w-full text-sm border-collapse whitespace-nowrap">
           <thead>
