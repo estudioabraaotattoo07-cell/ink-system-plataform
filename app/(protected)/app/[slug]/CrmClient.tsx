@@ -4572,12 +4572,18 @@ export default function CrmClient({
   if (!onboardingDone) {
     const onbSteps = ["Estúdio", "Horários", "Profissionais", "IA", "Concluído"];
     return (
-      <div style={{ minHeight: "100vh", background: "#0E0E0E", display: "flex", alignItems: "center", justifyContent: "center", padding: 18, fontFamily: "'DM Sans',sans-serif" }}>
+      <div style={{
+        minHeight: "100vh",
+        background: "radial-gradient(ellipse 700px 420px at 50% -5%, rgba(139,92,222,0.35), transparent 65%), #0E0E0E",
+        display: "flex", alignItems: "center", justifyContent: "center", padding: 18, fontFamily: "'DM Sans',sans-serif",
+      }}>
         <style>{S}</style>
         <div style={{ background: "#161616", border: "1px solid rgba(201,168,76,0.12)", borderRadius: 14, width: "100%", maxWidth: 540, overflow: "hidden" }}>
           <div style={{ padding: "26px 30px 18px", background: "#1E1E1E", borderBottom: "1px solid rgba(201,168,76,0.12)", textAlign: "center" }}>
-            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 30, fontWeight: 700, color: "#C9A84C", letterSpacing: ".1em" }}>IN-QUADRA</div>
-            <div style={{ fontSize: 11, color: "#8A8070", marginTop: 5, letterSpacing: ".1em", textTransform: "uppercase" }}>Ink System</div>
+            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, letterSpacing: ".08em" }}>
+              <span style={{ color: "#E8E2D9" }}>INK </span><span style={{ color: "#C9A84C" }}>SYSTEM</span>
+            </div>
+            <div style={{ fontSize: 10, color: "#8A8070", marginTop: 5, letterSpacing: ".1em", textTransform: "uppercase" }}>Gestão · Relacionamento · Tempo</div>
           </div>
           <div style={{ display: "flex", borderBottom: "1px solid rgba(201,168,76,0.12)" }}>
             {onbSteps.map((s, i) => (
