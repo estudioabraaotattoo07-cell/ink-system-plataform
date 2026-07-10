@@ -1,6 +1,7 @@
 // Vídeo institucional — troque pelo ID real do YouTube quando estiver pronto
 // (o ID é o trecho depois de "v=" na URL do vídeo).
 const YOUTUBE_VIDEO_ID = "";
+const WHATSAPP_SUPORTE = "https://wa.me/5527999598230";
 
 const PLANOS = [
   { id: "bronze", nome: "Bronze", preco: "R$297", artistas: "até 2", sms: 100, storage: "1GB", assessorias: 1, destaque: false },
@@ -164,7 +165,9 @@ export default function LandingPage() {
                 <li>Assessorias/mês: {p.assessorias}</li>
               </ul>
               <a
-                href={`/signup?plano=${p.id}`}
+                href={WHATSAPP_SUPORTE}
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                   marginTop: 14,
                   textAlign: "center",
