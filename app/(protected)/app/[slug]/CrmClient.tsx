@@ -1776,11 +1776,6 @@ export default function CrmClient({
             setShowSplash(true);
             localStorage.setItem("inq_onb", "1");
           }
-          // [X3] studio_logo from Supabase
-          if (cfg.studio_logo) {
-            setStudioLogo(cfg.studio_logo);
-            localStorage.setItem("inq_logo", cfg.studio_logo);
-          }
         }
       } catch(e) { console.error("Load error", e); }
       setDbReady(true);
@@ -4549,15 +4544,16 @@ export default function CrmClient({
   // ── SPLASH (já cadastrado, aguarda clique para entrar) ──
   if (onboardingDone && showSplash) {
     return (
-      <div style={{ minHeight: "100vh", background: "#0E0E0E", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 32, fontFamily: "'DM Sans',sans-serif" }}>
+      <div style={{
+        minHeight: "100vh",
+        background: "radial-gradient(ellipse 700px 420px at 50% -5%, rgba(139,92,222,0.35), transparent 65%), #0E0E0E",
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 32, fontFamily: "'DM Sans',sans-serif",
+      }}>
         <style>{S}</style>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
-          {studioLogo
-            ? <img src={studioLogo} alt="logo" style={{ width: 100, height: 100, borderRadius: "50%", objectFit: "cover", border: "3px solid #C9A84C", boxShadow: "0 0 40px rgba(201,168,76,.25)" }} />
-            : <div style={{ width: 100, height: 100, borderRadius: "50%", background: "#C9A84C", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Cormorant Garamond',serif", fontSize: 44, fontWeight: 700, color: "#000", boxShadow: "0 0 40px rgba(201,168,76,.25)" }}>
-                {studioName ? studioName[0].toUpperCase() : "S"}
-              </div>
-          }
+          <div style={{ width: 100, height: 100, borderRadius: "50%", background: "#C9A84C", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Cormorant Garamond',serif", fontSize: 44, fontWeight: 700, color: "#000", boxShadow: "0 0 40px rgba(201,168,76,.25)" }}>
+            {studioName ? studioName[0].toUpperCase() : "S"}
+          </div>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 28, fontWeight: 700, color: "#C9A84C", letterSpacing: ".08em" }}>{studioName}</div>
             <div style={{ fontSize: 10, color: "#555045", letterSpacing: ".18em", textTransform: "uppercase", marginTop: 5 }}>INK SYSTEM</div>
@@ -4631,41 +4627,6 @@ export default function CrmClient({
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>CNPJ</label>
                   <input className="fi" value={cnpj} onChange={e => setCnpj(maskCNPJ(e.target.value))} placeholder="00.000.000/0001-00" />
-                </div>
-              </div>
-              {/* Logo upload */}
-              <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 0 4px", borderTop: "1px solid rgba(201,168,76,0.12)", marginTop: 4 }}>
-                <div style={{ flexShrink: 0 }}>
-                  {studioLogo
-                    ? <img src={studioLogo} alt="logo" style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", border: "3px solid #C9A84C" }} />
-                    : <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#C9A84C", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Cormorant Garamond',serif", fontSize: 26, fontWeight: 700, color: "#000" }}>
-                        {studioName ? studioName[0].toUpperCase() : "S"}
-                      </div>
-                  }
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>Logo do Estúdio (opcional)</label>
-                  <label style={{ background: "#1E1E1E", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 6, padding: "6px 14px", fontSize: 12, color: "#8A8070", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontWeight: 600, display: "inline-block", width: "fit-content" }}>
-                    📁 Escolher imagem
-                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const reader = new FileReader();
-                      reader.onload = ev => {
-                        setLogoCropSrc(ev.target?.result as string);
-                        setLogoCropPos({ x: 0, y: 0 });
-                        setLogoCropScale(1);
-                        setShowLogoCrop(true);
-                      };
-                      reader.readAsDataURL(file);
-                    }} />
-                  </label>
-                  {studioLogo && (
-                    <button onClick={() => { setStudioLogo(""); localStorage.removeItem("inq_logo"); }}
-                      style={{ background: "none", border: "none", fontSize: 11, color: "#C0392B", cursor: "pointer", textAlign: "left", padding: 0 }}>
-                      ✕ Remover logo
-                    </button>
-                  )}
                 </div>
               </div>
               <div style={{ fontSize: 11, color: "#555045", marginTop: 2 }}>
@@ -13436,36 +13397,6 @@ export default function CrmClient({
 
                 {/* ── ABA ESTÚDIO ── */}
                 {settingsTab === "estudio" && <>
-                  <div>
-                    <div className="stit">Logo do Estúdio</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "10px 0" }}>
-                      <div style={{ position: "relative", width: 72, height: 72, flexShrink: 0 }}>
-                        {studioLogo
-                          ? <img src={studioLogo} alt="logo" style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover", border: "3px solid var(--gold)" }} />
-                          : <div style={{ width: 72, height: 72, borderRadius: "50%", background: "var(--gold)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Cormorant Garamond',serif", fontSize: 28, fontWeight: 700, color: "#000" }}>{studioName?.[0]?.toUpperCase() || "S"}</div>
-                        }
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        <label style={{ background: "var(--dk3)", border: "1px solid var(--br)", borderRadius: 6, padding: "7px 14px", fontSize: 12, color: "var(--tx2)", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontWeight: 600, display: "inline-block" }}>
-                          📁 Escolher imagem
-                          <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            const reader = new FileReader();
-                            reader.onload = ev => { setLogoCropSrc(ev.target?.result as string); setLogoCropPos({ x: 0, y: 0 }); setLogoCropScale(1); setShowSettings(false); setShowLogoCrop(true); };
-                            reader.readAsDataURL(file);
-                          }} />
-                        </label>
-                        {studioLogo && (
-                          <button onClick={() => { setStudioLogo(""); localStorage.removeItem("inq_logo"); }}
-                            style={{ background: "none", border: "1px solid rgba(192,57,43,.3)", borderRadius: 6, padding: "5px 12px", fontSize: 11, color: "var(--q1)", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
-                            🗑 Remover logo
-                          </button>
-                        )}
-                        <div style={{ fontSize: 10, color: "var(--tx3)", lineHeight: 1.5 }}>JPG, PNG ou SVG. Aparece na topbar e nos contratos.</div>
-                      </div>
-                    </div>
-                  </div>
                   <div>
                     <div className="stit">Identidade</div>
                     <div className="fg2">

@@ -20,21 +20,60 @@ export default function LandingPage() {
         fontFamily: "'DM Sans', sans-serif",
       }}
     >
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700&family=DM+Sans:wght@400;500;600&display=swap');`}</style>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700&family=DM+Sans:wght@400;500;600&display=swap');
+        .hero-btn-primary {
+          background: linear-gradient(135deg, #E8C97A, #C9A84C 45%, #8a6a24);
+          color: #17140A;
+          font-weight: 700;
+          border-radius: 999px;
+          padding: 16px 38px;
+          font-size: 14px;
+          text-decoration: none;
+          letter-spacing: .03em;
+          box-shadow: 0 6px 24px rgba(201,168,76,0.35), inset 0 1px 0 rgba(255,255,255,0.4);
+          border: 1px solid rgba(255,224,160,0.6);
+          transition: transform .15s ease, box-shadow .15s ease;
+          display: inline-block;
+        }
+        .hero-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 30px rgba(201,168,76,0.45), inset 0 1px 0 rgba(255,255,255,0.5); }
+        .hero-btn-secondary {
+          background: rgba(201,168,76,0.06);
+          backdrop-filter: blur(6px);
+          border: 1px solid rgba(201,168,76,0.4);
+          color: #E8C97A;
+          border-radius: 999px;
+          padding: 16px 38px;
+          font-size: 14px;
+          text-decoration: none;
+          letter-spacing: .03em;
+          transition: background .15s ease, border-color .15s ease;
+          display: inline-block;
+        }
+        .hero-btn-secondary:hover { background: rgba(201,168,76,0.14); border-color: rgba(201,168,76,0.65); }
+      `}</style>
 
       <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "64px 24px 24px" }}>
         <img
           src="/logo-ink-system.png"
           alt="Ink System — Gestão, Relacionamento, Tempo"
-          style={{ width: "100%", maxWidth: 560, height: "auto", margin: "0 auto 28px", display: "block" }}
+          style={{ width: "100%", maxWidth: 560, height: "auto", margin: "0 auto 36px", display: "block" }}
         />
+        <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+          <a href="/demo" className="hero-btn-primary">
+            Experimentar grátis
+          </a>
+          <a href="/login" className="hero-btn-secondary">
+            Já sou cliente
+          </a>
+        </div>
         <h1
           style={{
             fontFamily: "'Cormorant Garamond', serif",
             fontSize: 28,
             fontWeight: 700,
             color: "#E8E2D9",
-            margin: "0 0 14px",
+            margin: "44px 0 14px",
           }}
         >
           Tudo que seu estúdio precisa, num só sistema
@@ -43,36 +82,6 @@ export default function LandingPage() {
           Agenda inteligente, financeiro automático, contratos digitais e uma assistente que cuida do
           relacionamento com seus clientes enquanto você tatua. Veja como funciona no vídeo abaixo.
         </p>
-        <div style={{ marginTop: 36, display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <a
-            href="/demo"
-            style={{
-              background: "linear-gradient(135deg, #C9A84C, #a07830)",
-              color: "#0A0A0A",
-              fontWeight: 700,
-              borderRadius: 8,
-              padding: "13px 28px",
-              fontSize: 14,
-              textDecoration: "none",
-              letterSpacing: ".02em",
-            }}
-          >
-            Experimentar grátis
-          </a>
-          <a
-            href="/login"
-            style={{
-              border: "1px solid rgba(201,168,76,0.35)",
-              color: "#C9A84C",
-              borderRadius: 8,
-              padding: "13px 28px",
-              fontSize: 14,
-              textDecoration: "none",
-            }}
-          >
-            Já sou cliente
-          </a>
-        </div>
       </section>
 
       <section style={{ maxWidth: 720, margin: "0 auto", padding: "24px 24px 64px" }}>
