@@ -4760,7 +4760,35 @@ export default function CrmClient({
                   {onbStep === 2 ? "Concluir" : "Continuar"}
                 </button>
               )}
-              {onbStep === 3 && <button className="btn-s" onClick={async () => { setOnboardingDone(true); setShowSplash(false); localStorage.setItem("inq_onb", "1"); try { const { data: cfgEx } = await sb.from("configuracoes").select("id").eq("user_id", userId).limit(1).single(); if (cfgEx?.id) { await sb.from("configuracoes").update({ onboarding_done: true }).eq("id", cfgEx.id); } else { await sb.from("configuracoes").insert({ onboarding_done: true, user_id: userId }); } } catch(e) { console.warn("onboarding save", e); } if (!localStorage.getItem("inq_tour")) { setTimeout(() => { setTourStep(0); setTourAtivo(true); }, 800); } }}>Entrar no Sistema →</button>}
+              {onbStep === 3 && <button className="btn-s" onClick={async () => {
+                setOnboardingDone(true); setShowSplash(false); localStorage.setItem("inq_onb", "1");
+                try {
+                  const cfg: any = {
+                    studio_name: studioName, studio_tel: studioTel, studio_site: studioSite,
+                    studio_owner: studioOwner, studio_email: studioEmail,
+                    studio_city: studioCity, studio_insta: studioInsta,
+                    studio_rua: studioRua, studio_numero: studioNumero,
+                    studio_complemento: studioComplemento, studio_bairro: studioBairro,
+                    studio_cep: studioCep, studio_estado: studioEstado,
+                    studio_pais: studioPais,
+                    studio_redes: studioRedes,
+                    dono_nome: donoNome, dono_whats: donoWhats, dono_email: donoEmail,
+                    aura_name: auraName,
+                    google_link: googleLink,
+                    google_avaliacao_link: googleAvaliacaoLink,
+                    cnpj, meta_mensal: metaMensal,
+                    meta_sessoes: metaSessoes, meta_leads: metaLeads, meta_nps: metaNPS,
+                    desconto_aniversario: descontoAniversario,
+                    horarios, dark_mode: dark, tema,
+                    onboarding_done: true,
+                    user_id: userId,
+                    updated_at: new Date().toISOString()
+                  };
+                  const { data: cfgEx } = await sb.from("configuracoes").select("id").eq("user_id", userId).limit(1).single();
+                  if (cfgEx?.id) { await sb.from("configuracoes").update(cfg).eq("id", cfgEx.id); } else { await sb.from("configuracoes").insert(cfg); }
+                } catch(e) { console.warn("onboarding save", e); }
+                if (!localStorage.getItem("inq_tour")) { setTimeout(() => { setTourStep(0); setTourAtivo(true); }, 800); }
+              }}>Entrar no Sistema →</button>}
             </div>
             </div>
           </div>
