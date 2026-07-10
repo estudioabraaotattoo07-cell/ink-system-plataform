@@ -121,7 +121,7 @@ const S = `
   --ab:#4A9EBF;--ca:#9B6BB5;
 }
 body{background:var(--dk);color:var(--tx);font-family:'DM Sans',sans-serif;}
-.root{min-height:100vh;background:var(--dk);display:flex;flex-direction:column;}
+.root{min-height:100vh;background:radial-gradient(ellipse 900px 500px at 50% -10%, rgba(139,92,222,0.28), transparent 65%), var(--dk);display:flex;flex-direction:column;}
 @media(max-width:768px){
   body,html{overflow-x:hidden;max-width:100vw;}
   .kc{min-width:42vw!important;max-width:42vw!important;}
