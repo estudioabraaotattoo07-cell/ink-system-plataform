@@ -875,13 +875,14 @@ function TimeScroller({ value, onChange, label }: { value: number; onChange: (h:
 }
 
 // ─── DATE SCROLLER ────────────────────────────────────────────────────────────
-function DateScroller({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) {
+function DateScroller({ value, onChange, label, anos = "futuro" }: { value: string; onChange: (v: string) => void; label: string; anos?: "futuro" | "passado" }) {
   const curYear = new Date().getFullYear();
+  const anoPadrao = anos === "passado" ? curYear - 25 : curYear;
   const parseVal = (v: string) => {
-    if (!v) return { d: 1, m: 1, y: curYear };
+    if (!v) return { d: 1, m: 1, y: anoPadrao };
     const parts = v.split("-");
-    if (parts.length === 3) return { y: parseInt(parts[0]) || curYear, m: parseInt(parts[1]) || 1, d: parseInt(parts[2]) || 1 };
-    return { d: 1, m: 1, y: curYear };
+    if (parts.length === 3) return { y: parseInt(parts[0]) || anoPadrao, m: parseInt(parts[1]) || 1, d: parseInt(parts[2]) || 1 };
+    return { d: 1, m: 1, y: anoPadrao };
   };
   const pv = parseVal(value);
   const [open, setOpen] = useState(false);
@@ -896,7 +897,9 @@ function DateScroller({ value, onChange, label }: { value: string; onChange: (v:
   const maxD = daysInMonth(selM, selY);
   const DAYS = Array.from({ length: maxD }, (_, i) => i + 1);
   const MNAMES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-  const YEARS = [curYear, curYear+1, curYear+2, curYear+3, curYear+4];
+  const YEARS = anos === "passado"
+    ? Array.from({ length: 90 }, (_, i) => curYear - i)
+    : [curYear, curYear+1, curYear+2, curYear+3, curYear+4];
   const safeD = Math.min(selD, maxD);
   const confirm = (d: number, m: number, y: number) => {
     const safe = Math.min(d, daysInMonth(m, y));
@@ -4812,10 +4815,10 @@ export default function CrmClient({
                   </div>
                 </div>
                 <div className="ff"><label className="fl">E-mail de acesso ao sistema</label><input className="fi" type="email" placeholder="email@exemplo.com" value={artForm.email} onChange={e => setArtForm({ ...artForm, email: e.target.value.toLowerCase() })} /></div>
-                <div className="ff"><label className="fl">Telefone / WhatsApp (recebe SMS de lembrete de sessão)</label><input className="fi" placeholder="(99) 99999-9999" value={artForm.tel} onChange={e => setArtForm({ ...artForm, tel: e.target.value })} /></div>
+                <div className="ff"><label className="fl">Telefone / WhatsApp (recebe SMS de lembrete de sessão)</label><input className="fi" placeholder="(99) 99999-9999" value={artForm.tel} onChange={e => setArtForm({ ...artForm, tel: maskTel(e.target.value) })} /></div>
                 <div className="ff"><label className="fl">Instagram</label><input className="fi" placeholder="@perfil" value={artForm.insta} onChange={e => { const v = e.target.value; setArtForm({ ...artForm, insta: v && !v.startsWith("@") ? "@" + v : v }); }} /></div>
-                <div className="ff"><label className="fl">Aniversário</label><input className="fi" type="date" value={artForm.nascimento} onChange={e => setArtForm({ ...artForm, nascimento: e.target.value })} /></div>
-                <div className="ff"><label className="fl">Cor</label><ColorPicker value={artForm.cor} onChange={cor => setArtForm({ ...artForm, cor })} /></div>
+                <div className="ff"><DateScroller label="Aniversário" anos="passado" value={artForm.nascimento} onChange={v => setArtForm({ ...artForm, nascimento: v })} /></div>
+                <div className="ff"><label className="fl">Cor de identificação (aparece na agenda e no pipeline)</label><ColorPicker value={artForm.cor} onChange={cor => setArtForm({ ...artForm, cor })} /></div>
               </div>
               <div className="fmf"><button className="btn-c" onClick={() => setShowArtForm(false)}>Cancelar</button><button className="btn-s" onClick={saveArtist} disabled={!artForm.nome}>Salvar</button></div>
             </div>
@@ -7049,14 +7052,13 @@ export default function CrmClient({
                 </div>
                 <div className="ff">
                   <label className="fl">Telefone (visivel apenas para o dono)</label>
-                  <input className="fi" placeholder="(99) 99999-9999" value={editingArtist.tel || ""} onChange={e => setEditingArtist({ ...editingArtist, tel: e.target.value })} />
+                  <input className="fi" placeholder="(99) 99999-9999" value={editingArtist.tel || ""} onChange={e => setEditingArtist({ ...editingArtist, tel: maskTel(e.target.value) })} />
                 </div>
                 <div className="ff">
-                  <label className="fl">Aniversário</label>
-                  <input className="fi" type="date" value={editingArtist.nascimento || ""} onChange={e => setEditingArtist({ ...editingArtist, nascimento: e.target.value })} />
+                  <DateScroller label="Aniversário" anos="passado" value={editingArtist.nascimento || ""} onChange={v => setEditingArtist({ ...editingArtist, nascimento: v })} />
                 </div>
                 <div className="ff">
-                  <label className="fl">Cor</label>
+                  <label className="fl">Cor de identificação (aparece na agenda e no pipeline)</label>
                   <ColorPicker value={editingArtist.cor} onChange={cor => setEditingArtist({ ...editingArtist, cor })} />
                 </div>
               </div>
@@ -11429,7 +11431,7 @@ export default function CrmClient({
                 </div>
                 <div className="ff"><label className="fl">Telefone</label><input className="fi" placeholder="(99) 99999-9999" value={artForm.tel} onChange={e => setArtForm({ ...artForm, tel: maskTel(e.target.value) })} /></div>
                 <div className="ff">
-                  <label className="fl">Cor</label>
+                  <label className="fl">Cor de identificação (aparece na agenda e no pipeline)</label>
                   <ColorPicker value={artForm.cor} onChange={cor => setArtForm({ ...artForm, cor })} />
                 </div>
               </div>
