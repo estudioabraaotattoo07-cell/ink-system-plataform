@@ -121,7 +121,7 @@ const S = `
   --ab:#4A9EBF;--ca:#9B6BB5;
 }
 body{background:var(--dk);color:var(--tx);font-family:'DM Sans',sans-serif;}
-.root{min-height:100vh;background:radial-gradient(ellipse 900px 500px at 50% -10%, rgba(139,92,222,0.28), transparent 65%), var(--dk);display:flex;flex-direction:column;}
+.root{min-height:100vh;background:radial-gradient(ellipse 1100px 750px at 50% 0%, rgba(139,92,222,0.24), transparent 70%), var(--dk);background-attachment:fixed;display:flex;flex-direction:column;}
 @media(max-width:768px){
   body,html{overflow-x:hidden;max-width:100vw;}
   .kc{min-width:42vw!important;max-width:42vw!important;}
@@ -4811,9 +4811,9 @@ export default function CrmClient({
         )}
         {/* TOPBAR */}
         <div className="topbar">
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <img src="/logo-ink-icon.png" alt="Ink System" style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", border: "2px solid var(--gold)" }} />
-            <div style={{ cursor: userRole === "admin" ? "pointer" : "default" }} onClick={() => { if (userRole === "admin") setShowSettings(true); }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: userRole === "admin" ? "pointer" : "default" }} onClick={() => { if (userRole === "admin") setShowSettings(true); }}>
+            <img src="/logo-ink-icon.png" alt="Ink System" style={{ width: 36, height: 36, objectFit: "contain", display: "block" }} />
+            <div>
               <div className="bname">{studioName}</div>
               <div className="bsub">{userRole === "profissional" ? "Acesso Profissional" : "INK SYSTEM"}</div>
               {(() => { const cnpjDigits = (cnpj || "").replace(/[^0-9]/g,""); return cnpjDigits.length === 14 ? <div style={{ fontSize: 9, color: "var(--tx3)", letterSpacing: ".08em" }}>CNPJ: {cnpj}</div> : null; })()}
