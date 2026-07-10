@@ -4626,7 +4626,8 @@ export default function CrmClient({
           </div>
           {onbStep === 0 && (
             <div style={{ padding: "22px 28px", display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ fontSize: 14, color: "#E8E2D9", fontWeight: 600, marginBottom: 4 }}>Bem-vindo! Vamos configurar seu estúdio.</div>
+              <div style={{ fontSize: 14, color: "#E8E2D9", fontWeight: 600, marginBottom: 2 }}>Bem-vindo! Vamos configurar seu estúdio.</div>
+              <div style={{ fontSize: 11, color: "#8A8070", marginBottom: 6, lineHeight: 1.5 }}>Não precisa ter tudo em mãos agora — o que faltar dá pra completar depois em Configurações.</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>Nome do Estúdio *</label>
@@ -4657,6 +4658,7 @@ export default function CrmClient({
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>Link Google Meu Negócio</label>
                   <input className="fi" value={googleLink} onChange={e => setGoogleLink(e.target.value)} placeholder="https://g.page/..." />
+                  <div style={{ fontSize: 10, color: "#555045", lineHeight: 1.4 }}>Busque seu estúdio no Google Maps, clique em "Compartilhar" e copie o link (começa com g.page ou maps.app.goo.gl).</div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>CNPJ</label>
