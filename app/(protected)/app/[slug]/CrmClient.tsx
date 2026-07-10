@@ -4626,8 +4626,7 @@ export default function CrmClient({
           </div>
           {onbStep === 0 && (
             <div style={{ padding: "22px 28px", display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ fontSize: 14, color: "#E8E2D9", fontWeight: 600, marginBottom: 2 }}>Bem-vindo! Vamos configurar seu estúdio.</div>
-              <div style={{ fontSize: 11, color: "#8A8070", marginBottom: 6, lineHeight: 1.5 }}>Não precisa ter tudo em mãos agora — o que faltar dá pra completar depois em Configurações.</div>
+              <div style={{ fontSize: 14, color: "#E8E2D9", fontWeight: 600, marginBottom: 4 }}>Bem-vindo! Vamos configurar seu estúdio.</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>Nome do Estúdio *</label>
@@ -4756,7 +4755,13 @@ export default function CrmClient({
               </div>
             </div>
           )}
-          <div style={{ padding: "14px 28px", borderTop: "1px solid rgba(201,168,76,0.12)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ padding: "14px 28px", borderTop: "1px solid rgba(201,168,76,0.12)", display: "flex", flexDirection: "column", gap: 10 }}>
+            {onbStep < 4 && (
+              <div style={{ fontSize: 11, color: "#8A8070", lineHeight: 1.5, textAlign: "center" }}>
+                Preencha os campos com atenção — informações pendentes podem ser ajustadas a qualquer momento em Configurações.
+              </div>
+            )}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ fontSize: 11, color: "#555045" }}>{onbStep + 1} de {onbSteps.length}</div>
             <div style={{ display: "flex", gap: 8 }}>
               {onbStep > 0 && <button className="btn-c" onClick={() => setOnbStep(s => s - 1)}>Voltar</button>}
@@ -4766,6 +4771,7 @@ export default function CrmClient({
                 </button>
               )}
               {onbStep === 4 && <button className="btn-s" onClick={async () => { setOnboardingDone(true); setShowSplash(false); localStorage.setItem("inq_onb", "1"); try { const { data: cfgEx } = await sb.from("configuracoes").select("id").eq("user_id", userId).limit(1).single(); if (cfgEx?.id) { await sb.from("configuracoes").update({ onboarding_done: true }).eq("id", cfgEx.id); } else { await sb.from("configuracoes").insert({ onboarding_done: true, user_id: userId }); } } catch(e) { console.warn("onboarding save", e); } if (!localStorage.getItem("inq_tour")) { setTimeout(() => { if (!showLogoCrop) { setTourStep(0); setTourAtivo(true); } }, 800); } }}>Entrar no Sistema →</button>}
+            </div>
             </div>
           </div>
         </div>
