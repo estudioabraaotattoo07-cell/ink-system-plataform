@@ -53,12 +53,17 @@ export default function LandingPage() {
         .hero-btn-secondary:hover { background: rgba(201,168,76,0.14); border-color: rgba(201,168,76,0.65); }
       `}</style>
 
-      <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "64px 24px 24px" }}>
-        <img
-          src="/logo-ink-system.png"
-          alt="Ink System — Gestão, Relacionamento, Tempo"
-          style={{ width: "100%", maxWidth: 560, height: "auto", margin: "0 auto 36px", display: "block" }}
-        />
+      <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "56px 24px 8px" }}>
+        {/* A imagem tem uma "moldura" transparente grande em volta da arte —
+            recortamos visualmente com overflow:hidden até o arquivo ser
+            re-exportado já cortado (Imagem → Recortar no Photoshop). */}
+        <div style={{ height: 150, overflow: "hidden", position: "relative", margin: "0 auto 24px", maxWidth: 560 }}>
+          <img
+            src="/logo-ink-system.png"
+            alt="Ink System — Gestão, Relacionamento, Tempo"
+            style={{ width: "100%", position: "absolute", left: 0, top: -253, display: "block" }}
+          />
+        </div>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
           <a href="/demo" className="hero-btn-primary">
             Experimentar grátis
@@ -67,24 +72,9 @@ export default function LandingPage() {
             Já sou cliente
           </a>
         </div>
-        <h1
-          style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 28,
-            fontWeight: 700,
-            color: "#E8E2D9",
-            margin: "44px 0 14px",
-          }}
-        >
-          Tudo que seu estúdio precisa, num só sistema
-        </h1>
-        <p style={{ color: "#A79A8A", fontSize: 16, lineHeight: 1.6 }}>
-          Agenda inteligente, financeiro automático, contratos digitais e uma assistente que cuida do
-          relacionamento com seus clientes enquanto você tatua. Veja como funciona no vídeo abaixo.
-        </p>
       </section>
 
-      <section style={{ maxWidth: 720, margin: "0 auto", padding: "24px 24px 64px" }}>
+      <section style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px 24px" }}>
         <div
           style={{
             aspectRatio: "16/9",
@@ -110,6 +100,24 @@ export default function LandingPage() {
             <p style={{ color: "#6B5E54", fontSize: 13 }}>Vídeo de apresentação em breve</p>
           )}
         </div>
+      </section>
+
+      <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "0 24px 56px" }}>
+        <h1
+          style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: 28,
+            fontWeight: 700,
+            color: "#E8E2D9",
+            margin: "0 0 14px",
+          }}
+        >
+          Tudo que seu estúdio precisa, num só sistema
+        </h1>
+        <p style={{ color: "#A79A8A", fontSize: 16, lineHeight: 1.6 }}>
+          Agenda inteligente, financeiro automático, contratos digitais e uma assistente que cuida do
+          relacionamento com seus clientes enquanto você tatua.
+        </p>
       </section>
 
       <section style={{ maxWidth: 980, margin: "0 auto", padding: "0 24px 96px" }}>
