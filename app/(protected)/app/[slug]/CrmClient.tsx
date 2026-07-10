@@ -4578,13 +4578,18 @@ export default function CrmClient({
         display: "flex", alignItems: "center", justifyContent: "center", padding: 18, fontFamily: "'DM Sans',sans-serif",
       }}>
         <style>{S}</style>
-        <div style={{ background: "#161616", border: "1px solid rgba(201,168,76,0.22)", borderRadius: 22, width: "100%", maxWidth: 540, overflow: "hidden", boxShadow: "0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,168,76,0.06)" }}>
-          <div style={{ padding: "32px 30px 20px", background: "linear-gradient(180deg, #1E1E1E, #171717)", borderBottom: "1px solid rgba(201,168,76,0.15)", textAlign: "center" }}>
-            <div style={{ height: 64, overflow: "hidden", position: "relative", margin: "0 auto", maxWidth: 300 }}>
+        <div style={{ background: "#0C0C0C", border: "1px solid rgba(201,168,76,0.22)", borderRadius: 22, width: "100%", maxWidth: 540, overflow: "hidden", boxShadow: "0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,168,76,0.06)" }}>
+          <div style={{
+            padding: "30px 30px 18px",
+            background: "radial-gradient(ellipse 260px 130px at 50% 45%, rgba(201,168,76,0.22), transparent 70%), linear-gradient(180deg, #131313, #0A0A0A)",
+            borderBottom: "1px solid rgba(201,168,76,0.15)",
+            textAlign: "center",
+          }}>
+            <div style={{ height: 78, overflow: "hidden", position: "relative", margin: "0 auto", maxWidth: 260 }}>
               <img
                 src="/logo-ink-system.png"
                 alt="Ink System"
-                style={{ width: "100%", position: "absolute", left: 0, top: -108, display: "block" }}
+                style={{ width: "100%", position: "absolute", left: 0, top: -124, display: "block" }}
               />
             </div>
           </div>
