@@ -4578,7 +4578,7 @@ export default function CrmClient({
         display: "flex", alignItems: "center", justifyContent: "center", padding: 18, fontFamily: "'DM Sans',sans-serif",
       }}>
         <style>{S}</style>
-        <div style={{ background: "#0C0C0C", border: "1px solid rgba(201,168,76,0.25)", borderRadius: 22, width: "100%", maxWidth: 540, overflow: "hidden", boxShadow: "0 24px 64px rgba(0,0,0,0.6), 0 0 50px rgba(201,168,76,0.1), 0 0 0 1px rgba(201,168,76,0.06)" }}>
+        <div style={{ background: "#0C0C0C", border: "2px solid rgba(201,168,76,0.4)", borderRadius: 22, width: "100%", maxWidth: 540, overflow: "hidden", boxShadow: "0 24px 64px rgba(0,0,0,0.6), 0 0 10px rgba(201,168,76,0.35), 0 0 34px rgba(201,168,76,0.12)" }}>
           <div style={{
             padding: "30px 30px 18px",
             background: "radial-gradient(ellipse 300px 150px at 50% 40%, rgba(139,92,222,0.16), transparent 70%), linear-gradient(180deg, #131313, #0A0A0A)",
@@ -4638,9 +4638,6 @@ export default function CrmClient({
                   <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>CNPJ</label>
                   <input className="fi" value={cnpj} onChange={e => setCnpj(maskCNPJ(e.target.value))} placeholder="00.000.000/0001-00" />
                 </div>
-              </div>
-              <div style={{ fontSize: 11, color: "#555045", marginTop: 2 }}>
-                O WhatsApp sera vinculado a {auraName} para atendimento automatizado.
               </div>
             </div>
           )}
