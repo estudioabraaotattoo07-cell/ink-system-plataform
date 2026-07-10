@@ -11,60 +11,125 @@ const PLANOS = [
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-neutral-950 text-neutral-100">
-      <section className="max-w-3xl mx-auto text-center px-4 pt-20 pb-12">
-        <h1 className="text-4xl font-semibold text-amber-500">INK SYSTEM</h1>
-        <p className="mt-4 text-neutral-400 text-lg">
+    <main
+      style={{
+        minHeight: "100vh",
+        background:
+          "radial-gradient(ellipse 900px 500px at 50% -10%, rgba(139,92,222,0.35), transparent 65%), #05040A",
+        color: "#E8E2D9",
+        fontFamily: "'DM Sans', sans-serif",
+      }}
+    >
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700&family=DM+Sans:wght@400;500;600&display=swap');`}</style>
+
+      <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "64px 24px 24px" }}>
+        <img
+          src="/logo-ink-system.png"
+          alt="Ink System — CRM para estúdios de tatuagem"
+          style={{ width: "100%", maxWidth: 560, height: "auto", margin: "0 auto 32px", display: "block" }}
+        />
+        <p style={{ color: "#A79A8A", fontSize: 17, lineHeight: 1.6 }}>
           O CRM feito pra quem atende cliente presencial — tatuadores, podólogos, dentistas e mais.
         </p>
-        <div className="mt-10 flex gap-4 justify-center flex-wrap">
+        <div style={{ marginTop: 36, display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
           <a
             href="/demo"
-            className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-medium rounded-lg px-6 py-3 text-sm transition-colors"
+            style={{
+              background: "linear-gradient(135deg, #C9A84C, #a07830)",
+              color: "#0A0A0A",
+              fontWeight: 700,
+              borderRadius: 8,
+              padding: "13px 28px",
+              fontSize: 14,
+              textDecoration: "none",
+              letterSpacing: ".02em",
+            }}
           >
             Experimentar grátis
           </a>
           <a
             href="/login"
-            className="border border-neutral-700 hover:border-amber-500 rounded-lg px-6 py-3 text-sm text-neutral-300 transition-colors"
+            style={{
+              border: "1px solid rgba(201,168,76,0.35)",
+              color: "#C9A84C",
+              borderRadius: 8,
+              padding: "13px 28px",
+              fontSize: 14,
+              textDecoration: "none",
+            }}
           >
             Já sou cliente
           </a>
         </div>
       </section>
 
-      <section className="max-w-3xl mx-auto px-4 pb-16">
-        <div className="aspect-video w-full rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 flex items-center justify-center">
+      <section style={{ maxWidth: 720, margin: "0 auto", padding: "24px 24px 64px" }}>
+        <div
+          style={{
+            aspectRatio: "16/9",
+            width: "100%",
+            borderRadius: 14,
+            overflow: "hidden",
+            border: "1px solid rgba(201,168,76,0.15)",
+            background: "#0B0B0F",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           {YOUTUBE_VIDEO_ID ? (
             <iframe
-              className="w-full h-full"
+              style={{ width: "100%", height: "100%", border: 0 }}
               src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}`}
               title="Apresentação do INK SYSTEM"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />
           ) : (
-            <p className="text-neutral-500 text-sm">Vídeo de apresentação em breve</p>
+            <p style={{ color: "#6B5E54", fontSize: 13 }}>Vídeo de apresentação em breve</p>
           )}
         </div>
       </section>
 
-      <section className="max-w-5xl mx-auto px-4 pb-24">
-        <h2 className="text-center text-2xl font-semibold text-neutral-100 mb-10">Planos</h2>
-        <div className="grid md:grid-cols-3 gap-6">
+      <section style={{ maxWidth: 980, margin: "0 auto", padding: "0 24px 96px" }}>
+        <h2
+          style={{
+            textAlign: "center",
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: 32,
+            fontWeight: 700,
+            color: "#C9A84C",
+            letterSpacing: ".03em",
+            marginBottom: 40,
+          }}
+        >
+          Planos
+        </h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20 }}>
           {PLANOS.map((p) => (
             <div
               key={p.nome}
-              className={`rounded-xl border p-6 flex flex-col gap-3 ${
-                p.destaque ? "border-amber-500 bg-neutral-900" : "border-neutral-800 bg-neutral-950"
-              }`}
+              style={{
+                borderRadius: 14,
+                padding: 26,
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+                background: p.destaque
+                  ? "linear-gradient(160deg, rgba(139,92,222,0.12), rgba(11,11,15,0.9))"
+                  : "#0B0B0F",
+                border: p.destaque ? "1px solid rgba(201,168,76,0.5)" : "1px solid rgba(201,168,76,0.15)",
+                boxShadow: p.destaque ? "0 0 40px rgba(201,168,76,0.08)" : "none",
+              }}
             >
-              <div className="text-lg font-semibold text-amber-500">{p.nome}</div>
-              <div className="text-2xl font-semibold">
-                {p.preco}
-                <span className="text-sm text-neutral-500 font-normal">/mês</span>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 700, color: "#C9A84C" }}>
+                {p.nome}
               </div>
-              <ul className="text-sm text-neutral-400 flex flex-col gap-1 mt-2">
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 30, fontWeight: 700, color: "#E8E2D9" }}>
+                {p.preco}
+                <span style={{ fontSize: 13, color: "#6B5E54", fontFamily: "'DM Sans', sans-serif", fontWeight: 400 }}>/mês</span>
+              </div>
+              <ul style={{ fontSize: 13, color: "#A79A8A", display: "flex", flexDirection: "column", gap: 6, marginTop: 6, paddingLeft: 0, listStyle: "none" }}>
                 <li>Artistas: {p.artistas}</li>
                 <li>SMS/mês: {p.sms}</li>
                 <li>Storage: {p.storage}</li>
@@ -74,7 +139,17 @@ export default function LandingPage() {
                 href={WHATSAPP_SUPORTE}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 text-center bg-amber-500 hover:bg-amber-400 text-neutral-950 font-medium rounded-lg py-2 text-sm transition-colors"
+                style={{
+                  marginTop: 14,
+                  textAlign: "center",
+                  background: "linear-gradient(135deg, #C9A84C, #a07830)",
+                  color: "#0A0A0A",
+                  fontWeight: 700,
+                  borderRadius: 8,
+                  padding: "11px 0",
+                  fontSize: 13,
+                  textDecoration: "none",
+                }}
               >
                 Assinar
               </a>
