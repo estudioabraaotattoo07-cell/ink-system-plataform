@@ -5,13 +5,16 @@ import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { createMockClient } from "@/lib/demo/mockClient";
 import { jsPDF } from "jspdf";
 
 // ─── SUPABASE ─────────────────────────────────────────────────────────────────
 // Todo dado passa pelo proxy seguro do servidor (app/rest/v1/[...path]/route.ts),
 // nunca direto no Supabase — por isso a URL aqui é a origem do próprio app e a
 // chave é só um placeholder (o proxy ignora e força o user_id real da sessão).
-const sb = createClient(
+// Em modo demo (ver prop demoMode), essa referência é trocada uma única vez
+// por um client mock em memória (lib/demo/mockClient.ts) — nunca toca rede.
+let sb: any = createClient(
   typeof window !== "undefined" ? window.location.origin : "",
   "placeholder-key"
 );
@@ -1124,12 +1127,24 @@ export default function CrmClient({
   cliente,
   userId,
   userEmail,
+  demoMode,
+  demoSeed,
 }: {
   cliente: ClienteInk;
   userId: string;
   userEmail: string;
+  demoMode?: boolean;
+  demoSeed?: Record<string, any[]>;
 }) {
   const router = useRouter();
+  // Troca o client real pelo mock em memória uma única vez por montagem —
+  // nunca de novo nos re-renders seguintes, senão os dados fictícios
+  // resetariam sozinhos a cada digitação/clique.
+  const demoAplicado = useRef(false);
+  if (demoMode && demoSeed && !demoAplicado.current) {
+    sb = createMockClient(demoSeed);
+    demoAplicado.current = true;
+  }
   const hojeLocal = () => {
     const agora = new Date();
     const offset = -3 * 60; // Brasília UTC-3
@@ -2058,6 +2073,26 @@ export default function CrmClient({
     setHistorico(p => [{ ...row, id: Date.now() }, ...p]);
     try { await sb.from("historico").insert(row); } catch(e) { console.warn("log error", e); }
   }, [userId]);
+
+  // ── MODO DEMO: explica o que aconteceria de verdade ao mover um card no Pipeline ──
+  const prevEtapasRef = useRef<Record<number, string>>({});
+  useEffect(() => {
+    if (!demoMode) return;
+    const fluxos = demoSeed?.fluxo_etapas || [];
+    for (const c of clients) {
+      const anterior = prevEtapasRef.current[c.id];
+      if (anterior !== undefined && anterior !== c.etapa) {
+        const fluxo = fluxos.find((f: any) => f.etapa_slug === c.etapa && f.ativo);
+        if (fluxo) {
+          const texto = String(fluxo.mensagem || "").replace("{nome}", c.nome || "o cliente");
+          const canalLabel = fluxo.canal === "sms" ? "SMS" : fluxo.canal === "whatsapp" ? "WhatsApp" : "e-mail";
+          const etapaLabel = stages.find(s => s.id === c.etapa)?.label || c.etapa;
+          setShowAviso(`🔔 "${c.nome}" entrou em "${etapaLabel}" — receberia agora este ${canalLabel}:\n\n"${texto}"`);
+        }
+      }
+      prevEtapasRef.current[c.id] = c.etapa;
+    }
+  }, [clients, demoMode, demoSeed, stages]);
 
   useEffect(() => {
     if (!userId) return;
@@ -4779,6 +4814,11 @@ export default function CrmClient({
   return (
     <>
       <div className="root">
+        {demoMode && (
+          <div style={{ background: "linear-gradient(90deg, #C9A84C, #a07830)", color: "#0A0A0A", textAlign: "center", fontSize: 12, fontWeight: 700, padding: "6px 12px", letterSpacing: ".02em" }}>
+            🧪 Modo demonstração — clientes fictícios, nada é salvo. Atualize a página (F5) pra reiniciar.
+          </div>
+        )}
         {/* TOPBAR */}
         <div className="topbar">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -4817,7 +4857,11 @@ export default function CrmClient({
                 💰 {colaboradoresComPendencia.length} repasse{colaboradoresComPendencia.length > 1 ? "s" : ""} pendente{colaboradoresComPendencia.length > 1 ? "s" : ""}
               </div>
             )}
-            <button className="theme-btn" title="Sair" onClick={async () => { await createBrowserSupabaseClient().auth.signOut(); router.push("/login"); }} style={{ fontSize: 13 }}>🚪</button>
+            <button className="theme-btn" title="Sair" onClick={async () => {
+              if (demoMode) { router.push("/"); return; }
+              await createBrowserSupabaseClient().auth.signOut();
+              router.push("/login");
+            }} style={{ fontSize: 13 }}>🚪</button>
             <button className="btn-new" onClick={() => setShowForm(true)}>+ Novo Cliente</button>
           </div>
         </div>
@@ -12563,7 +12607,7 @@ export default function CrmClient({
               <div style={{ fontSize: 16, fontWeight: 700, color: showAviso?.includes("sucesso") || showAviso?.includes("concluído") || showAviso?.includes("confirmada") || showAviso?.includes("registrado") ? "var(--q3)" : "var(--gold)", fontFamily: "'Cormorant Garamond',serif" }}>
                 {showAviso?.includes("sucesso") || showAviso?.includes("concluído") || showAviso?.includes("confirmada") || showAviso?.includes("registrado") ? "✅ Sucesso" : "⚠ Atenção"}
               </div>
-              <div style={{ fontSize: 13, color: "var(--tx)", lineHeight: 1.6 }}>{showAviso}</div>
+              <div style={{ fontSize: 13, color: "var(--tx)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{showAviso}</div>
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button className="btn-s" onClick={() => setShowAviso(null)}>Entendido</button>
               </div>
