@@ -1055,7 +1055,15 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (c: string)
 
 // ─── MÁSCARA TELEFONE ────────────────────────────────────────────────────────
 function maskCNPJ(v: string) {
+  // Detecta CPF (11 digitos) ou CNPJ (14) pela quantidade de caracteres
+  // digitados, já que profissional autonomo pode nao ter CNPJ.
   v = v.replace(/\D/g,"").slice(0,14);
+  if (v.length <= 11) {
+    if (v.length <= 3) return v;
+    if (v.length <= 6) return v.slice(0,3)+"."+v.slice(3);
+    if (v.length <= 9) return v.slice(0,3)+"."+v.slice(3,6)+"."+v.slice(6);
+    return v.slice(0,3)+"."+v.slice(3,6)+"."+v.slice(6,9)+"-"+v.slice(9);
+  }
   if (v.length <= 2) return v;
   if (v.length <= 5) return v.slice(0,2)+"."+v.slice(2);
   if (v.length <= 8) return v.slice(0,2)+"."+v.slice(2,5)+"."+v.slice(5);
@@ -4632,44 +4640,44 @@ export default function CrmClient({
               <div style={{ fontSize: 14, color: "#E8E2D9", fontWeight: 600, marginBottom: 4 }}>Bem-vindo! Vamos configurar seu estúdio.</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>Nome do Estúdio *</label>
+                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#B5A896" }}>Nome do Estúdio</label>
                   <input className="fi" value={studioName} onChange={e => setStudioName(e.target.value)} placeholder="Nome do seu estúdio" />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>Nome do Responsável *</label>
+                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#B5A896" }}>Nome do Responsável</label>
                   <input className="fi" value={studioOwner} onChange={e => setStudioOwner(e.target.value)} placeholder="Seu nome" />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>WhatsApp da {auraName} *</label>
+                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#B5A896" }}>WhatsApp do Estúdio</label>
                   <input className="fi" value={studioTel} onChange={e => setStudioTel(maskTel(e.target.value))} placeholder="(99) 99999-9999" />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>Email do Estudio</label>
+                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#B5A896" }}>E-mail do Estúdio</label>
                   <input className="fi" value={studioEmail} onChange={e => setStudioEmail(e.target.value)} placeholder="contato@estudio.com" />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>Cidade e Estado</label>
+                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#B5A896" }}>Cidade e Estado</label>
                   <input className="fi" value={studioCity} onChange={e => setStudioCity(e.target.value)} placeholder="Cidade - UF" />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>Instagram do Estudio</label>
+                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#B5A896" }}>Instagram do Estúdio</label>
                   <input className="fi" value={studioInsta} placeholder="@estudio"
                     onFocus={() => { if (!studioInsta) setStudioInsta("@"); }}
                     onChange={e => { const v = e.target.value; setStudioInsta(v && !v.startsWith("@") ? "@" + v : v); }} />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>Link do Google Maps</label>
+                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#B5A896" }}>Link do Google Maps</label>
                   <input className="fi" value={googleLink} onChange={e => setGoogleLink(e.target.value)} placeholder="https://g.page/..." />
-                  <div style={{ fontSize: 10, color: "#555045", lineHeight: 1.4 }}>Busque seu estúdio no Google Maps, clique em "Compartilhar" e copie o link. Usado pra indicar o endereço nos lembretes de sessão.</div>
+                  <div style={{ fontSize: 10, color: "#8A8070", lineHeight: 1.4 }}>Busque seu estúdio no Google Maps, clique em "Compartilhar" e copie o link. Usado pra indicar o endereço nos lembretes de sessão.</div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>Link de Avaliação do Google</label>
+                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#B5A896" }}>Link de Avaliação do Google</label>
                   <input className="fi" value={googleAvaliacaoLink} onChange={e => setGoogleAvaliacaoLink(e.target.value)} placeholder="https://g.page/r/.../review" />
-                  <div style={{ fontSize: 10, color: "#555045", lineHeight: 1.4 }}>No Google Meu Negócio, procure "Obter mais avaliações" e copie o link — leva o cliente direto pra tela de avaliar, sem precisar buscar o estúdio. Sem esse link, o convite automático de avaliação fica desligado.</div>
+                  <div style={{ fontSize: 10, color: "#8A8070", lineHeight: 1.4 }}>No Google Meu Negócio, procure "Obter mais avaliações" e copie o link — leva o cliente direto pra tela de avaliar, sem precisar buscar o estúdio. Sem esse link, o convite automático de avaliação fica desligado.</div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#8A8070" }}>CNPJ</label>
-                  <input className="fi" value={cnpj} onChange={e => setCnpj(maskCNPJ(e.target.value))} placeholder="00.000.000/0001-00" />
+                  <label style={{ fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase", color: "#B5A896" }}>CNPJ ou CPF</label>
+                  <input className="fi" value={cnpj} onChange={e => setCnpj(maskCNPJ(e.target.value))} placeholder="000.000.000-00 ou 00.000.000/0001-00" />
                 </div>
               </div>
             </div>
@@ -13456,7 +13464,7 @@ export default function CrmClient({
                     <div className="fg2">
                       <div className="fi2"><div className="fil">Email do Estúdio{!studioEmail && <span style={{ color: "var(--q2)", marginLeft: 4 }}>⚠</span>}</div><input className="ef" value={studioEmail} placeholder="contato@estudio.com" onChange={e => setStudioEmail(e.target.value)} style={{ borderColor: !studioEmail ? "rgba(212,130,10,.4)" : undefined }} /></div>
                       <div className="fi2"><div className="fil">WhatsApp do Estúdio</div><input className="ef" value={studioTel} placeholder="(99) 99999-9999" onChange={e => setStudioTel(maskTel(e.target.value))} /></div>
-                      <div className="fi2"><div className="fil">CNPJ{!cnpj && <span style={{ color: "var(--q2)", marginLeft: 4 }}>⚠</span>}</div><input className="ef" value={cnpj} placeholder="00.000.000/0001-00" maxLength={18} onChange={e => {
+                      <div className="fi2"><div className="fil">CNPJ ou CPF{!cnpj && <span style={{ color: "var(--q2)", marginLeft: 4 }}>⚠</span>}</div><input className="ef" value={cnpj} placeholder="000.000.000-00 ou 00.000.000/0001-00" maxLength={18} onChange={e => {
                         const raw = e.target.value.replace(/\D/g,"").slice(0,14);
                         let fmt = raw;
                         if (raw.length > 2) fmt = raw.slice(0,2) + "." + raw.slice(2);
