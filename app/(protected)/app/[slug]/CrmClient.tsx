@@ -812,21 +812,32 @@ function TimeScroller({ value, onChange, label }: { value: number; onChange: (h:
   const [selM, setSelM] = useState(0);
   const HOURS = Array.from({ length: 24 }, (_, i) => i);
   const MINS = [0, 15, 30, 45];
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
   useEffect(() => {
     const sv = (isNaN(value) || value == null) ? 9 : value;
     setSelH(Math.floor(sv));
   }, [value]);
   const confirm = (h: number, m: number) => { onChange(h, m); setOpen(false); };
+  const toggleOpen = () => {
+    if (!open && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const dropdownHeight = 214;
+      const openUp = window.innerHeight - rect.bottom < dropdownHeight;
+      setPos({ top: openUp ? rect.top - dropdownHeight - 4 : rect.bottom + 4, left: rect.left });
+    }
+    setOpen(v => !v);
+  };
   return (
     <div style={{ position: "relative", flex: 1 }}>
       <label className="fl">{label}</label>
-      <div onClick={() => setOpen(v => !v)} className="fi"
+      <div ref={triggerRef} onClick={toggleOpen} className="fi"
         style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", userSelect: "none" }}>
         <span>{String(selH).padStart(2,"0")}:{String(selM).padStart(2,"0")}</span>
         <span style={{ fontSize: 10, color: "var(--tx3)" }}>▾</span>
       </div>
-      {open && (
-        <div onClick={e => e.stopPropagation()} style={{ position: "absolute", top: "100%", left: 0, zIndex: 9999, background: "var(--dk2)", border: "1px solid var(--br)", borderRadius: 8, boxShadow: "0 8px 32px rgba(0,0,0,.6)", marginTop: 4, padding: "8px 4px", width: 140 }}>
+      {open && createPortal(
+        <div onClick={e => e.stopPropagation()} style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 9999, background: "var(--dk2)", border: "1px solid var(--br)", borderRadius: 8, boxShadow: "0 8px 32px rgba(0,0,0,.6)", padding: "8px 4px", width: 140 }}>
           <div style={{ display: "flex", gap: 4 }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 9, color: "var(--tx3)", textAlign: "center", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>Hora</div>
@@ -856,7 +867,8 @@ function TimeScroller({ value, onChange, label }: { value: number; onChange: (h:
             style={{ width: "100%", marginTop: 8, background: "var(--gold)", border: "none", borderRadius: 6, padding: "6px 0", fontSize: 12, fontWeight: 700, color: "#1a1a1a", cursor: "pointer" }}>
             OK
           </button>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -893,16 +905,27 @@ function DateScroller({ value, onChange, label }: { value: string; onChange: (v:
     setOpen(false);
   };
   const display = value ? (value.split("-").reverse().join("/")) : "DD/MM/AAAA";
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const toggleOpen = () => {
+    if (!open && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const dropdownHeight = 214;
+      const openUp = window.innerHeight - rect.bottom < dropdownHeight;
+      setPos({ top: openUp ? rect.top - dropdownHeight - 4 : rect.bottom + 4, left: rect.left });
+    }
+    setOpen(v => !v);
+  };
   return (
     <div style={{ position: "relative", flex: 1 }}>
       {label && <label className="fl">{label}</label>}
-      <div onClick={() => setOpen(v => !v)} className="fi"
+      <div ref={triggerRef} onClick={toggleOpen} className="fi"
         style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", userSelect: "none" }}>
         <span style={{ color: value ? "var(--tx)" : "var(--tx3)" }}>{display}</span>
         <span style={{ fontSize: 10, color: "var(--tx3)" }}>▾</span>
       </div>
-      {open && (
-        <div onClick={e => e.stopPropagation()} style={{ position: "absolute", top: "100%", left: 0, zIndex: 9999, background: "var(--dk2)", border: "1px solid var(--br)", borderRadius: 8, boxShadow: "0 8px 32px rgba(0,0,0,.6)", marginTop: 4, padding: "8px 4px", width: 210 }}>
+      {open && createPortal(
+        <div onClick={e => e.stopPropagation()} style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 9999, background: "var(--dk2)", border: "1px solid var(--br)", borderRadius: 8, boxShadow: "0 8px 32px rgba(0,0,0,.6)", padding: "8px 4px", width: 210 }}>
           <div style={{ display: "flex", gap: 4 }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 9, color: "var(--tx3)", textAlign: "center", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>Dia</div>
@@ -944,7 +967,8 @@ function DateScroller({ value, onChange, label }: { value: string; onChange: (v:
             style={{ width: "100%", marginTop: 8, background: "var(--gold)", border: "none", borderRadius: 6, padding: "6px 0", fontSize: 12, fontWeight: 700, color: "#1a1a1a", cursor: "pointer" }}>
             OK
           </button>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
