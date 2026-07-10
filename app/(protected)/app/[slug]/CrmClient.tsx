@@ -4578,12 +4578,15 @@ export default function CrmClient({
         display: "flex", alignItems: "center", justifyContent: "center", padding: 18, fontFamily: "'DM Sans',sans-serif",
       }}>
         <style>{S}</style>
-        <div style={{ background: "#161616", border: "1px solid rgba(201,168,76,0.12)", borderRadius: 14, width: "100%", maxWidth: 540, overflow: "hidden" }}>
-          <div style={{ padding: "26px 30px 18px", background: "#1E1E1E", borderBottom: "1px solid rgba(201,168,76,0.12)", textAlign: "center" }}>
-            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, letterSpacing: ".08em" }}>
-              <span style={{ color: "#E8E2D9" }}>INK </span><span style={{ color: "#C9A84C" }}>SYSTEM</span>
+        <div style={{ background: "#161616", border: "1px solid rgba(201,168,76,0.22)", borderRadius: 22, width: "100%", maxWidth: 540, overflow: "hidden", boxShadow: "0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,168,76,0.06)" }}>
+          <div style={{ padding: "32px 30px 20px", background: "linear-gradient(180deg, #1E1E1E, #171717)", borderBottom: "1px solid rgba(201,168,76,0.15)", textAlign: "center" }}>
+            <div style={{ height: 64, overflow: "hidden", position: "relative", margin: "0 auto", maxWidth: 300 }}>
+              <img
+                src="/logo-ink-system.png"
+                alt="Ink System"
+                style={{ width: "100%", position: "absolute", left: 0, top: -108, display: "block" }}
+              />
             </div>
-            <div style={{ fontSize: 10, color: "#8A8070", marginTop: 5, letterSpacing: ".1em", textTransform: "uppercase" }}>Gestão · Relacionamento · Tempo</div>
           </div>
           <div style={{ display: "flex", borderBottom: "1px solid rgba(201,168,76,0.12)" }}>
             {onbSteps.map((s, i) => (
