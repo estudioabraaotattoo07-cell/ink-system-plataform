@@ -55,13 +55,14 @@ export default function LandingPage() {
 
       <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "56px 24px 8px" }}>
         {/* A imagem tem uma "moldura" transparente grande em volta da arte —
-            recortamos visualmente com overflow:hidden até o arquivo ser
-            re-exportado já cortado (Imagem → Recortar no Photoshop). */}
-        <div style={{ height: 150, overflow: "hidden", position: "relative", margin: "0 auto 24px", maxWidth: 560 }}>
+            recortamos visualmente com object-fit/object-position (em %, não
+            pixels, pra funcionar em qualquer tamanho de tela) até o arquivo
+            ser re-exportado já cortado (Imagem → Recortar no Photoshop). */}
+        <div style={{ width: "100%", maxWidth: 560, aspectRatio: "560/150", margin: "0 auto 24px" }}>
           <img
             src="/logo-ink-system.png"
             alt="Ink System — Gestão, Relacionamento, Tempo"
-            style={{ width: "100%", position: "absolute", left: 0, top: -253, display: "block" }}
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 43%", display: "block" }}
           />
         </div>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
