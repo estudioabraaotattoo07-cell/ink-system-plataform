@@ -4,9 +4,9 @@ const YOUTUBE_VIDEO_ID = "";
 const WHATSAPP_SUPORTE = "https://wa.me/5527999598230";
 
 const PLANOS = [
-  { id: "bronze", nome: "Bronze", preco: "R$297", artistas: "até 2", sms: 100, storage: "1GB", assessorias: 1, destaque: false },
-  { id: "prata", nome: "Prata", preco: "R$497", artistas: "até 4", sms: 200, storage: "3GB", assessorias: 2, destaque: true },
-  { id: "ouro", nome: "Ouro", preco: "R$597", artistas: "até 6", sms: 400, storage: "5GB", assessorias: 4, destaque: false },
+  { id: "bronze", nome: "Bronze", preco: "R$297", artistas: "até 2", sms: 15, storage: "1GB", assessorias: 1, destaque: false },
+  { id: "prata", nome: "Prata", preco: "R$497", artistas: "até 4", sms: 30, storage: "3GB", assessorias: 2, destaque: true },
+  { id: "ouro", nome: "Ouro", preco: "R$597", artistas: "até 6", sms: 50, storage: "5GB", assessorias: 4, destaque: false },
 ];
 
 export default function LandingPage() {
