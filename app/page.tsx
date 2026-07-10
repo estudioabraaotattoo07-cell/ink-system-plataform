@@ -25,11 +25,23 @@ export default function LandingPage() {
       <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "64px 24px 24px" }}>
         <img
           src="/logo-ink-system.png"
-          alt="Ink System — CRM para estúdios de tatuagem"
-          style={{ width: "100%", maxWidth: 560, height: "auto", margin: "0 auto 32px", display: "block" }}
+          alt="Ink System — Gestão, Relacionamento, Tempo"
+          style={{ width: "100%", maxWidth: 560, height: "auto", margin: "0 auto 28px", display: "block" }}
         />
-        <p style={{ color: "#A79A8A", fontSize: 17, lineHeight: 1.6 }}>
-          O CRM feito pra quem atende cliente presencial — tatuadores, podólogos, dentistas e mais.
+        <h1
+          style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: 28,
+            fontWeight: 700,
+            color: "#E8E2D9",
+            margin: "0 0 14px",
+          }}
+        >
+          Tudo que seu estúdio precisa, num só sistema
+        </h1>
+        <p style={{ color: "#A79A8A", fontSize: 16, lineHeight: 1.6 }}>
+          Agenda inteligente, financeiro automático, contratos digitais e uma assistente que cuida do
+          relacionamento com seus clientes enquanto você tatua. Veja como funciona no vídeo abaixo.
         </p>
         <div style={{ marginTop: 36, display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
           <a
