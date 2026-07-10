@@ -58,7 +58,7 @@ export default function LandingPage() {
             recortamos visualmente com object-fit/object-position (em %, não
             pixels, pra funcionar em qualquer tamanho de tela) até o arquivo
             ser re-exportado já cortado (Imagem → Recortar no Photoshop). */}
-        <div style={{ width: "100%", maxWidth: 560, aspectRatio: "560/150", margin: "0 auto 24px" }}>
+        <div style={{ width: "100%", maxWidth: 400, aspectRatio: "560/150", margin: "0 auto 24px" }}>
           <img
             src="/logo-ink-system.png"
             alt="Ink System — Gestão, Relacionamento, Tempo"
