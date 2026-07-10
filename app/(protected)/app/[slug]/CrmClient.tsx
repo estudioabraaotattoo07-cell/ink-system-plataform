@@ -1219,7 +1219,6 @@ export default function CrmClient({
   // Data de corte pro cálculo de comissão pendente — só conta lançamentos a partir daqui,
   // pra não misturar com comissões antigas possivelmente já pagas por fora do sistema.
   const [comissaoSaldoInicio, setComissaoSaldoInicio] = useState<string>(new Date().toISOString().split("T")[0]);
-  const [studioLogo, setStudioLogo] = useState<string>(() => localStorage.getItem("inq_logo") || "");
   const [studioTel, setStudioTel] = useState("");
   const [studioOwner, setStudioOwner] = useState("");
   const [studioEmail, setStudioEmail] = useState("");
@@ -1442,11 +1441,6 @@ export default function CrmClient({
   const [showRecorrenteModal, setShowRecorrenteModal] = useState<{cid: any} | null>(null);
   const [recorrenteForm, setRecorrenteForm] = useState({ dataInicio: new Date().toISOString().split("T")[0], intervalo: 7, total: 4, hora: 9, duracao: 2, artista: "" });
   const [fichaRevelada, setFichaRevelada] = useState<Set<any>>(new Set());
-  const [showLogoCrop, setShowLogoCrop] = useState(false);
-  const [logoCropSrc, setLogoCropSrc] = useState("");
-  const [logoCropPos, setLogoCropPos] = useState({ x: 0, y: 0 });
-  const [logoCropScale, setLogoCropScale] = useState(1);
-  const logoCropRef = useRef<any>(null);
   const [pagFormas, setPagFormas] = useState<{forma: string; valor: string; parcelas: string}[]>([{ forma: "Pix", valor: "", parcelas: "1" }]);
   const [sinalPgtoModal, setSinalPgtoModal] = useState<{forma: string; parcelas: string} | null>(null);
   const [selSessaoModal, setSelSessaoModal] = useState<{cid: any; sessoes: any[]} | null>(null);
@@ -4588,12 +4582,15 @@ export default function CrmClient({
       }}>
         <style>{S}</style>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
-          <div style={{ width: 100, height: 100, borderRadius: "50%", background: "#C9A84C", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Cormorant Garamond',serif", fontSize: 44, fontWeight: 700, color: "#000", boxShadow: "0 0 40px rgba(201,168,76,.25)" }}>
-            {studioName ? studioName[0].toUpperCase() : "S"}
+          <div style={{ width: "100%", maxWidth: 300, aspectRatio: "560/150" }}>
+            <img
+              src="/logo-ink-system.png"
+              alt="Ink System"
+              style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 43%", display: "block" }}
+            />
           </div>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 28, fontWeight: 700, color: "#C9A84C", letterSpacing: ".08em" }}>{studioName}</div>
-            <div style={{ fontSize: 10, color: "#555045", letterSpacing: ".18em", textTransform: "uppercase", marginTop: 5 }}>INK SYSTEM</div>
           </div>
         </div>
         <button onClick={() => setShowSplash(false)}
@@ -4763,7 +4760,7 @@ export default function CrmClient({
                   {onbStep === 2 ? "Concluir" : "Continuar"}
                 </button>
               )}
-              {onbStep === 3 && <button className="btn-s" onClick={async () => { setOnboardingDone(true); setShowSplash(false); localStorage.setItem("inq_onb", "1"); try { const { data: cfgEx } = await sb.from("configuracoes").select("id").eq("user_id", userId).limit(1).single(); if (cfgEx?.id) { await sb.from("configuracoes").update({ onboarding_done: true }).eq("id", cfgEx.id); } else { await sb.from("configuracoes").insert({ onboarding_done: true, user_id: userId }); } } catch(e) { console.warn("onboarding save", e); } if (!localStorage.getItem("inq_tour")) { setTimeout(() => { if (!showLogoCrop) { setTourStep(0); setTourAtivo(true); } }, 800); } }}>Entrar no Sistema →</button>}
+              {onbStep === 3 && <button className="btn-s" onClick={async () => { setOnboardingDone(true); setShowSplash(false); localStorage.setItem("inq_onb", "1"); try { const { data: cfgEx } = await sb.from("configuracoes").select("id").eq("user_id", userId).limit(1).single(); if (cfgEx?.id) { await sb.from("configuracoes").update({ onboarding_done: true }).eq("id", cfgEx.id); } else { await sb.from("configuracoes").insert({ onboarding_done: true, user_id: userId }); } } catch(e) { console.warn("onboarding save", e); } if (!localStorage.getItem("inq_tour")) { setTimeout(() => { setTourStep(0); setTourAtivo(true); }, 800); } }}>Entrar no Sistema →</button>}
             </div>
             </div>
           </div>
@@ -4815,10 +4812,7 @@ export default function CrmClient({
         {/* TOPBAR */}
         <div className="topbar">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            {studioLogo
-              ? <img src={studioLogo} alt="logo" style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", border: "2px solid var(--gold)" }} />
-              : <div className="bmark">C</div>
-            }
+            <img src="/logo-ink-icon.png" alt="Ink System" style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", border: "2px solid var(--gold)" }} />
             <div style={{ cursor: userRole === "admin" ? "pointer" : "default" }} onClick={() => { if (userRole === "admin") setShowSettings(true); }}>
               <div className="bname">{studioName}</div>
               <div className="bsub">{userRole === "profissional" ? "Acesso Profissional" : "INK SYSTEM"}</div>
@@ -13017,95 +13011,6 @@ export default function CrmClient({
           );
         })()}
 
-        {/* ── MODAL CROP LOGO ── */}
-        {showLogoCrop && (
-          <div className="ov" onClick={() => setShowLogoCrop(false)}>
-            <div onClick={e => e.stopPropagation()} style={{ background: "var(--dk2)", border: "1px solid var(--br)", borderRadius: 14, width: "min(420px, 94vw)", padding: "24px", display: "flex", flexDirection: "column", gap: 16 }}>
-              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 18, fontWeight: 700, color: "var(--gold)" }}>Ajustar Logo</div>
-              <div style={{ fontSize: 12, color: "var(--tx2)" }}>Arraste a imagem para centralizar dentro do círculo.</div>
-              <div style={{ position: "relative", width: 260, height: 260, margin: "0 auto", overflow: "hidden", borderRadius: 8, cursor: "grab", userSelect: "none", touchAction: "none" }}
-                ref={logoCropRef}
-                onMouseDown={e => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const startX = e.clientX - logoCropPos.x;
-                  const startY = e.clientY - logoCropPos.y;
-                  const onMove = (ev: MouseEvent) => { ev.preventDefault(); setLogoCropPos({ x: ev.clientX - startX, y: ev.clientY - startY }); };
-                  const onUp = () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); };
-                  document.addEventListener("mousemove", onMove);
-                  document.addEventListener("mouseup", onUp);
-                }}
-                onTouchStart={e => {
-                  e.stopPropagation();
-                  const t = e.touches[0];
-                  const startX = t.clientX - logoCropPos.x;
-                  const startY = t.clientY - logoCropPos.y;
-                  const onMove = (ev: TouchEvent) => { ev.preventDefault(); const tt = ev.touches[0]; setLogoCropPos({ x: tt.clientX - startX, y: tt.clientY - startY }); };
-                  const onUp = () => { document.removeEventListener("touchmove", onMove as any); document.removeEventListener("touchend", onUp); };
-                  document.addEventListener("touchmove", onMove as any, { passive: false });
-                  document.addEventListener("touchend", onUp);
-                }}>
-                {/* imagem arrastável */}
-                <img src={logoCropSrc} alt="crop"
-                  style={{ position: "absolute", top: logoCropPos.y, left: logoCropPos.x, width: 260 * logoCropScale, height: "auto", pointerEvents: "none", draggable: false } as any} />
-                {/* overlay escuro fora do círculo */}
-                <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-                  <svg width="260" height="260" style={{ position: "absolute", inset: 0 }}>
-                    <defs>
-                      <mask id="circleMask">
-                        <rect width="260" height="260" fill="white"/>
-                        <circle cx="130" cy="130" r="120" fill="black"/>
-                      </mask>
-                    </defs>
-                    <rect width="260" height="260" fill="rgba(0,0,0,0.72)" mask="url(#circleMask)"/>
-                    <circle cx="130" cy="130" r="120" fill="none" stroke="#C9A84C" strokeWidth="2"/>
-                  </svg>
-                </div>
-              </div>
-              {/* zoom */}
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 11, color: "var(--tx3)" }}>Zoom</span>
-                <input type="range" min={0.5} max={3} step={0.05} value={logoCropScale}
-                  onChange={e => setLogoCropScale(Number(e.target.value))}
-                  style={{ flex: 1, accentColor: "var(--gold)" }} />
-                <span style={{ fontSize: 11, color: "var(--tx2)", width: 36 }}>{Math.round(logoCropScale * 100)}%</span>
-              </div>
-              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                <button className="btn-c" onClick={() => { setShowLogoCrop(false); setLogoCropSrc(""); }}>Cancelar</button>
-                <button className="btn-s" onClick={() => {
-                  // Renderizar o recorte em canvas
-                  const canvas = document.createElement("canvas");
-                  canvas.width = 240; canvas.height = 240;
-                  const ctx = canvas.getContext("2d");
-                  if (!ctx) return;
-                  const img = new Image();
-                  img.onload = () => {
-                    ctx.beginPath();
-                    ctx.arc(120, 120, 120, 0, Math.PI * 2);
-                    ctx.clip();
-                    const scale = logoCropScale;
-                    const iw = 260 * scale;
-                    const ih = img.naturalHeight * (iw / img.naturalWidth);
-                    const sx = logoCropPos.x * (240 / 260);
-                    const sy = logoCropPos.y * (240 / 260);
-                    const sw = iw * (240 / 260);
-                    const sh = ih * (240 / 260);
-                    ctx.drawImage(img, sx, sy, sw, sh);
-                    const base64 = canvas.toDataURL("image/png");
-                    setStudioLogo(base64);
-                    localStorage.setItem("inq_logo", base64);
-                    setShowLogoCrop(false);
-                    setLogoCropSrc("");
-                    setLogoCropPos({ x: 0, y: 0 });
-                    setLogoCropScale(1);
-                  };
-                  img.src = logoCropSrc;
-                }}>✓ Confirmar Recorte</button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* ── TOUR GUIADO ── */}
         {tourAtivo && (() => {
           const step = TOUR_STEPS[tourStep];
@@ -14249,7 +14154,6 @@ export default function CrmClient({
                     meta_sessoes: metaSessoes, meta_leads: metaLeads, meta_nps: metaNPS,
                     desconto_aniversario: descontoAniversario,
                     horarios, dark_mode: dark, tema,
-                    studio_logo: studioLogo,
                     alerta_config: alertaConfig,
                     entrada_cats: entradaCats,
                     saida_cats: saidaCats,
