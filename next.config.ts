@@ -10,6 +10,17 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // O produto real (CRM) roda no inq-saas (Vite/Vercel separado), não aqui.
+  // Este projeto e so venda + admin. /login proxeia pro CRM de verdade,
+  // preservando o dominio na barra de enderecos do visitante; /assets/*
+  // e necessario junto porque o index.html do Vite referencia esse caminho
+  // absoluto pros bundles JS/CSS.
+  async rewrites() {
+    return [
+      { source: "/login", destination: "https://inq-saas.vercel.app/" },
+      { source: "/assets/:path*", destination: "https://inq-saas.vercel.app/assets/:path*" },
+    ];
+  },
 };
 
 export default nextConfig;
