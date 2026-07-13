@@ -43,8 +43,20 @@ export default async function AdminPage() {
   const erro = erroClientes || erroChamados;
 
   return (
-    <main className="min-h-screen bg-neutral-950 text-neutral-100 p-8">
-      <h1 className="text-xl font-semibold mb-6">INK SYSTEM — Painel Admin</h1>
+    <main
+      className="min-h-screen text-neutral-100 p-8"
+      style={{
+        background:
+          "radial-gradient(ellipse 900px 500px at 0% -10%, rgba(139,92,222,0.22), transparent 65%), #0A0A0A",
+      }}
+    >
+      <div className="mb-8 flex items-center gap-4">
+        <img src="/logo-ink-system.png" alt="INK SYSTEM" style={{ height: 52, width: "auto" }} />
+        <div style={{ width: 1, height: 36, background: "linear-gradient(to bottom, transparent, #C9A84C, transparent)" }} />
+        <span style={{ fontSize: 13, letterSpacing: ".1em", textTransform: "uppercase", color: "#8A7A60" }}>
+          Painel do Administrador
+        </span>
+      </div>
       {erro && (
         <div className="mb-6 text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-4 py-3">
           Erro ao buscar dados do Supabase: {erro.message}
