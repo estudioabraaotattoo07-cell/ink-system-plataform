@@ -51,7 +51,13 @@ export default async function AdminPage() {
       }}
     >
       <div className="mb-8 flex items-center gap-5">
-        <img src="/logo-ink-icon.png" alt="INK SYSTEM" style={{ height: 255, width: "auto" }} />
+        <div style={{ height: 255, aspectRatio: "532/552", overflow: "hidden" }}>
+          <img
+            src="/logotipo-admin.png"
+            alt="INK SYSTEM"
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "53% 43%", display: "block" }}
+          />
+        </div>
         <div style={{ width: 1, height: 56, background: "linear-gradient(to bottom, transparent, #C9A84C, transparent)", boxShadow: "0 0 6px rgba(201,168,76,0.5)" }} />
         <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "#C9A84C", textShadow: "0 0 12px rgba(201,168,76,0.4)" }}>
           Painel do Administrador
