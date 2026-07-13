@@ -36,11 +36,20 @@ export default function AdminLoginPage() {
       }}
     >
       <div className="w-full flex flex-col items-center gap-7" style={{ maxWidth: 380 }}>
-        <img
-          src="/logo-ink-icon.png"
-          alt="INK SYSTEM"
-          style={{ width: 64, height: 64, filter: "drop-shadow(0 0 18px rgba(201,168,76,0.4))" }}
-        />
+        <div
+          style={{
+            width: 140,
+            aspectRatio: "532/552",
+            overflow: "hidden",
+            filter: "drop-shadow(0 0 18px rgba(201,168,76,0.4))",
+          }}
+        >
+          <img
+            src="/logotipo-admin.png"
+            alt="INK SYSTEM"
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "53% 43%", display: "block" }}
+          />
+        </div>
         <form
           onSubmit={entrar}
           className="w-full flex flex-col gap-4"
