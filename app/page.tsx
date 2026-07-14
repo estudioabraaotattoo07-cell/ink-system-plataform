@@ -66,7 +66,7 @@ export default function LandingPage() {
           />
         </div>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="/demo" className="hero-btn-primary">
+          <a href="https://inq-saas.vercel.app/?demo=1" target="_blank" rel="noopener noreferrer" className="hero-btn-primary">
             Experimentar grátis
           </a>
           <a href="/login" className="hero-btn-secondary">
