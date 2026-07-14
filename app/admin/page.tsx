@@ -45,6 +45,16 @@ export default async function AdminPage() {
   const leadsNovos = (leads ?? []).filter((l) => l.status === "novo");
   const leadsRespondidos = (leads ?? []).filter((l) => l.status !== "novo");
 
+  const anoMesAtual = new Date().toISOString().slice(0, 7);
+  const { data: usoMensagem, error: erroUso } = await sbAdmin
+    .from("mensageria_uso")
+    .select("user_id, emails_enviados, sms_enviados, emails_comprados, sms_comprados")
+    .eq("ano_mes", anoMesAtual);
+  const usoPorUser = new Map<string, { emailsComprados: number; smsComprados: number }>();
+  for (const u of usoMensagem ?? []) {
+    usoPorUser.set(u.user_id, { emailsComprados: u.emails_comprados || 0, smsComprados: u.sms_comprados || 0 });
+  }
+
   const chamadosPorCliente = new Map<string, { total: number; abertos: number }>();
   for (const c of chamados ?? []) {
     const cur = chamadosPorCliente.get(c.ink_cliente_id) ?? { total: 0, abertos: 0 };
@@ -62,7 +72,7 @@ export default async function AdminPage() {
   }
 
   const linhas = clientes ?? [];
-  const erro = erroClientes || erroChamados || erroStats || erroLeads;
+  const erro = erroClientes || erroChamados || erroStats || erroLeads || erroUso;
 
   const ranking = linhas
     .map((c) => ({ cliente: c, ...( statsPorUser.get(c.auth_user_id) ?? { visitas: 0, cliques: 0 } ) }))
@@ -163,12 +173,14 @@ export default async function AdminPage() {
               <th className="py-2 pr-4">SMS/mês</th>
               <th className="py-2 pr-4">Artistas</th>
               <th className="py-2 pr-4">Assessorias</th>
+              <th className="py-2 pr-4">Extras comprados</th>
               <th className="py-2 pr-4">Chamados</th>
             </tr>
           </thead>
           <tbody>
             {linhas.map((c) => {
               const ch = chamadosPorCliente.get(c.id) ?? { total: 0, abertos: 0 };
+              const extras = usoPorUser.get(c.auth_user_id);
               return (
                 <tr key={c.id} className="border-b border-neutral-900">
                   <td className="py-2 pr-4">
@@ -182,6 +194,14 @@ export default async function AdminPage() {
                   <td className="py-2 pr-4">{c.sms_usados_mes ?? 0}</td>
                   <td className="py-2 pr-4">{c.artistas_count ?? 0}</td>
                   <td className="py-2 pr-4">{c.assessorias_usadas_mes ?? 0}</td>
+                  <td className="py-2 pr-4 text-neutral-500">
+                    {extras && (extras.emailsComprados > 0 || extras.smsComprados > 0)
+                      ? [
+                          extras.smsComprados > 0 ? `+${extras.smsComprados} SMS` : null,
+                          extras.emailsComprados > 0 ? `+${extras.emailsComprados} e-mail` : null,
+                        ].filter(Boolean).join(" · ")
+                      : "—"}
+                  </td>
                   <td className="py-2 pr-4">
                     {ch.abertos}/{ch.total}
                   </td>
@@ -190,7 +210,7 @@ export default async function AdminPage() {
             })}
             {linhas.length === 0 && (
               <tr>
-                <td colSpan={10} className="py-6 text-center text-neutral-500">
+                <td colSpan={11} className="py-6 text-center text-neutral-500">
                   Nenhum cliente cadastrado ainda.
                 </td>
               </tr>

@@ -4,9 +4,9 @@ const YOUTUBE_VIDEO_ID = "";
 const WHATSAPP_SUPORTE = "https://wa.me/5527999598230";
 
 const PLANOS = [
-  { id: "bronze", nome: "Bronze", preco: "R$297", artistas: "até 2", sms: 15, storage: "1GB", assessorias: 1, destaque: false },
-  { id: "prata", nome: "Prata", preco: "R$497", artistas: "até 4", sms: 30, storage: "3GB", assessorias: 2, destaque: true },
-  { id: "ouro", nome: "Ouro", preco: "R$597", artistas: "até 6", sms: 50, storage: "5GB", assessorias: 4, destaque: false },
+  { id: "bronze", nome: "Bronze", preco: "R$297", artistas: "até 2", sms: 50, email: 120, storage: "1GB", assessorias: 1, destaque: false },
+  { id: "prata", nome: "Prata", preco: "R$497", artistas: "até 4", sms: 100, email: 200, storage: "3GB", assessorias: 2, destaque: true },
+  { id: "ouro", nome: "Ouro", preco: "R$597", artistas: "até 6", sms: 200, email: 400, storage: "5GB", assessorias: 4, destaque: false },
 ];
 
 export default function LandingPage() {
@@ -162,6 +162,7 @@ export default function LandingPage() {
               <ul style={{ fontSize: 13, color: "#A79A8A", display: "flex", flexDirection: "column", gap: 6, marginTop: 6, paddingLeft: 0, listStyle: "none" }}>
                 <li>Artistas: {p.artistas}</li>
                 <li>SMS/mês: {p.sms}</li>
+                <li>E-mail/mês: {p.email}</li>
                 <li>Storage: {p.storage}</li>
                 <li>Assessorias/mês: {p.assessorias}</li>
               </ul>
