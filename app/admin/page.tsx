@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import LeadCard from "./LeadCard";
 
 // Sempre busca dado fresco — nunca cachear/pré-renderizar a lista de clientes.
 export const dynamic = "force-dynamic";
@@ -37,6 +38,13 @@ export default async function AdminPage() {
     .select("user_id, visitas, cliques")
     .gte("dia", trintaDiasAtras);
 
+  const { data: leads, error: erroLeads } = await sbAdmin
+    .from("ink_leads")
+    .select("*")
+    .order("created_at", { ascending: false });
+  const leadsNovos = (leads ?? []).filter((l) => l.status === "novo");
+  const leadsRespondidos = (leads ?? []).filter((l) => l.status !== "novo");
+
   const chamadosPorCliente = new Map<string, { total: number; abertos: number }>();
   for (const c of chamados ?? []) {
     const cur = chamadosPorCliente.get(c.ink_cliente_id) ?? { total: 0, abertos: 0 };
@@ -54,7 +62,7 @@ export default async function AdminPage() {
   }
 
   const linhas = clientes ?? [];
-  const erro = erroClientes || erroChamados || erroStats;
+  const erro = erroClientes || erroChamados || erroStats || erroLeads;
 
   const ranking = linhas
     .map((c) => ({ cliente: c, ...( statsPorUser.get(c.auth_user_id) ?? { visitas: 0, cliques: 0 } ) }))
@@ -87,6 +95,26 @@ export default async function AdminPage() {
           Erro ao buscar dados do Supabase: {erro.message}
         </div>
       )}
+      <div className="mb-8">
+        <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "#C9A84C", marginBottom: 10 }}>
+          Solicitações {leadsNovos.length > 0 && <span style={{ color: "#E8A838" }}>({leadsNovos.length} nova{leadsNovos.length > 1 ? "s" : ""})</span>}
+        </div>
+        {(leads ?? []).length === 0 ? (
+          <div className="text-sm text-neutral-500">Nenhuma solicitação recebida ainda.</div>
+        ) : (
+          <div style={{ maxWidth: 720 }}>
+            {leadsNovos.map((l) => <LeadCard key={l.id} lead={l} />)}
+            {leadsRespondidos.length > 0 && (
+              <details style={{ marginTop: 8 }}>
+                <summary className="text-sm text-neutral-500 cursor-pointer">Ver {leadsRespondidos.length} já respondida{leadsRespondidos.length > 1 ? "s" : ""}</summary>
+                <div style={{ marginTop: 10 }}>
+                  {leadsRespondidos.map((l) => <LeadCard key={l.id} lead={l} />)}
+                </div>
+              </details>
+            )}
+          </div>
+        )}
+      </div>
       <div className="mb-8">
         <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "#C9A84C", marginBottom: 10 }}>
           Ranking de visitas nos sites (últimos 30 dias)
