@@ -31,6 +31,12 @@ export default async function AdminPage() {
     .from("ink_chamados")
     .select("ink_cliente_id, status");
 
+  const trintaDiasAtras = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  const { data: stats, error: erroStats } = await sbAdmin
+    .from("site_stats")
+    .select("user_id, visitas, cliques")
+    .gte("dia", trintaDiasAtras);
+
   const chamadosPorCliente = new Map<string, { total: number; abertos: number }>();
   for (const c of chamados ?? []) {
     const cur = chamadosPorCliente.get(c.ink_cliente_id) ?? { total: 0, abertos: 0 };
@@ -39,8 +45,21 @@ export default async function AdminPage() {
     chamadosPorCliente.set(c.ink_cliente_id, cur);
   }
 
+  const statsPorUser = new Map<string, { visitas: number; cliques: number }>();
+  for (const s of stats ?? []) {
+    const cur = statsPorUser.get(s.user_id) ?? { visitas: 0, cliques: 0 };
+    cur.visitas += s.visitas || 0;
+    cur.cliques += s.cliques || 0;
+    statsPorUser.set(s.user_id, cur);
+  }
+
   const linhas = clientes ?? [];
-  const erro = erroClientes || erroChamados;
+  const erro = erroClientes || erroChamados || erroStats;
+
+  const ranking = linhas
+    .map((c) => ({ cliente: c, ...( statsPorUser.get(c.auth_user_id) ?? { visitas: 0, cliques: 0 } ) }))
+    .filter((r) => r.visitas > 0 || r.cliques > 0)
+    .sort((a, b) => b.visitas - a.visitas);
 
   return (
     <main
@@ -68,6 +87,41 @@ export default async function AdminPage() {
           Erro ao buscar dados do Supabase: {erro.message}
         </div>
       )}
+      <div className="mb-8">
+        <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "#C9A84C", marginBottom: 10 }}>
+          Ranking de visitas nos sites (últimos 30 dias)
+        </div>
+        {ranking.length === 0 ? (
+          <div className="text-sm text-neutral-500">Nenhuma visita registrada ainda nos últimos 30 dias.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="text-sm border-collapse whitespace-nowrap">
+              <thead>
+                <tr className="text-left text-neutral-400 border-b border-neutral-800">
+                  <th className="py-2 pr-4">#</th>
+                  <th className="py-2 pr-4">Estúdio</th>
+                  <th className="py-2 pr-4">Visitas</th>
+                  <th className="py-2 pr-4">Cliques em CTA</th>
+                  <th className="py-2 pr-4">Conversão</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ranking.map((r, i) => (
+                  <tr key={r.cliente.id} className="border-b border-neutral-900">
+                    <td className="py-2 pr-4 text-neutral-500">{i + 1}º</td>
+                    <td className="py-2 pr-4">
+                      {r.cliente.nome_estudio || "—"} <span className="text-neutral-500">/{r.cliente.slug}</span>
+                    </td>
+                    <td className="py-2 pr-4">{r.visitas}</td>
+                    <td className="py-2 pr-4">{r.cliques}</td>
+                    <td className="py-2 pr-4">{r.visitas > 0 ? `${((r.cliques / r.visitas) * 100).toFixed(0)}%` : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm border-collapse whitespace-nowrap">
           <thead>
