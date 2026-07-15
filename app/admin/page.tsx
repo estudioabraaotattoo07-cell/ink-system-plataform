@@ -103,13 +103,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       }}
     >
       <div className="mb-8 flex items-center gap-5">
-        <div style={{ height: 255, aspectRatio: "532/552", overflow: "hidden" }}>
-          <img
-            src="/logotipo-admin.png"
-            alt="INK SYSTEM"
-            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "53% 43%", display: "block" }}
-          />
-        </div>
+        <img
+          src="/logo-ink-system.png"
+          alt="INK SYSTEM"
+          style={{ height: 44, width: "auto", display: "block" }}
+        />
         <div style={{ width: 1, height: 56, background: "linear-gradient(to bottom, transparent, #C9A84C, transparent)", boxShadow: "0 0 6px rgba(201,168,76,0.5)" }} />
         <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "#C9A84C", textShadow: "0 0 12px rgba(201,168,76,0.4)" }}>
           Painel do Administrador

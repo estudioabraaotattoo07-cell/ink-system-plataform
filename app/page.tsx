@@ -54,17 +54,11 @@ export default function LandingPage() {
       `}</style>
 
       <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "56px 24px 8px" }}>
-        {/* A imagem tem uma "moldura" transparente grande em volta da arte —
-            recortamos visualmente com object-fit/object-position (em %, não
-            pixels, pra funcionar em qualquer tamanho de tela) até o arquivo
-            ser re-exportado já cortado (Imagem → Recortar no Photoshop). */}
-        <div style={{ width: "100%", maxWidth: 400, aspectRatio: "560/150", margin: "0 auto 24px" }}>
-          <img
-            src="/logo-ink-system.png"
-            alt="Ink System — Gestão, Relacionamento, Tempo"
-            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 43%", display: "block" }}
-          />
-        </div>
+        <img
+          src="/logo-ink-system.png"
+          alt="Ink System — Gestão, Relacionamento, Tempo"
+          style={{ width: "100%", maxWidth: 400, height: "auto", display: "block", margin: "0 auto 24px" }}
+        />
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
           <a href="https://inq-saas.vercel.app/?demo=1" target="_blank" rel="noopener noreferrer" className="hero-btn-primary">
             Experimentar grátis
