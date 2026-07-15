@@ -56,6 +56,18 @@ export default async function AdminPage() {
     usoPorUser.set(u.user_id, { emailsComprados: u.emails_comprados || 0, smsComprados: u.sms_comprados || 0 });
   }
 
+  const { data: falhas, error: erroFalhas } = await sbAdmin
+    .from("mensageria_falhas")
+    .select("user_id, canal, motivo, criado_em")
+    .gte("criado_em", trintaDiasAtras)
+    .order("criado_em", { ascending: false });
+  const falhasPorUser = new Map<string, { total: number; ultimoMotivo: string; ultimoCanal: string }>();
+  for (const f of falhas ?? []) {
+    const cur = falhasPorUser.get(f.user_id) ?? { total: 0, ultimoMotivo: f.motivo || "", ultimoCanal: f.canal };
+    cur.total++;
+    falhasPorUser.set(f.user_id, cur);
+  }
+
   const chamadosPorCliente = new Map<string, { total: number; abertos: number }>();
   for (const c of chamados ?? []) {
     const cur = chamadosPorCliente.get(c.ink_cliente_id) ?? { total: 0, abertos: 0 };
@@ -73,7 +85,7 @@ export default async function AdminPage() {
   }
 
   const linhas = clientes ?? [];
-  const erro = erroClientes || erroChamados || erroStats || erroLeads || erroUso;
+  const erro = erroClientes || erroChamados || erroStats || erroLeads || erroUso || erroFalhas;
 
   const ranking = linhas
     .map((c) => ({ cliente: c, ...( statsPorUser.get(c.auth_user_id) ?? { visitas: 0, cliques: 0 } ) }))
@@ -178,6 +190,7 @@ export default async function AdminPage() {
               <th className="py-2 pr-4">Artistas</th>
               <th className="py-2 pr-4">Assessorias</th>
               <th className="py-2 pr-4">Extras comprados</th>
+              <th className="py-2 pr-4">Falhas (30d)</th>
               <th className="py-2 pr-4">Chamados</th>
               <th className="py-2 pr-4">Ações</th>
             </tr>
@@ -186,6 +199,7 @@ export default async function AdminPage() {
             {linhas.map((c) => {
               const ch = chamadosPorCliente.get(c.id) ?? { total: 0, abertos: 0 };
               const extras = usoPorUser.get(c.auth_user_id);
+              const falhasCliente = falhasPorUser.get(c.auth_user_id);
               return (
                 <tr key={c.id} className="border-b border-neutral-900">
                   <td className="py-2 pr-4">
@@ -208,6 +222,18 @@ export default async function AdminPage() {
                       : "—"}
                   </td>
                   <td className="py-2 pr-4">
+                    {falhasCliente && falhasCliente.total > 0 ? (
+                      <span
+                        title={`Último: ${falhasCliente.ultimoCanal} — ${falhasCliente.ultimoMotivo || "sem detalhe"}`}
+                        style={{ background: "rgba(231,76,60,.15)", color: "#E74C3C", border: "1px solid rgba(231,76,60,.4)", borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 700, cursor: "help" }}
+                      >
+                        {falhasCliente.total}
+                      </span>
+                    ) : (
+                      <span className="text-neutral-600">0</span>
+                    )}
+                  </td>
+                  <td className="py-2 pr-4">
                     {ch.abertos}/{ch.total}
                   </td>
                   <td className="py-2 pr-4">
@@ -218,7 +244,7 @@ export default async function AdminPage() {
             })}
             {linhas.length === 0 && (
               <tr>
-                <td colSpan={12} className="py-6 text-center text-neutral-500">
+                <td colSpan={13} className="py-6 text-center text-neutral-500">
                   Nenhum cliente cadastrado ainda.
                 </td>
               </tr>
