@@ -32,15 +32,18 @@ export default function FichaCard({ ficha }: { ficha: Ficha }) {
 
   return (
     <div
+      className="ficha-card"
       style={{
-        border: `1px solid ${ficha.temNaoRespondida ? "rgba(201,168,76,0.4)" : "rgba(255,255,255,0.08)"}`,
-        borderRadius: 10,
+        border: `1px solid ${ficha.temNaoRespondida ? "rgba(201,168,76,0.4)" : "rgba(201,168,76,0.18)"}`,
+        borderRadius: 12,
         padding: "10px 12px",
-        marginBottom: 10,
-        background: ficha.temNaoRespondida ? "rgba(201,168,76,0.05)" : "transparent",
+        background: ficha.temNaoRespondida ? "rgba(201,168,76,0.08)" : "#141414",
+        boxShadow: "0 1px 3px rgba(0,0,0,.22)",
         opacity: movendo ? 0.5 : 1,
+        transition: "box-shadow .22s ease, transform .18s ease, border-color .18s ease",
       }}
     >
+      <style>{`.ficha-card:hover{border-color:rgba(201,168,76,0.45);box-shadow:0 0 0 1px rgba(201,168,76,0.45),0 0 20px 1px rgba(201,168,76,0.29),0 10px 24px rgba(0,0,0,.4);transform:translateY(-2px);}`}</style>
       <div style={{ cursor: "pointer" }} onClick={() => setAberto((v) => !v)}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 6 }}>
           <span className="text-neutral-100" style={{ fontSize: 13, fontWeight: 600 }}>{ficha.nome || "(sem nome)"}</span>
