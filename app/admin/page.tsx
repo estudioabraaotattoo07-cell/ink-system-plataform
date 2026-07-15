@@ -99,6 +99,9 @@ export default async function AdminPage() {
         <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "#C9A84C", textShadow: "0 0 12px rgba(201,168,76,0.4)" }}>
           Painel do Administrador
         </span>
+        <a href="/admin/licencas" className="ml-auto text-sm text-neutral-400 hover:text-neutral-200">
+          Chaves de Acesso e Licenças →
+        </a>
       </div>
       {erro && (
         <div className="mb-6 text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-4 py-3">
