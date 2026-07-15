@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import PipelineBoard from "./PipelineBoard";
 import TestarEnvioButton from "./TestarEnvioButton";
+import AdminTabs from "./AdminTabs";
 
 // Sempre busca dado fresco — nunca cachear/pré-renderizar a lista de clientes.
 export const dynamic = "force-dynamic";
@@ -113,42 +114,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "#C9A84C", textShadow: "0 0 12px rgba(201,168,76,0.4)" }}>
           Painel do Administrador
         </span>
-        <a href="/admin/licencas" className="ml-auto text-sm text-neutral-400 hover:text-neutral-200">
-          Chaves de Acesso e Licenças →
-        </a>
       </div>
       {erro && (
         <div className="mb-6 text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-4 py-3">
           Erro ao buscar dados do Supabase: {erro.message}
         </div>
       )}
-      <div className="mb-8 flex items-center gap-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-        {[
-          { id: "pipeline", label: "Pipeline" },
-          { id: "clientes", label: "Clientes" },
-        ].map((t) => (
-          <a
-            key={t.id}
-            href={t.id === "pipeline" ? "/admin" : `/admin?tab=${t.id}`}
-            style={{
-              padding: "10px 18px",
-              fontSize: 12,
-              fontWeight: 600,
-              textTransform: "uppercase",
-              letterSpacing: ".05em",
-              color: abaAtiva === t.id ? "#C9A84C" : "#7a7368",
-              borderBottom: abaAtiva === t.id ? "2px solid #C9A84C" : "2px solid transparent",
-              marginBottom: -1,
-              textDecoration: "none",
-            }}
-          >
-            {t.label}
-            {t.id === "pipeline" && leadsNovos.length > 0 && (
-              <span style={{ color: "#E8A838", marginLeft: 6 }}>({leadsNovos.length})</span>
-            )}
-          </a>
-        ))}
-      </div>
+      <AdminTabs active={abaAtiva} pipelineBadge={leadsNovos.length} />
 
       {abaAtiva === "pipeline" && (
         <div className="mb-8">

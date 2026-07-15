@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import ChavesForm from "./ChavesForm";
 import LicencaRow from "./LicencaRow";
+import AdminTabs from "../AdminTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -33,17 +34,15 @@ export default async function LicencasPage() {
           "radial-gradient(ellipse 900px 500px at 0% -10%, rgba(139,92,222,0.22), transparent 65%), #0A0A0A",
       }}
     >
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "#C9A84C" }}>
-            INK SYSTEM — Chaves de Acesso e Licenças
-          </span>
-          <div className="text-sm text-neutral-500 mt-1">
-            Configuração central de infraestrutura — afeta todos os CRMs dos estúdios-clientes.
-          </div>
+      <div className="mb-6">
+        <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "#C9A84C" }}>
+          INK SYSTEM — Chaves de Acesso e Licenças
+        </span>
+        <div className="text-sm text-neutral-500 mt-1">
+          Configuração central de infraestrutura — afeta todos os CRMs dos estúdios-clientes.
         </div>
-        <a href="/admin" className="text-sm text-neutral-400 hover:text-neutral-200">← Voltar ao painel</a>
       </div>
+      <AdminTabs active="licencas" />
 
       <ChavesForm cfg={cfg || null} />
 

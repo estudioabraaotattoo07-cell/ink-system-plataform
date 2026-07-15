@@ -1,18 +1,50 @@
-import LeadCard from "./LeadCard";
+import FichaCard, { type Ficha } from "./FichaCard";
+import { type Lead } from "./LeadCard";
 import { ESTAGIOS } from "./pipelineStages";
 
-type Lead = Parameters<typeof LeadCard>[0]["lead"];
+// Etapa mais "avançada" primeiro -- assim, se a pessoa mandar uma nova
+// solicitação depois de já ter avançado no pipeline, ela não volta pra Lead
+// só porque a solicitação nova nasceu com estagio padrão.
+const RANK: Record<string, number> = { lead: 0, contato_feito: 1, negociacao: 2, perdido: 3 };
+
+function agruparPorFicha(leads: Lead[]): Ficha[] {
+  const porEmail = new Map<string, Lead[]>();
+  for (const l of leads) {
+    const grupo = porEmail.get(l.email) ?? [];
+    grupo.push(l);
+    porEmail.set(l.email, grupo);
+  }
+
+  const fichas: Ficha[] = [];
+  for (const [email, solicitacoes] of porEmail) {
+    solicitacoes.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
+    const maisAvancada = solicitacoes.reduce((acc, l) => (RANK[l.estagio] ?? 0) > (RANK[acc.estagio] ?? 0) ? l : acc, solicitacoes[0]);
+    fichas.push({
+      email,
+      nome: solicitacoes.find((l) => l.nome)?.nome ?? null,
+      telefone: solicitacoes.find((l) => l.telefone)?.telefone ?? null,
+      estudio: solicitacoes.find((l) => l.estudio)?.estudio ?? null,
+      planoSugerido: solicitacoes.find((l) => l.plano_sugerido)?.plano_sugerido ?? null,
+      estagio: maisAvancada.estagio || "lead",
+      temNaoRespondida: solicitacoes.some((l) => l.status !== "respondido"),
+      solicitacoes,
+    });
+  }
+  fichas.sort((a, b) => +new Date(b.solicitacoes[0].created_at) - +new Date(a.solicitacoes[0].created_at));
+  return fichas;
+}
 
 export default function PipelineBoard({ leads }: { leads: Lead[] }) {
   if (leads.length === 0) {
     return <div className="text-sm text-neutral-500">Nenhuma solicitação recebida ainda.</div>;
   }
 
-  const porEstagio = new Map<string, Lead[]>();
+  const fichas = agruparPorFicha(leads);
+  const porEstagio = new Map<string, Ficha[]>();
   for (const estagio of ESTAGIOS) porEstagio.set(estagio.id, []);
-  for (const l of leads) {
-    const key = porEstagio.has(l.estagio) ? l.estagio : "lead";
-    porEstagio.get(key)!.push(l);
+  for (const f of fichas) {
+    const key = porEstagio.has(f.estagio) ? f.estagio : "lead";
+    porEstagio.get(key)!.push(f);
   }
 
   return (
@@ -31,7 +63,7 @@ export default function PipelineBoard({ leads }: { leads: Lead[] }) {
             {cards.length === 0 ? (
               <div className="text-neutral-600" style={{ fontSize: 11 }}>—</div>
             ) : (
-              cards.map((l) => <LeadCard key={l.id} lead={l} />)
+              cards.map((f) => <FichaCard key={f.email} ficha={f} />)
             )}
           </div>
         );

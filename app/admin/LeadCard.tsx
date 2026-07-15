@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { responderLead, moverLeadEstagio } from "./actions";
-import { ESTAGIOS } from "./pipelineStages";
+import { responderLead } from "./actions";
 
-type Lead = {
+export type Lead = {
   id: string;
   created_at: string;
   tipo: string;
@@ -20,10 +19,11 @@ type Lead = {
   resposta_admin: string | null;
 };
 
+// Um item de histórico dentro da ficha do cliente -- representa UMA
+// solicitação (um envio de formulário). A ficha inteira pode ter várias.
 export default function LeadCard({ lead }: { lead: Lead }) {
   const [resposta, setResposta] = useState("");
   const [pending, startTransition] = useTransition();
-  const [movendo, startMover] = useTransition();
   const [erro, setErro] = useState("");
 
   const enviar = () => {
@@ -35,49 +35,28 @@ export default function LeadCard({ lead }: { lead: Lead }) {
     });
   };
 
-  const mover = (novoEstagio: string) => {
-    startMover(async () => { await moverLeadEstagio(lead.id, novoEstagio); });
-  };
-
   return (
-    <div
-      style={{
-        border: `1px solid ${lead.status === "novo" ? "rgba(201,168,76,0.4)" : "rgba(255,255,255,0.08)"}`,
-        borderRadius: 10,
-        padding: "10px 12px",
-        marginBottom: 10,
-        background: lead.status === "novo" ? "rgba(201,168,76,0.05)" : "transparent",
-        opacity: movendo ? 0.5 : 1,
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 6 }}>
-        <div>
-          <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em", color: lead.tipo === "suporte" ? "#5B8DEF" : "#C9A84C" }}>
-            {lead.tipo === "suporte" ? "Suporte" : "Plano"}
-          </span>{" "}
-          <span className="text-neutral-100" style={{ fontSize: 13 }}>{lead.nome || "(sem nome)"}</span>
-          <div className="text-neutral-500" style={{ fontSize: 11 }}>
-            {lead.email}
-            {lead.telefone && <> · {lead.telefone}</>}
-            {lead.estudio && <> · {lead.estudio}</>}
-          </div>
-        </div>
-        <span className="text-xs text-neutral-500" style={{ fontSize: 10 }}>{new Date(lead.created_at).toLocaleDateString("pt-BR")}</span>
+    <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "10px 0" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 6 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em", color: lead.tipo === "suporte" ? "#5B8DEF" : "#C9A84C" }}>
+          {lead.tipo === "suporte" ? "Suporte" : "Plano"}
+        </span>
+        <span className="text-neutral-500" style={{ fontSize: 10 }}>{new Date(lead.created_at).toLocaleDateString("pt-BR")}</span>
       </div>
 
       {lead.plano_sugerido && (
-        <div className="text-neutral-400 mt-2" style={{ fontSize: 12 }}>Plano sugerido: <strong className="text-neutral-200">{lead.plano_sugerido}</strong></div>
+        <div className="text-neutral-400 mt-1" style={{ fontSize: 12 }}>Plano sugerido: <strong className="text-neutral-200">{lead.plano_sugerido}</strong></div>
       )}
       {lead.mensagem && (
-        <div className="text-neutral-300 mt-2 italic" style={{ fontSize: 12 }}>"{lead.mensagem}"</div>
+        <div className="text-neutral-300 mt-1 italic" style={{ fontSize: 12 }}>"{lead.mensagem}"</div>
       )}
 
       {lead.status === "respondido" ? (
-        <div className="text-sm text-green-400 mt-3 bg-green-950/30 border border-green-900 rounded-lg px-3 py-2" style={{ fontSize: 11 }}>
+        <div className="text-sm text-green-400 mt-2 bg-green-950/30 border border-green-900 rounded-lg px-3 py-2" style={{ fontSize: 11 }}>
           ✓ Respondido: {lead.resposta_admin}
         </div>
       ) : (
-        <div className="mt-3">
+        <div className="mt-2">
           <textarea
             value={resposta}
             onChange={(e) => setResposta(e.target.value)}
@@ -98,17 +77,6 @@ export default function LeadCard({ lead }: { lead: Lead }) {
           </div>
         </div>
       )}
-
-      <select
-        value={lead.estagio}
-        onChange={(e) => mover(e.target.value)}
-        disabled={movendo}
-        style={{ marginTop: 10, width: "100%", background: "#0A0A0A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 6, color: "#A09585", fontSize: 11, padding: "5px 8px", cursor: movendo ? "not-allowed" : "pointer" }}
-      >
-        {ESTAGIOS.map((e) => (
-          <option key={e.id} value={e.id}>{e.emoji} Mover para: {e.label}</option>
-        ))}
-      </select>
     </div>
   );
 }

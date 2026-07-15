@@ -39,13 +39,15 @@ export async function responderLead(leadId: string, resposta: string) {
   return { ok: true };
 }
 
-// Move um lead entre as colunas do pipeline (Lead / Contato Feito / Negociação
-// / Perdido) -- movimento manual por enquanto, sem drag-and-drop.
-export async function moverLeadEstagio(leadId: string, estagio: string) {
+// Move a FICHA inteira (todas as solicitações da mesma pessoa, agrupadas por
+// e-mail) entre as colunas do pipeline -- movimento manual por enquanto, sem
+// drag-and-drop. Atualiza todas as linhas daquele e-mail pra manter a etapa
+// consistente mesmo se a pessoa mandar uma solicitação nova depois.
+export async function moverFichaEstagio(email: string, estagio: string) {
   const ESTAGIOS_VALIDOS = ["lead", "contato_feito", "negociacao", "perdido"];
   if (!ESTAGIOS_VALIDOS.includes(estagio)) return { ok: false, error: "Etapa inválida." };
   const sb = getAdminClient();
-  const { error } = await sb.from("ink_leads").update({ estagio }).eq("id", leadId);
+  const { error } = await sb.from("ink_leads").update({ estagio }).eq("email", email);
   if (error) return { ok: false, error: error.message };
   revalidatePath("/admin");
   return { ok: true };
