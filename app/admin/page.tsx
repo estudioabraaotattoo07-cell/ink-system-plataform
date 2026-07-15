@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import LeadCard from "./LeadCard";
+import TestarEnvioButton from "./TestarEnvioButton";
 
 // Sempre busca dado fresco — nunca cachear/pré-renderizar a lista de clientes.
 export const dynamic = "force-dynamic";
@@ -178,6 +179,7 @@ export default async function AdminPage() {
               <th className="py-2 pr-4">Assessorias</th>
               <th className="py-2 pr-4">Extras comprados</th>
               <th className="py-2 pr-4">Chamados</th>
+              <th className="py-2 pr-4">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -208,12 +210,15 @@ export default async function AdminPage() {
                   <td className="py-2 pr-4">
                     {ch.abertos}/{ch.total}
                   </td>
+                  <td className="py-2 pr-4">
+                    <TestarEnvioButton clienteId={c.id} />
+                  </td>
                 </tr>
               );
             })}
             {linhas.length === 0 && (
               <tr>
-                <td colSpan={11} className="py-6 text-center text-neutral-500">
+                <td colSpan={12} className="py-6 text-center text-neutral-500">
                   Nenhum cliente cadastrado ainda.
                 </td>
               </tr>

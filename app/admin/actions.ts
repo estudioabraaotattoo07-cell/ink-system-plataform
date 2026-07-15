@@ -37,3 +37,32 @@ export async function responderLead(leadId: string, resposta: string) {
   revalidatePath("/admin");
   return { ok: true };
 }
+
+// Teste de envio isolado por estúdio-cliente — mora só aqui no admin (não no
+// CRM de cada estúdio), pra você conseguir diagnosticar se a falha é de um
+// cliente específico sem depender de nenhum botão dentro do CRM dele.
+export async function testarEnvioTenant(clienteId: string) {
+  const sb = getAdminClient();
+  const { data: cliente, error: errCliente } = await sb
+    .from("ink_clientes")
+    .select("slug, email, nome_estudio")
+    .eq("id", clienteId)
+    .single();
+  if (errCliente || !cliente) return { ok: false, error: "Cliente não encontrado." };
+  if (!cliente.email) return { ok: false, error: "Esse cliente não tem e-mail cadastrado." };
+  if (!cliente.slug) return { ok: false, error: "Esse cliente ainda não tem endereço (slug) definido." };
+
+  const remetente = `${cliente.nome_estudio || "INK SYSTEM"} <${cliente.slug}@inksystem.com.br>`;
+  const html = `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.8;color:#222;max-width:600px">Esta é uma mensagem de teste disparada pelo painel admin do INK SYSTEM pra verificar o envio de e-mail deste estúdio especificamente.</div>`;
+
+  const resp = await fetch("https://inq-saas.vercel.app/api/resend", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ from: remetente, to: cliente.email, subject: `Teste de envio — ${cliente.nome_estudio || "INK SYSTEM"}`, html }),
+  }).catch((e) => null);
+
+  if (!resp) return { ok: false, error: "Erro de conexão ao tentar enviar." };
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) return { ok: false, error: data?.message || data?.error || `Erro ${resp.status}` };
+  return { ok: true, destino: cliente.email };
+}
