@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import LeadCard from "./LeadCard";
+import PipelineBoard from "./PipelineBoard";
 import TestarEnvioButton from "./TestarEnvioButton";
 
 // Sempre busca dado fresco — nunca cachear/pré-renderizar a lista de clientes.
@@ -22,7 +22,9 @@ function diasParaVencimento(dataVenc: string | null) {
   return `${diff}d`;
 }
 
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab: tabParam } = await searchParams;
+  const abaAtiva = tabParam === "clientes" ? "clientes" : "pipeline";
   const sbAdmin = getAdminClient();
   const { data: clientes, error: erroClientes } = await sbAdmin
     .from("ink_clientes")
@@ -44,7 +46,6 @@ export default async function AdminPage() {
     .select("*")
     .order("created_at", { ascending: false });
   const leadsNovos = (leads ?? []).filter((l) => l.status === "novo");
-  const leadsRespondidos = (leads ?? []).filter((l) => l.status !== "novo");
 
   const anoMesAtual = new Date().toISOString().slice(0, 7);
   const { data: usoMensagem, error: erroUso } = await sbAdmin
@@ -121,137 +122,155 @@ export default async function AdminPage() {
           Erro ao buscar dados do Supabase: {erro.message}
         </div>
       )}
-      <div className="mb-8">
-        <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "#C9A84C", marginBottom: 10 }}>
-          Solicitações {leadsNovos.length > 0 && <span style={{ color: "#E8A838" }}>({leadsNovos.length} nova{leadsNovos.length > 1 ? "s" : ""})</span>}
+      <div className="mb-8 flex items-center gap-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+        {[
+          { id: "pipeline", label: "Pipeline" },
+          { id: "clientes", label: "Clientes" },
+        ].map((t) => (
+          <a
+            key={t.id}
+            href={t.id === "pipeline" ? "/admin" : `/admin?tab=${t.id}`}
+            style={{
+              padding: "10px 18px",
+              fontSize: 12,
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: ".05em",
+              color: abaAtiva === t.id ? "#C9A84C" : "#7a7368",
+              borderBottom: abaAtiva === t.id ? "2px solid #C9A84C" : "2px solid transparent",
+              marginBottom: -1,
+              textDecoration: "none",
+            }}
+          >
+            {t.label}
+            {t.id === "pipeline" && leadsNovos.length > 0 && (
+              <span style={{ color: "#E8A838", marginLeft: 6 }}>({leadsNovos.length})</span>
+            )}
+          </a>
+        ))}
+      </div>
+
+      {abaAtiva === "pipeline" && (
+        <div className="mb-8">
+          <PipelineBoard leads={leads ?? []} />
         </div>
-        {(leads ?? []).length === 0 ? (
-          <div className="text-sm text-neutral-500">Nenhuma solicitação recebida ainda.</div>
-        ) : (
-          <div style={{ maxWidth: 720 }}>
-            {leadsNovos.map((l) => <LeadCard key={l.id} lead={l} />)}
-            {leadsRespondidos.length > 0 && (
-              <details style={{ marginTop: 8 }}>
-                <summary className="text-sm text-neutral-500 cursor-pointer">Ver {leadsRespondidos.length} já respondida{leadsRespondidos.length > 1 ? "s" : ""}</summary>
-                <div style={{ marginTop: 10 }}>
-                  {leadsRespondidos.map((l) => <LeadCard key={l.id} lead={l} />)}
-                </div>
-              </details>
+      )}
+
+      {abaAtiva === "clientes" && (
+        <>
+          <div className="mb-8">
+            <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "#C9A84C", marginBottom: 10 }}>
+              Ranking de visitas nos sites (últimos 30 dias)
+            </div>
+            {ranking.length === 0 ? (
+              <div className="text-sm text-neutral-500">Nenhuma visita registrada ainda nos últimos 30 dias.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="text-sm border-collapse whitespace-nowrap">
+                  <thead>
+                    <tr className="text-left text-neutral-400 border-b border-neutral-800">
+                      <th className="py-2 pr-4">#</th>
+                      <th className="py-2 pr-4">Estúdio</th>
+                      <th className="py-2 pr-4">Visitas</th>
+                      <th className="py-2 pr-4">Cliques em CTA</th>
+                      <th className="py-2 pr-4">Conversão</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ranking.map((r, i) => (
+                      <tr key={r.cliente.id} className="border-b border-neutral-900">
+                        <td className="py-2 pr-4 text-neutral-500">{i + 1}º</td>
+                        <td className="py-2 pr-4">
+                          {r.cliente.nome_estudio || "—"} <span className="text-neutral-500">/{r.cliente.slug}</span>
+                        </td>
+                        <td className="py-2 pr-4">{r.visitas}</td>
+                        <td className="py-2 pr-4">{r.cliques}</td>
+                        <td className="py-2 pr-4">{r.visitas > 0 ? `${((r.cliques / r.visitas) * 100).toFixed(0)}%` : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
-        )}
-      </div>
-      <div className="mb-8">
-        <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "#C9A84C", marginBottom: 10 }}>
-          Ranking de visitas nos sites (últimos 30 dias)
-        </div>
-        {ranking.length === 0 ? (
-          <div className="text-sm text-neutral-500">Nenhuma visita registrada ainda nos últimos 30 dias.</div>
-        ) : (
           <div className="overflow-x-auto">
-            <table className="text-sm border-collapse whitespace-nowrap">
+            <table className="w-full text-sm border-collapse whitespace-nowrap">
               <thead>
                 <tr className="text-left text-neutral-400 border-b border-neutral-800">
-                  <th className="py-2 pr-4">#</th>
                   <th className="py-2 pr-4">Estúdio</th>
-                  <th className="py-2 pr-4">Visitas</th>
-                  <th className="py-2 pr-4">Cliques em CTA</th>
-                  <th className="py-2 pr-4">Conversão</th>
+                  <th className="py-2 pr-4">E-mail</th>
+                  <th className="py-2 pr-4">Plano</th>
+                  <th className="py-2 pr-4">Status</th>
+                  <th className="py-2 pr-4">Vencimento</th>
+                  <th className="py-2 pr-4">Storage</th>
+                  <th className="py-2 pr-4">SMS/mês</th>
+                  <th className="py-2 pr-4">Artistas</th>
+                  <th className="py-2 pr-4">Assessorias</th>
+                  <th className="py-2 pr-4">Extras comprados</th>
+                  <th className="py-2 pr-4">Falhas (30d)</th>
+                  <th className="py-2 pr-4">Chamados</th>
+                  <th className="py-2 pr-4">Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {ranking.map((r, i) => (
-                  <tr key={r.cliente.id} className="border-b border-neutral-900">
-                    <td className="py-2 pr-4 text-neutral-500">{i + 1}º</td>
-                    <td className="py-2 pr-4">
-                      {r.cliente.nome_estudio || "—"} <span className="text-neutral-500">/{r.cliente.slug}</span>
+                {linhas.map((c) => {
+                  const ch = chamadosPorCliente.get(c.id) ?? { total: 0, abertos: 0 };
+                  const extras = usoPorUser.get(c.auth_user_id);
+                  const falhasCliente = falhasPorUser.get(c.auth_user_id);
+                  return (
+                    <tr key={c.id} className="border-b border-neutral-900">
+                      <td className="py-2 pr-4">
+                        {c.nome_estudio || "—"} <span className="text-neutral-500">/{c.slug}</span>
+                      </td>
+                      <td className="py-2 pr-4">{c.email}</td>
+                      <td className="py-2 pr-4">{c.plano || "—"}</td>
+                      <td className="py-2 pr-4">{c.status}</td>
+                      <td className="py-2 pr-4">{diasParaVencimento(c.data_vencimento)}</td>
+                      <td className="py-2 pr-4">{c.storage_usado_mb ?? 0}MB</td>
+                      <td className="py-2 pr-4">{c.sms_usados_mes ?? 0}</td>
+                      <td className="py-2 pr-4">{c.artistas_count ?? 0}</td>
+                      <td className="py-2 pr-4">{c.assessorias_usadas_mes ?? 0}</td>
+                      <td className="py-2 pr-4 text-neutral-500">
+                        {extras && (extras.emailsComprados > 0 || extras.smsComprados > 0)
+                          ? [
+                              extras.smsComprados > 0 ? `+${extras.smsComprados} SMS` : null,
+                              extras.emailsComprados > 0 ? `+${extras.emailsComprados} e-mail` : null,
+                            ].filter(Boolean).join(" · ")
+                          : "—"}
+                      </td>
+                      <td className="py-2 pr-4">
+                        {falhasCliente && falhasCliente.total > 0 ? (
+                          <span
+                            title={`Último: ${falhasCliente.ultimoCanal} — ${falhasCliente.ultimoMotivo || "sem detalhe"}`}
+                            style={{ background: "rgba(231,76,60,.15)", color: "#E74C3C", border: "1px solid rgba(231,76,60,.4)", borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 700, cursor: "help" }}
+                          >
+                            {falhasCliente.total}
+                          </span>
+                        ) : (
+                          <span className="text-neutral-600">0</span>
+                        )}
+                      </td>
+                      <td className="py-2 pr-4">
+                        {ch.abertos}/{ch.total}
+                      </td>
+                      <td className="py-2 pr-4">
+                        <TestarEnvioButton clienteId={c.id} />
+                      </td>
+                    </tr>
+                  );
+                })}
+                {linhas.length === 0 && (
+                  <tr>
+                    <td colSpan={13} className="py-6 text-center text-neutral-500">
+                      Nenhum cliente cadastrado ainda.
                     </td>
-                    <td className="py-2 pr-4">{r.visitas}</td>
-                    <td className="py-2 pr-4">{r.cliques}</td>
-                    <td className="py-2 pr-4">{r.visitas > 0 ? `${((r.cliques / r.visitas) * 100).toFixed(0)}%` : "—"}</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
-        )}
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm border-collapse whitespace-nowrap">
-          <thead>
-            <tr className="text-left text-neutral-400 border-b border-neutral-800">
-              <th className="py-2 pr-4">Estúdio</th>
-              <th className="py-2 pr-4">E-mail</th>
-              <th className="py-2 pr-4">Plano</th>
-              <th className="py-2 pr-4">Status</th>
-              <th className="py-2 pr-4">Vencimento</th>
-              <th className="py-2 pr-4">Storage</th>
-              <th className="py-2 pr-4">SMS/mês</th>
-              <th className="py-2 pr-4">Artistas</th>
-              <th className="py-2 pr-4">Assessorias</th>
-              <th className="py-2 pr-4">Extras comprados</th>
-              <th className="py-2 pr-4">Falhas (30d)</th>
-              <th className="py-2 pr-4">Chamados</th>
-              <th className="py-2 pr-4">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {linhas.map((c) => {
-              const ch = chamadosPorCliente.get(c.id) ?? { total: 0, abertos: 0 };
-              const extras = usoPorUser.get(c.auth_user_id);
-              const falhasCliente = falhasPorUser.get(c.auth_user_id);
-              return (
-                <tr key={c.id} className="border-b border-neutral-900">
-                  <td className="py-2 pr-4">
-                    {c.nome_estudio || "—"} <span className="text-neutral-500">/{c.slug}</span>
-                  </td>
-                  <td className="py-2 pr-4">{c.email}</td>
-                  <td className="py-2 pr-4">{c.plano || "—"}</td>
-                  <td className="py-2 pr-4">{c.status}</td>
-                  <td className="py-2 pr-4">{diasParaVencimento(c.data_vencimento)}</td>
-                  <td className="py-2 pr-4">{c.storage_usado_mb ?? 0}MB</td>
-                  <td className="py-2 pr-4">{c.sms_usados_mes ?? 0}</td>
-                  <td className="py-2 pr-4">{c.artistas_count ?? 0}</td>
-                  <td className="py-2 pr-4">{c.assessorias_usadas_mes ?? 0}</td>
-                  <td className="py-2 pr-4 text-neutral-500">
-                    {extras && (extras.emailsComprados > 0 || extras.smsComprados > 0)
-                      ? [
-                          extras.smsComprados > 0 ? `+${extras.smsComprados} SMS` : null,
-                          extras.emailsComprados > 0 ? `+${extras.emailsComprados} e-mail` : null,
-                        ].filter(Boolean).join(" · ")
-                      : "—"}
-                  </td>
-                  <td className="py-2 pr-4">
-                    {falhasCliente && falhasCliente.total > 0 ? (
-                      <span
-                        title={`Último: ${falhasCliente.ultimoCanal} — ${falhasCliente.ultimoMotivo || "sem detalhe"}`}
-                        style={{ background: "rgba(231,76,60,.15)", color: "#E74C3C", border: "1px solid rgba(231,76,60,.4)", borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 700, cursor: "help" }}
-                      >
-                        {falhasCliente.total}
-                      </span>
-                    ) : (
-                      <span className="text-neutral-600">0</span>
-                    )}
-                  </td>
-                  <td className="py-2 pr-4">
-                    {ch.abertos}/{ch.total}
-                  </td>
-                  <td className="py-2 pr-4">
-                    <TestarEnvioButton clienteId={c.id} />
-                  </td>
-                </tr>
-              );
-            })}
-            {linhas.length === 0 && (
-              <tr>
-                <td colSpan={13} className="py-6 text-center text-neutral-500">
-                  Nenhum cliente cadastrado ainda.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+        </>
+      )}
     </main>
   );
 }
