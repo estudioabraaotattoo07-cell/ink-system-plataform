@@ -19,6 +19,9 @@ const nextConfig: NextConfig = {
     return [
       { source: "/login", destination: "https://inq-saas.vercel.app/" },
       { source: "/assets/:path*", destination: "https://inq-saas.vercel.app/assets/:path*" },
+      // Site público de cada estúdio (inksystem.com.br/slug) — motor real fica
+      // no inq-saas (api/lead.js?acao=site), preservando o domínio na barra.
+      { source: "/:slug", destination: "https://inq-saas.vercel.app/api/lead?acao=site&slug=:slug" },
     ];
   },
 };
