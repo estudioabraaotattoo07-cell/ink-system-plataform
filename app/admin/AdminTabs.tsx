@@ -7,7 +7,7 @@ const TABS = [
 
 export default function AdminTabs({ active, pipelineBadge }: { active: "pipeline" | "clientes" | "financeiro" | "licencas"; pipelineBadge?: number }) {
   return (
-    <div className="mb-8 flex items-center gap-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+    <div className="mb-8 flex items-center gap-2" style={{ borderBottom: "1px solid rgba(201,168,76,0.18)" }}>
       {TABS.map((t) => (
         <a
           key={t.id}

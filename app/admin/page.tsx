@@ -111,7 +111,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           "radial-gradient(ellipse 900px 500px at 0% -10%, rgba(139,92,222,0.22), transparent 65%), #0A0A0A",
       }}
     >
-      <div className="mb-8 flex items-center gap-5" style={{ justifyContent: "space-between" }}>
+      <div className="mb-8 flex items-center gap-5" style={{ justifyContent: "space-between", borderBottom: "1px solid rgba(201,168,76,0.18)", paddingBottom: 20 }}>
         <div className="flex items-center gap-5">
           <img
             src="/logo-ink-system.png"
