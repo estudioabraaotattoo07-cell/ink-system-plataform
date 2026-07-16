@@ -86,8 +86,17 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     statsPorUser.set(s.user_id, cur);
   }
 
+  // Uso do dia (todos os tenants somados) -- mostrado no "relojinho" do cabeçalho.
+  const hojeStr = new Date().toISOString().slice(0, 10);
+  const { data: usoHoje, error: erroUsoHoje } = await sbAdmin
+    .from("mensageria_diario")
+    .select("emails_enviados, sms_enviados")
+    .eq("dia", hojeStr);
+  const emailsHoje = (usoHoje ?? []).reduce((s, u) => s + (u.emails_enviados || 0), 0);
+  const smsHoje = (usoHoje ?? []).reduce((s, u) => s + (u.sms_enviados || 0), 0);
+
   const linhas = clientes ?? [];
-  const erro = erroClientes || erroChamados || erroStats || erroLeads || erroUso || erroFalhas;
+  const erro = erroClientes || erroChamados || erroStats || erroLeads || erroUso || erroFalhas || erroUsoHoje;
 
   const ranking = linhas
     .map((c) => ({ cliente: c, ...( statsPorUser.get(c.auth_user_id) ?? { visitas: 0, cliques: 0 } ) }))
@@ -102,16 +111,31 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           "radial-gradient(ellipse 900px 500px at 0% -10%, rgba(139,92,222,0.22), transparent 65%), #0A0A0A",
       }}
     >
-      <div className="mb-8 flex items-center gap-5">
-        <img
-          src="/logo-ink-system.png"
-          alt="INK SYSTEM"
-          style={{ height: 44, width: "auto", display: "block" }}
-        />
-        <div style={{ width: 1, height: 56, background: "linear-gradient(to bottom, transparent, #C9A84C, transparent)", boxShadow: "0 0 6px rgba(201,168,76,0.5)" }} />
-        <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "#C9A84C", textShadow: "0 0 12px rgba(201,168,76,0.4)" }}>
-          Painel do Administrador
-        </span>
+      <div className="mb-8 flex items-center gap-5" style={{ justifyContent: "space-between" }}>
+        <div className="flex items-center gap-5">
+          <img
+            src="/logo-ink-system.png"
+            alt="INK SYSTEM"
+            style={{ height: 44, width: "auto", display: "block" }}
+          />
+          <div style={{ width: 1, height: 56, background: "linear-gradient(to bottom, transparent, #C9A84C, transparent)", boxShadow: "0 0 6px rgba(201,168,76,0.5)" }} />
+          <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "#C9A84C", textShadow: "0 0 12px rgba(201,168,76,0.4)" }}>
+            Painel do Administrador
+          </span>
+        </div>
+        <div title="Total de todos os estúdios, hoje" style={{ display: "flex", gap: 14, background: "#0A0A0A", border: "1px solid rgba(201,168,76,0.25)", borderRadius: 999, padding: "8px 18px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontSize: 14 }}>📧</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#E8E2D9" }}>{emailsHoje}</span>
+            <span style={{ fontSize: 10, color: "#6B5E54" }}>hoje</span>
+          </div>
+          <div style={{ width: 1, background: "rgba(201,168,76,0.2)" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontSize: 14 }}>💬</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#E8E2D9" }}>{smsHoje}</span>
+            <span style={{ fontSize: 10, color: "#6B5E54" }}>hoje</span>
+          </div>
+        </div>
       </div>
       {erro && (
         <div className="mb-6 text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-4 py-3">
