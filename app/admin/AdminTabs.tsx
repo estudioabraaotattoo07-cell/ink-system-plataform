@@ -1,10 +1,11 @@
 const TABS = [
   { id: "pipeline", label: "Pipeline", href: "/admin" },
   { id: "clientes", label: "Clientes", href: "/admin?tab=clientes" },
+  { id: "financeiro", label: "Financeiro", href: "/admin/financeiro" },
   { id: "licencas", label: "Chaves de Acesso", href: "/admin/licencas" },
 ] as const;
 
-export default function AdminTabs({ active, pipelineBadge }: { active: "pipeline" | "clientes" | "licencas"; pipelineBadge?: number }) {
+export default function AdminTabs({ active, pipelineBadge }: { active: "pipeline" | "clientes" | "financeiro" | "licencas"; pipelineBadge?: number }) {
   return (
     <div className="mb-8 flex items-center gap-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
       {TABS.map((t) => (
