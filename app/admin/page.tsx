@@ -164,22 +164,14 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             )}
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse whitespace-nowrap">
+            <table style={{ width: "100%", borderCollapse: "collapse", whiteSpace: "nowrap" }}>
               <thead>
-                <tr className="text-left text-neutral-400 border-b border-neutral-800">
-                  <th className="py-2 pr-4">Estúdio</th>
-                  <th className="py-2 pr-4">E-mail</th>
-                  <th className="py-2 pr-4">Plano</th>
-                  <th className="py-2 pr-4">Status</th>
-                  <th className="py-2 pr-4">Vencimento</th>
-                  <th className="py-2 pr-4">Storage</th>
-                  <th className="py-2 pr-4">SMS/mês</th>
-                  <th className="py-2 pr-4">Artistas</th>
-                  <th className="py-2 pr-4">Assessorias</th>
-                  <th className="py-2 pr-4">Extras comprados</th>
-                  <th className="py-2 pr-4">Falhas (30d)</th>
-                  <th className="py-2 pr-4">Chamados</th>
-                  <th className="py-2 pr-4">Ações</th>
+                <tr>
+                  {["Estúdio", "E-mail", "Plano", "Status", "Vencimento", "Storage", "SMS/mês", "Artistas", "Assessorias", "Extras comprados", "Falhas (30d)", "Chamados", "Ações"].map((h) => (
+                    <th key={h} style={{ background: "#0A0A0A", borderBottom: "1px solid rgba(201,168,76,0.45)", padding: "12px 16px", fontSize: 10, letterSpacing: ".09em", textTransform: "uppercase", color: "#C9A84C", fontWeight: 600, textAlign: "left" }}>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -187,20 +179,39 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                   const ch = chamadosPorCliente.get(c.id) ?? { total: 0, abertos: 0 };
                   const extras = usoPorUser.get(c.auth_user_id);
                   const falhasCliente = falhasPorUser.get(c.auth_user_id);
+                  const planoCor = c.plano === "ouro" ? "#C9A84C" : c.plano === "prata" ? "#B8BCC4" : c.plano === "bronze" ? "#CD7F32" : "#A09585";
+                  const statusCor = c.status === "ativo" ? "#27AE60" : ["suspenso", "inativo", "cancelado", "vencido"].includes(c.status) ? "#E74C3C" : c.status === "teste" ? "#4A9EBF" : "#A09585";
+                  const td = { background: "#0A0A0A", borderBottom: "1px solid rgba(201,168,76,0.18)", padding: "14px 16px", fontSize: 12, color: "#E8E2D9", verticalAlign: "middle" as const, lineHeight: 1.4 };
                   return (
-                    <tr key={c.id} className="border-b border-neutral-900">
-                      <td className="py-2 pr-4">
-                        {c.nome_estudio || "—"} <span className="text-neutral-500">/{c.slug}</span>
+                    <tr key={c.id}>
+                      <td style={td}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(201,168,76,0.13)", border: "1px solid rgba(201,168,76,0.45)", color: "#C9A84C", fontFamily: "'Cormorant Garamond',serif", fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            {c.nome_estudio?.[0]?.toUpperCase() || "?"}
+                          </div>
+                          <div>
+                            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 14, fontWeight: 600, lineHeight: 1.4 }}>{c.nome_estudio || "—"}</div>
+                            <div style={{ color: "#A09585", fontSize: 11 }}>/{c.slug}</div>
+                          </div>
+                        </div>
                       </td>
-                      <td className="py-2 pr-4">{c.email}</td>
-                      <td className="py-2 pr-4">{c.plano || "—"}</td>
-                      <td className="py-2 pr-4">{c.status}</td>
-                      <td className="py-2 pr-4">{diasParaVencimento(c.data_vencimento)}</td>
-                      <td className="py-2 pr-4">{c.storage_usado_mb ?? 0}MB</td>
-                      <td className="py-2 pr-4">{c.sms_usados_mes ?? 0}</td>
-                      <td className="py-2 pr-4">{c.artistas_count ?? 0}</td>
-                      <td className="py-2 pr-4">{c.assessorias_usadas_mes ?? 0}</td>
-                      <td className="py-2 pr-4 text-neutral-500">
+                      <td style={td}>{c.email}</td>
+                      <td style={td}>
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase", display: "inline-block", background: planoCor + "22", color: planoCor, border: "1px solid " + planoCor + "55" }}>
+                          {c.plano || "—"}
+                        </span>
+                      </td>
+                      <td style={td}>
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase", display: "inline-block", background: statusCor + "22", color: statusCor, border: "1px solid " + statusCor + "55" }}>
+                          {c.status}
+                        </span>
+                      </td>
+                      <td style={td}>{diasParaVencimento(c.data_vencimento)}</td>
+                      <td style={td}>{c.storage_usado_mb ?? 0}MB</td>
+                      <td style={td}>{c.sms_usados_mes ?? 0}</td>
+                      <td style={td}>{c.artistas_count ?? 0}</td>
+                      <td style={td}>{c.assessorias_usadas_mes ?? 0}</td>
+                      <td style={{ ...td, color: "#A09585" }}>
                         {extras && (extras.emailsComprados > 0 || extras.smsComprados > 0)
                           ? [
                               extras.smsComprados > 0 ? `+${extras.smsComprados} SMS` : null,
@@ -208,7 +219,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                             ].filter(Boolean).join(" · ")
                           : "—"}
                       </td>
-                      <td className="py-2 pr-4">
+                      <td style={td}>
                         {falhasCliente && falhasCliente.total > 0 ? (
                           <span
                             title={`Último: ${falhasCliente.ultimoCanal} — ${falhasCliente.ultimoMotivo || "sem detalhe"}`}
@@ -217,13 +228,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                             {falhasCliente.total}
                           </span>
                         ) : (
-                          <span className="text-neutral-600">0</span>
+                          <span style={{ color: "#706860" }}>0</span>
                         )}
                       </td>
-                      <td className="py-2 pr-4">
+                      <td style={td}>
                         {ch.abertos}/{ch.total}
                       </td>
-                      <td className="py-2 pr-4">
+                      <td style={td}>
                         <TestarEnvioButton clienteId={c.id} />
                       </td>
                     </tr>
@@ -231,7 +242,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 })}
                 {linhas.length === 0 && (
                   <tr>
-                    <td colSpan={13} className="py-6 text-center text-neutral-500">
+                    <td colSpan={13} style={{ background: "#0A0A0A", padding: "24px 16px", textAlign: "center", color: "#A09585" }}>
                       Nenhum cliente cadastrado ainda.
                     </td>
                   </tr>
