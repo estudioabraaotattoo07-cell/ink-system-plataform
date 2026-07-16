@@ -48,15 +48,19 @@ export default function PipelineBoard({ leads }: { leads: Lead[] }) {
   }
 
   return (
-    <div style={{ display: "flex", gap: 14, overflowX: "auto", padding: "14px 4px 4px" }}>
+    <div style={{ display: "flex", gap: 14, overflowX: "auto", padding: "54px 4px 4px" }}>
       {ESTAGIOS.map((estagio) => {
         const cards = porEstagio.get(estagio.id) ?? [];
         return (
-          <div key={estagio.id} style={{ minWidth: 160, maxWidth: 160 }}>
+          <div key={estagio.id} style={{ minWidth: 160, maxWidth: 160, position: "relative" }}>
+            <div style={{
+              position: "absolute", top: -14, left: 8, right: 8, height: 56,
+              background: estagio.color, filter: "blur(28px)", opacity: 0.36,
+              zIndex: -1, borderRadius: "50%", pointerEvents: "none",
+            }} />
             <div style={{
               padding: "12px 14px", minHeight: 66, borderRadius: "14px 14px 0 0",
-              background: `radial-gradient(ellipse 140px 46px at 50% -6%, ${estagio.color}66, transparent 72%), #0A0A0A`,
-              border: "1px solid rgba(201,168,76,0.18)", borderBottom: `2px solid ${estagio.color}`,
+              background: "#0A0A0A", border: "1px solid rgba(201,168,76,0.18)", borderBottom: `2px solid ${estagio.color}`,
               display: "flex", alignItems: "center", justifyContent: "space-between",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
