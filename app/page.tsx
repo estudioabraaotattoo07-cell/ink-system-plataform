@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 // Vídeo institucional — troque pelo ID real do YouTube quando estiver pronto
 // (o ID é o trecho depois de "v=" na URL do vídeo).
 const YOUTUBE_VIDEO_ID = "";
@@ -6,17 +8,63 @@ const WHATSAPP_SUPORTE = "https://wa.me/5527999598230";
 const PLANOS = [
   {
     id: "bronze", nome: "Bronze", preco: "R$297", artistas: "até 2", sms: 50, email: 120, storage: "1GB", assessorias: 1, destaque: false,
-    metal: "linear-gradient(135deg, #E8B389 0%, #C1783F 25%, #8B5628 50%, #C1783F 75%, #E8B389 100%)",
+    metal: "linear-gradient(135deg, #B8703F 0%, #8B4226 25%, #3D2410 50%, #8B4226 75%, #B8703F 100%)",
+    metalBtn: "linear-gradient(135deg, #C88755 0%, #8B4226 30%, #B8703F 55%, #6B3418 80%, #C88755 100%)",
+    corBorda: "#2A1508",
+    corParafuso: "#8B4226",
+    corTexto: "#FBF0E4",
   },
   {
     id: "prata", nome: "Prata", preco: "R$497", artistas: "até 4", sms: 100, email: 200, storage: "3GB", assessorias: 2, destaque: true,
-    metal: "linear-gradient(135deg, #F5F5F5 0%, #C8C8C8 25%, #888888 50%, #C8C8C8 75%, #F5F5F5 100%)",
+    metal: "linear-gradient(135deg, #B8B8B8 0%, #888888 25%, #4A4A4A 50%, #888888 75%, #B8B8B8 100%)",
+    metalBtn: "linear-gradient(135deg, #D0D0D0 0%, #888888 30%, #B8B8B8 55%, #5A5A5A 80%, #D0D0D0 100%)",
+    corBorda: "#1E1E1E",
+    corParafuso: "#8A8A8A",
+    corTexto: "#F5F5F5",
   },
   {
     id: "ouro", nome: "Ouro", preco: "R$597", artistas: "até 6", sms: 200, email: 400, storage: "10GB", assessorias: 4, destaque: false,
-    metal: "linear-gradient(135deg, #FFF4D1 0%, #E8C97A 25%, #C9A84C 50%, #E8C97A 75%, #FFF4D1 100%)",
+    metal: "linear-gradient(135deg, #FFFBEF 0%, #E8C97A 20%, #C9A84C 40%, #FFFBEF 55%, #C9A84C 70%, #E8C97A 85%, #FFFBEF 100%)",
+    metalBtn: "linear-gradient(135deg, #FFFDF5 0%, #E8C97A 25%, #C9A84C 50%, #8a6a24 75%, #E8C97A 100%)",
+    corBorda: "#6B4F14",
+    corParafuso: "#C9A84C",
+    corTexto: "#1A1006",
   },
 ];
+
+function Parafuso({ cor, corner }: { cor: string; corner: "tl" | "tr" | "bl" | "br" }) {
+  const pos: CSSProperties =
+    corner === "tl" ? { top: 8, left: 8 } :
+    corner === "tr" ? { top: 8, right: 8 } :
+    corner === "bl" ? { bottom: 8, left: 8 } :
+    { bottom: 8, right: 8 };
+  return (
+    <div
+      style={{
+        position: "absolute",
+        width: 13,
+        height: 13,
+        borderRadius: "50%",
+        background: `radial-gradient(circle at 35% 30%, #fff 0%, ${cor} 45%, rgba(0,0,0,0.75) 100%)`,
+        boxShadow: "0 1px 3px rgba(0,0,0,0.7), inset 0 0 2px rgba(0,0,0,0.5)",
+        ...pos,
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "18%",
+          right: "18%",
+          height: 1.5,
+          background: "rgba(0,0,0,0.6)",
+          transform: "translateY(-50%) rotate(18deg)",
+          borderRadius: 1,
+        }}
+      />
+    </div>
+  );
+}
 
 export default function LandingPage() {
   return (
@@ -149,24 +197,34 @@ export default function LandingPage() {
               rel="noopener noreferrer"
               className="plan-card"
               style={{
+                position: "relative",
                 borderRadius: 14,
-                padding: 24,
+                padding: 26,
                 display: "flex",
                 flexDirection: "column",
                 gap: 10,
                 background: p.metal,
                 textDecoration: "none",
-                boxShadow: p.destaque ? "0 0 40px rgba(220,220,220,0.25)" : "0 0 24px rgba(0,0,0,0.35)",
+                border: `3px solid ${p.corBorda}`,
+                boxShadow: [
+                  "inset 0 2px 0 rgba(255,255,255,0.35)",
+                  "inset 0 -4px 8px rgba(0,0,0,0.4)",
+                  p.destaque ? "0 12px 32px rgba(220,220,220,0.2)" : "0 12px 32px rgba(0,0,0,0.5)",
+                ].join(", "),
               }}
             >
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 700, color: "#1A1006" }}>
+              <Parafuso cor={p.corParafuso} corner="tl" />
+              <Parafuso cor={p.corParafuso} corner="tr" />
+              <Parafuso cor={p.corParafuso} corner="bl" />
+              <Parafuso cor={p.corParafuso} corner="br" />
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 700, color: p.corTexto, textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
                 {p.nome}
               </div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 30, fontWeight: 700, color: "#1A1006" }}>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 30, fontWeight: 700, color: p.corTexto, textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
                 {p.preco}
-                <span style={{ fontSize: 13, color: "rgba(26,16,6,0.65)", fontFamily: "'DM Sans', sans-serif", fontWeight: 400 }}>/mês</span>
+                <span style={{ fontSize: 13, opacity: 0.75, fontFamily: "'DM Sans', sans-serif", fontWeight: 400 }}>/mês</span>
               </div>
-              <ul style={{ fontSize: 13, color: "rgba(26,16,6,0.8)", fontWeight: 500, display: "flex", flexDirection: "column", gap: 6, marginTop: 6, paddingLeft: 0, listStyle: "none" }}>
+              <ul style={{ fontSize: 13, color: p.corTexto, opacity: 0.9, fontWeight: 500, textShadow: "0 1px 2px rgba(0,0,0,0.4)", display: "flex", flexDirection: "column", gap: 6, marginTop: 6, paddingLeft: 0, listStyle: "none" }}>
                 <li>Artistas: {p.artistas}</li>
                 <li>SMS/mês: {p.sms}</li>
                 <li>E-mail/mês: {p.email}</li>
@@ -177,12 +235,19 @@ export default function LandingPage() {
                 style={{
                   marginTop: 14,
                   textAlign: "center",
-                  background: "#0A0A0A",
-                  color: "#E8E2D9",
+                  background: p.metalBtn,
+                  color: p.corTexto,
                   fontWeight: 700,
                   borderRadius: 8,
-                  padding: "11px 0",
+                  padding: "12px 0",
                   fontSize: 13,
+                  border: `1px solid ${p.corBorda}`,
+                  textShadow: "0 1px 2px rgba(0,0,0,0.35)",
+                  boxShadow: [
+                    "inset 0 1px 0 rgba(255,255,255,0.6)",
+                    "inset 0 -2px 3px rgba(0,0,0,0.3)",
+                    "0 8px 18px rgba(0,0,0,0.55)",
+                  ].join(", "),
                 }}
               >
                 Assinar
