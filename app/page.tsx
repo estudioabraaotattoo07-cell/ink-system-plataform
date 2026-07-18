@@ -4,9 +4,18 @@ const YOUTUBE_VIDEO_ID = "";
 const WHATSAPP_SUPORTE = "https://wa.me/5527999598230";
 
 const PLANOS = [
-  { id: "bronze", nome: "Bronze", preco: "R$297", artistas: "até 2", sms: 50, email: 120, storage: "1GB", assessorias: 1, destaque: false },
-  { id: "prata", nome: "Prata", preco: "R$497", artistas: "até 4", sms: 100, email: 200, storage: "3GB", assessorias: 2, destaque: true },
-  { id: "ouro", nome: "Ouro", preco: "R$597", artistas: "até 6", sms: 200, email: 400, storage: "5GB", assessorias: 4, destaque: false },
+  {
+    id: "bronze", nome: "Bronze", preco: "R$297", artistas: "até 2", sms: 50, email: 120, storage: "1GB", assessorias: 1, destaque: false,
+    metal: "linear-gradient(135deg, #E8B389 0%, #C1783F 25%, #8B5628 50%, #C1783F 75%, #E8B389 100%)",
+  },
+  {
+    id: "prata", nome: "Prata", preco: "R$497", artistas: "até 4", sms: 100, email: 200, storage: "3GB", assessorias: 2, destaque: true,
+    metal: "linear-gradient(135deg, #F5F5F5 0%, #C8C8C8 25%, #888888 50%, #C8C8C8 75%, #F5F5F5 100%)",
+  },
+  {
+    id: "ouro", nome: "Ouro", preco: "R$597", artistas: "até 6", sms: 200, email: 400, storage: "10GB", assessorias: 4, destaque: false,
+    metal: "linear-gradient(135deg, #FFF4D1 0%, #E8C97A 25%, #C9A84C 50%, #E8C97A 75%, #FFF4D1 100%)",
+  },
 ];
 
 export default function LandingPage() {
@@ -135,49 +144,65 @@ export default function LandingPage() {
               key={p.nome}
               style={{
                 borderRadius: 14,
-                padding: 26,
-                display: "flex",
-                flexDirection: "column",
-                gap: 10,
-                background: p.destaque
-                  ? "linear-gradient(160deg, rgba(139,92,222,0.12), rgba(11,11,15,0.9))"
-                  : "#0B0B0F",
-                border: p.destaque ? "1px solid rgba(201,168,76,0.5)" : "1px solid rgba(201,168,76,0.15)",
-                boxShadow: p.destaque ? "0 0 40px rgba(201,168,76,0.08)" : "none",
+                padding: 2,
+                background: p.metal,
+                boxShadow: p.destaque ? "0 0 40px rgba(200,200,200,0.12)" : "0 0 24px rgba(0,0,0,0.3)",
               }}
             >
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 700, color: "#C9A84C" }}>
-                {p.nome}
-              </div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 30, fontWeight: 700, color: "#E8E2D9" }}>
-                {p.preco}
-                <span style={{ fontSize: 13, color: "#6B5E54", fontFamily: "'DM Sans', sans-serif", fontWeight: 400 }}>/mês</span>
-              </div>
-              <ul style={{ fontSize: 13, color: "#A79A8A", display: "flex", flexDirection: "column", gap: 6, marginTop: 6, paddingLeft: 0, listStyle: "none" }}>
-                <li>Artistas: {p.artistas}</li>
-                <li>SMS/mês: {p.sms}</li>
-                <li>E-mail/mês: {p.email}</li>
-                <li>Storage: {p.storage}</li>
-                <li>Assessorias/mês: {p.assessorias}</li>
-              </ul>
-              <a
-                href={WHATSAPP_SUPORTE}
-                target="_blank"
-                rel="noopener noreferrer"
+              <div
                 style={{
-                  marginTop: 14,
-                  textAlign: "center",
-                  background: "linear-gradient(135deg, #C9A84C, #a07830)",
-                  color: "#0A0A0A",
-                  fontWeight: 700,
-                  borderRadius: 8,
-                  padding: "11px 0",
-                  fontSize: 13,
-                  textDecoration: "none",
+                  borderRadius: 12,
+                  padding: 24,
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10,
+                  background: "#0B0B0F",
                 }}
               >
-                Assinar
-              </a>
+                <div
+                  style={{
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontSize: 20,
+                    fontWeight: 700,
+                    background: p.metal,
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}
+                >
+                  {p.nome}
+                </div>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 30, fontWeight: 700, color: "#E8E2D9" }}>
+                  {p.preco}
+                  <span style={{ fontSize: 13, color: "#6B5E54", fontFamily: "'DM Sans', sans-serif", fontWeight: 400 }}>/mês</span>
+                </div>
+                <ul style={{ fontSize: 13, color: "#A79A8A", display: "flex", flexDirection: "column", gap: 6, marginTop: 6, paddingLeft: 0, listStyle: "none" }}>
+                  <li>Artistas: {p.artistas}</li>
+                  <li>SMS/mês: {p.sms}</li>
+                  <li>E-mail/mês: {p.email}</li>
+                  <li>Storage: {p.storage}</li>
+                  <li>Assessorias/mês: {p.assessorias}</li>
+                </ul>
+                <a
+                  href={WHATSAPP_SUPORTE}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    marginTop: 14,
+                    textAlign: "center",
+                    background: p.metal,
+                    color: "#0A0A0A",
+                    fontWeight: 700,
+                    borderRadius: 8,
+                    padding: "11px 0",
+                    fontSize: 13,
+                    textDecoration: "none",
+                  }}
+                >
+                  Assinar
+                </a>
+              </div>
             </div>
           ))}
         </div>
