@@ -60,6 +60,8 @@ export default function LandingPage() {
           display: inline-block;
         }
         .hero-btn-secondary:hover { background: rgba(201,168,76,0.14); border-color: rgba(201,168,76,0.65); }
+        .plan-card { transition: transform .15s ease, filter .15s ease; }
+        .plan-card:hover { transform: translateY(-4px); filter: brightness(1.08); }
       `}</style>
 
       <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "56px 24px 8px" }}>
@@ -140,70 +142,52 @@ export default function LandingPage() {
         </h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20 }}>
           {PLANOS.map((p) => (
-            <div
+            <a
               key={p.nome}
+              href={WHATSAPP_SUPORTE}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="plan-card"
               style={{
                 borderRadius: 14,
-                padding: 2,
+                padding: 24,
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
                 background: p.metal,
-                boxShadow: p.destaque ? "0 0 40px rgba(200,200,200,0.12)" : "0 0 24px rgba(0,0,0,0.3)",
+                textDecoration: "none",
+                boxShadow: p.destaque ? "0 0 40px rgba(220,220,220,0.25)" : "0 0 24px rgba(0,0,0,0.35)",
               }}
             >
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 700, color: "#1A1006" }}>
+                {p.nome}
+              </div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 30, fontWeight: 700, color: "#1A1006" }}>
+                {p.preco}
+                <span style={{ fontSize: 13, color: "rgba(26,16,6,0.65)", fontFamily: "'DM Sans', sans-serif", fontWeight: 400 }}>/mês</span>
+              </div>
+              <ul style={{ fontSize: 13, color: "rgba(26,16,6,0.8)", fontWeight: 500, display: "flex", flexDirection: "column", gap: 6, marginTop: 6, paddingLeft: 0, listStyle: "none" }}>
+                <li>Artistas: {p.artistas}</li>
+                <li>SMS/mês: {p.sms}</li>
+                <li>E-mail/mês: {p.email}</li>
+                <li>Storage: {p.storage}</li>
+                <li>Assessorias/mês: {p.assessorias}</li>
+              </ul>
               <div
                 style={{
-                  borderRadius: 12,
-                  padding: 24,
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 10,
-                  background: "#0B0B0F",
+                  marginTop: 14,
+                  textAlign: "center",
+                  background: "#0A0A0A",
+                  color: "#E8E2D9",
+                  fontWeight: 700,
+                  borderRadius: 8,
+                  padding: "11px 0",
+                  fontSize: 13,
                 }}
               >
-                <div
-                  style={{
-                    fontFamily: "'Cormorant Garamond', serif",
-                    fontSize: 20,
-                    fontWeight: 700,
-                    background: p.metal,
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                  }}
-                >
-                  {p.nome}
-                </div>
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 30, fontWeight: 700, color: "#E8E2D9" }}>
-                  {p.preco}
-                  <span style={{ fontSize: 13, color: "#6B5E54", fontFamily: "'DM Sans', sans-serif", fontWeight: 400 }}>/mês</span>
-                </div>
-                <ul style={{ fontSize: 13, color: "#A79A8A", display: "flex", flexDirection: "column", gap: 6, marginTop: 6, paddingLeft: 0, listStyle: "none" }}>
-                  <li>Artistas: {p.artistas}</li>
-                  <li>SMS/mês: {p.sms}</li>
-                  <li>E-mail/mês: {p.email}</li>
-                  <li>Storage: {p.storage}</li>
-                  <li>Assessorias/mês: {p.assessorias}</li>
-                </ul>
-                <a
-                  href={WHATSAPP_SUPORTE}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    marginTop: 14,
-                    textAlign: "center",
-                    background: p.metal,
-                    color: "#0A0A0A",
-                    fontWeight: 700,
-                    borderRadius: 8,
-                    padding: "11px 0",
-                    fontSize: 13,
-                    textDecoration: "none",
-                  }}
-                >
-                  Assinar
-                </a>
+                Assinar
               </div>
-            </div>
+            </a>
           ))}
         </div>
       </section>
