@@ -151,8 +151,8 @@ export default function LandingPage() {
         .hero-btn-secondary:hover { background: rgba(201,168,76,0.14); border-color: rgba(201,168,76,0.65); }
         .plan-card { transition: transform .15s ease, filter .15s ease; }
         .plan-card:hover { transform: translateY(-4px); filter: brightness(1.08); }
-        .plan-detail-cta { transition: background .2s ease, transform .15s ease; }
-        .plan-detail-cta:hover { background: rgba(255,255,255,0.08); transform: translateY(-2px); }
+        .plan-detail-cta { transition: filter .2s ease, transform .15s ease; }
+        .plan-detail-cta:hover { filter: brightness(1.1); transform: translateY(-2px); }
       `}</style>
 
       <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "56px 24px 8px" }}>
@@ -315,59 +315,67 @@ export default function LandingPage() {
           O que cada plano inclui
         </h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 28 }}>
-          {DETALHES_PLANOS.map((p) => (
-            <div
-              key={p.id}
-              style={{
-                borderRadius: 12,
-                padding: 22,
-                background: "#0B0B0F",
-                border: `2.5px solid ${p.cor}`,
-                boxShadow: `0 0 12px ${p.cor}99, 0 0 32px ${p.cor}55, 0 0 60px ${p.cor}25, inset 0 0 16px ${p.cor}1a`,
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: p.cor, marginBottom: 4, textShadow: `0 0 10px ${p.cor}80` }}>
-                {p.nome}
-              </div>
-              {p.heranca && (
-                <div style={{ fontSize: 11, color: "#6B5E54", marginBottom: 14, fontStyle: "italic" }}>{p.heranca}</div>
-              )}
-              <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: p.heranca ? 0 : 14, flex: 1 }}>
-                {p.itens.map((item, i) => (
-                  <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                    <span style={{ fontSize: 16, flexShrink: 0 }}>{item.emoji}</span>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "#E8E2D9" }}>{item.titulo}</div>
-                      <div style={{ fontSize: 12, color: "#A79A8A", marginTop: 1 }}>{item.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <a
-                href={WHATSAPP_SUPORTE}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="plan-detail-cta"
+          {DETALHES_PLANOS.map((p) => {
+            const plano = PLANOS.find((pl) => pl.id === p.id)!;
+            return (
+              <div
+                key={p.id}
                 style={{
-                  marginTop: 20,
-                  textAlign: "center",
-                  background: "transparent",
-                  color: p.cor,
-                  fontWeight: 700,
-                  borderRadius: 8,
-                  padding: "10px 0",
-                  fontSize: 13,
-                  textDecoration: "none",
-                  border: `1.5px solid ${p.cor}`,
-                  boxShadow: `0 0 8px ${p.cor}66`,
+                  borderRadius: 12,
+                  padding: 22,
+                  background: "#0B0B0F",
+                  border: `2.5px solid ${p.cor}`,
+                  boxShadow: `0 0 6px ${p.cor}66, 0 0 16px ${p.cor}33, 0 0 30px ${p.cor}15, inset 0 0 8px ${p.cor}0d`,
+                  display: "flex",
+                  flexDirection: "column",
                 }}
               >
-                Quero usar agora
-              </a>
-            </div>
-          ))}
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: p.cor, marginBottom: 4, textShadow: `0 0 5px ${p.cor}40` }}>
+                  {p.nome}
+                </div>
+                {p.heranca && (
+                  <div style={{ fontSize: 11, color: "#6B5E54", marginBottom: 14, fontStyle: "italic" }}>{p.heranca}</div>
+                )}
+                <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: p.heranca ? 0 : 14, flex: 1 }}>
+                  {p.itens.map((item, i) => (
+                    <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                      <span style={{ fontSize: 16, flexShrink: 0 }}>{item.emoji}</span>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#E8E2D9" }}>{item.titulo}</div>
+                        <div style={{ fontSize: 12, color: "#A79A8A", marginTop: 1 }}>{item.desc}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <a
+                  href={WHATSAPP_SUPORTE}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="plan-detail-cta"
+                  style={{
+                    marginTop: 20,
+                    textAlign: "center",
+                    background: plano.metalBtn,
+                    color: plano.corTexto,
+                    fontWeight: 700,
+                    borderRadius: 999,
+                    padding: "12px 0",
+                    fontSize: 13,
+                    textDecoration: "none",
+                    border: `1px solid ${plano.corBorda}`,
+                    textShadow: "0 1px 2px rgba(0,0,0,0.35)",
+                    boxShadow: [
+                      "inset 0 1px 0 rgba(255,255,255,0.6)",
+                      "inset 0 -2px 3px rgba(0,0,0,0.3)",
+                      `0 6px 16px ${p.cor}55`,
+                    ].join(", "),
+                  }}
+                >
+                  {p.nome} · Ativar agora
+                </a>
+              </div>
+            );
+          })}
         </div>
       </section>
     </main>
