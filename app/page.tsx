@@ -151,6 +151,8 @@ export default function LandingPage() {
         .hero-btn-secondary:hover { background: rgba(201,168,76,0.14); border-color: rgba(201,168,76,0.65); }
         .plan-card { transition: transform .15s ease, filter .15s ease; }
         .plan-card:hover { transform: translateY(-4px); filter: brightness(1.08); }
+        .plan-detail-cta { transition: background .2s ease, transform .15s ease; }
+        .plan-detail-cta:hover { background: rgba(255,255,255,0.08); transform: translateY(-2px); }
       `}</style>
 
       <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "56px 24px 8px" }}>
@@ -312,7 +314,7 @@ export default function LandingPage() {
         >
           O que cada plano inclui
         </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 28 }}>
           {DETALHES_PLANOS.map((p) => (
             <div
               key={p.id}
@@ -320,16 +322,19 @@ export default function LandingPage() {
                 borderRadius: 12,
                 padding: 22,
                 background: "#0B0B0F",
-                border: `1px solid ${p.cor}55`,
+                border: `2.5px solid ${p.cor}`,
+                boxShadow: `0 0 12px ${p.cor}99, 0 0 32px ${p.cor}55, 0 0 60px ${p.cor}25, inset 0 0 16px ${p.cor}1a`,
+                display: "flex",
+                flexDirection: "column",
               }}
             >
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: p.cor, marginBottom: 4 }}>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: p.cor, marginBottom: 4, textShadow: `0 0 10px ${p.cor}80` }}>
                 {p.nome}
               </div>
               {p.heranca && (
                 <div style={{ fontSize: 11, color: "#6B5E54", marginBottom: 14, fontStyle: "italic" }}>{p.heranca}</div>
               )}
-              <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: p.heranca ? 0 : 14 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: p.heranca ? 0 : 14, flex: 1 }}>
                 {p.itens.map((item, i) => (
                   <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                     <span style={{ fontSize: 16, flexShrink: 0 }}>{item.emoji}</span>
@@ -340,6 +345,27 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
+              <a
+                href={WHATSAPP_SUPORTE}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="plan-detail-cta"
+                style={{
+                  marginTop: 20,
+                  textAlign: "center",
+                  background: "transparent",
+                  color: p.cor,
+                  fontWeight: 700,
+                  borderRadius: 8,
+                  padding: "10px 0",
+                  fontSize: 13,
+                  textDecoration: "none",
+                  border: `1.5px solid ${p.cor}`,
+                  boxShadow: `0 0 8px ${p.cor}66`,
+                }}
+              >
+                Quero usar agora
+              </a>
             </div>
           ))}
         </div>
