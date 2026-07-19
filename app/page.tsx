@@ -32,6 +32,47 @@ const PLANOS = [
   },
 ];
 
+const DETALHES_PLANOS = [
+  {
+    id: "bronze",
+    nome: "Bronze",
+    cor: "#C88755",
+    heranca: null as string | null,
+    itens: [
+      { emoji: "🗂️", titulo: "CRM completo", desc: "Pipeline visual, Agenda e Financeiro automático" },
+      { emoji: "📋", titulo: "Ficha de cliente completa", desc: "Histórico, documentos e anamnese" },
+      { emoji: "🌐", titulo: "Site próprio editável", desc: "Seu portfólio, seus artistas, sem designer" },
+      { emoji: "✉️", titulo: "Confirmação automática", desc: "E-mail e SMS a cada agendamento" },
+    ],
+  },
+  {
+    id: "prata",
+    nome: "Prata",
+    cor: "#C8C8C8",
+    heranca: "Tudo do Bronze, mais:",
+    itens: [
+      { emoji: "🔔", titulo: "Mensagens automáticas por etapa", desc: "Lembrete, aviso do dia, confirmação de presença" },
+      { emoji: "🎉", titulo: "Campanhas em datas comemorativas", desc: "Dia das Mães, aniversário, Natal — sozinho" },
+      { emoji: "📸", titulo: "Portfólio ampliado", desc: "15 fotos por artista" },
+    ],
+  },
+  {
+    id: "ouro",
+    nome: "Ouro",
+    cor: "#E8C97A",
+    heranca: "Tudo do Bronze e Prata, mais:",
+    itens: [
+      { emoji: "🔑", titulo: "Campanhas com palavra secreta", desc: "Crédito automático pra quem participa" },
+      { emoji: "🔗", titulo: "Rastreio de origem", desc: "Saiba de onde vem cada cliente" },
+      { emoji: "🎨", titulo: "Site com cores personalizadas", desc: "Identidade visual só sua" },
+      { emoji: "💬", titulo: "Depoimentos e história do estúdio", desc: "No próprio site" },
+      { emoji: "🎞️", titulo: "Carrossel em movimento automático", desc: "Fotos do portfólio rodando sozinhas" },
+      { emoji: "🖌️", titulo: "Tema do CRM personalizável", desc: "Do jeito que você preferir" },
+      { emoji: "📸", titulo: "Portfólio máximo", desc: "30 fotos por artista" },
+    ],
+  },
+];
+
 function Parafuso({ cor, corner }: { cor: string; corner: "tl" | "tr" | "bl" | "br" }) {
   const pos: CSSProperties =
     corner === "tl" ? { top: 8, left: 8 } :
@@ -253,6 +294,53 @@ export default function LandingPage() {
                 Assinar
               </div>
             </a>
+          ))}
+        </div>
+      </section>
+
+      <section style={{ maxWidth: 980, margin: "0 auto", padding: "0 24px 96px" }}>
+        <h2
+          style={{
+            textAlign: "center",
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: 28,
+            fontWeight: 700,
+            color: "#C9A84C",
+            letterSpacing: ".03em",
+            marginBottom: 40,
+          }}
+        >
+          O que cada plano inclui
+        </h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
+          {DETALHES_PLANOS.map((p) => (
+            <div
+              key={p.id}
+              style={{
+                borderRadius: 12,
+                padding: 22,
+                background: "#0B0B0F",
+                border: `1px solid ${p.cor}55`,
+              }}
+            >
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: p.cor, marginBottom: 4 }}>
+                {p.nome}
+              </div>
+              {p.heranca && (
+                <div style={{ fontSize: 11, color: "#6B5E54", marginBottom: 14, fontStyle: "italic" }}>{p.heranca}</div>
+              )}
+              <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: p.heranca ? 0 : 14 }}>
+                {p.itens.map((item, i) => (
+                  <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                    <span style={{ fontSize: 16, flexShrink: 0 }}>{item.emoji}</span>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#E8E2D9" }}>{item.titulo}</div>
+                      <div style={{ fontSize: 12, color: "#A79A8A", marginTop: 1 }}>{item.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </section>
