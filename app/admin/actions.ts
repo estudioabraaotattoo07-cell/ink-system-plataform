@@ -2,6 +2,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import { randomUUID } from "node:crypto";
 
 function getAdminClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
@@ -84,12 +85,23 @@ export async function moverFichaEstagio(email: string, estagio: string) {
 export async function solicitarComplementacao(email: string, nome: string | null) {
   const sb = getAdminClient();
   const primeiroNome = nome?.split(" ")[0] || "";
+
+  // Reaproveita o token se o admin já tiver clicado antes pra essa ficha --
+  // não gera link novo (e não invalida um formulário já em andamento).
+  const { data: existente } = await sb.from("ink_implantacao_dados").select("token").eq("email", email).maybeSingle();
+  let token = existente?.token;
+  if (!token) {
+    token = randomUUID();
+    const { error: errInsert } = await sb.from("ink_implantacao_dados").insert({ email, token, nome_completo: nome });
+    if (errInsert) return { ok: false, error: errInsert.message };
+  }
+
   const html = paragrafos([
     `Olá, ${primeiroNome}.`,
     "Recebemos sua solicitação de implantação do Ink System.",
     "Durante nossa análise, percebemos que ainda precisamos de algumas informações antes de aprovarmos o seu ambiente.",
     "Isso faz parte do nosso processo de homologação e garante que cada implantação seja preparada corretamente para o perfil de cada estúdio.",
-  ]) + BOTAO_HTML("Complementar informações", "https://inksystem.com.br/complementar")
+  ]) + BOTAO_HTML("Complementar informações", `https://inksystem.com.br/complementar/${token}`)
     + paragrafos(["Após o envio, sua solicitação retornará automaticamente para análise."])
     + RODAPE;
 
