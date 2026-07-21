@@ -299,6 +299,41 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section style={{ maxWidth: 720, margin: "0 auto", padding: "0 24px 96px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
+          <div
+            style={{
+              borderRadius: 12,
+              padding: 26,
+              background: "#0B0B0F",
+              border: "1px solid rgba(201,168,76,0.25)",
+            }}
+          >
+            <div style={{ fontSize: 26, marginBottom: 10 }}>📄</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#E8E2D9", marginBottom: 8 }}>Contrato sem papel</div>
+            <div style={{ fontSize: 13, color: "#A79A8A", lineHeight: 1.6 }}>
+              Envie o contrato pro cliente e receba de volta assinado, direto pelo sistema — sem imprimir, sem
+              perder no WhatsApp e sem guardar papel em gaveta.
+            </div>
+          </div>
+          <div
+            style={{
+              borderRadius: 12,
+              padding: 26,
+              background: "#0B0B0F",
+              border: "1px solid rgba(201,168,76,0.25)",
+            }}
+          >
+            <div style={{ fontSize: 26, marginBottom: 10 }}>💳</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#E8E2D9", marginBottom: 8 }}>Pagamento e histórico</div>
+            <div style={{ fontSize: 13, color: "#A79A8A", lineHeight: 1.6 }}>
+              Cada pagamento fica registrado por cliente e por mês, com histórico completo à mão — sem
+              precisar caçar informação em conversa antiga ou anotação solta.
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section style={{ maxWidth: 980, margin: "0 auto", padding: "0 24px 96px" }}>
         <h2
           style={{
