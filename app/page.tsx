@@ -126,10 +126,11 @@ export default function LandingPage() {
           color: #17140A;
           font-weight: 700;
           border-radius: 999px;
-          padding: 16px 38px;
+          padding: 16px 46px;
           font-size: 14px;
           text-decoration: none;
           letter-spacing: .03em;
+          text-shadow: -1px 0 0 rgba(74,44,10,0.35), 1px 0 0 rgba(74,44,10,0.35), 0 -1px 0 rgba(74,44,10,0.35), 0 1px 0 rgba(74,44,10,0.35);
           box-shadow: 0 6px 24px rgba(201,168,76,0.35), inset 0 1px 0 rgba(255,255,255,0.4);
           border: 1px solid rgba(255,224,160,0.6);
           transition: transform .15s ease, box-shadow .15s ease;
@@ -584,7 +585,7 @@ export default function LandingPage() {
           Conheça o Ink System e descubra como ele pode transformar a rotina do seu estúdio.
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <AuraTriggerButton className="hero-btn-primary" style={{ textAlign: "center" }}>
+          <AuraTriggerButton className="hero-btn-primary" style={{ textAlign: "center", padding: "20px 54px", fontSize: 15 }}>
             Quero conhecer o Ink System
           </AuraTriggerButton>
         </div>

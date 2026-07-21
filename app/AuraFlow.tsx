@@ -387,8 +387,13 @@ export function AuraTriggerButton({
   children: ReactNode;
 }) {
   const abrir = useAuraFlow();
+  // Quando há className, a classe CSS já define todo o visual (padding,
+  // fonte, cor, fundo, borda) -- forçar qualquer uma dessas propriedades
+  // aqui via inline style vence a classe por especificidade e apaga o
+  // que ela define. Só reseta tudo quando o botão não tem classe (aí
+  // depende só do "style" prop passado por quem chamou).
   const reset: CSSProperties = className
-    ? { padding: 0, font: "inherit", textAlign: "inherit", cursor: "pointer", color: "inherit" }
+    ? { cursor: "pointer" }
     : { background: "none", border: "none", padding: 0, font: "inherit", textAlign: "inherit", cursor: "pointer", color: "inherit" };
   return (
     <button
