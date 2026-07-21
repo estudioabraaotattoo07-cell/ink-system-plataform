@@ -7,7 +7,7 @@ const YOUTUBE_VIDEO_ID = "";
 
 const PLANOS = [
   {
-    id: "bronze", nome: "Bronze", preco: "R$297", artistas: "até 2", sms: 50, email: 120, storage: "1GB", assessorias: 1, destaque: false,
+    id: "bronze", nome: "Bronze", subtitulo: "Estruture seu estúdio.", preco: "R$297", artistas: "até 2", sms: 50, email: 120, storage: "1GB", assessorias: 1, destaque: false,
     metal: "linear-gradient(135deg, #B8703F 0%, #8B4226 25%, #3D2410 50%, #8B4226 75%, #B8703F 100%)",
     metalBtn: "linear-gradient(135deg, #C88755 0%, #8B4226 30%, #B8703F 55%, #6B3418 80%, #C88755 100%)",
     corBorda: "#2A1508",
@@ -15,7 +15,7 @@ const PLANOS = [
     corTexto: "#FBF0E4",
   },
   {
-    id: "prata", nome: "Prata", preco: "R$497", artistas: "até 4", sms: 100, email: 200, storage: "3GB", assessorias: 2, destaque: true,
+    id: "prata", nome: "Prata", subtitulo: "Automatize sua rotina.", preco: "R$497", artistas: "até 4", sms: 100, email: 200, storage: "3GB", assessorias: 2, destaque: true,
     metal: "linear-gradient(135deg, #B8B8B8 0%, #888888 25%, #4A4A4A 50%, #888888 75%, #B8B8B8 100%)",
     metalBtn: "linear-gradient(135deg, #D0D0D0 0%, #888888 30%, #B8B8B8 55%, #5A5A5A 80%, #D0D0D0 100%)",
     corBorda: "#1E1E1E",
@@ -23,7 +23,7 @@ const PLANOS = [
     corTexto: "#F5F5F5",
   },
   {
-    id: "ouro", nome: "Ouro", preco: "R$597", artistas: "até 6", sms: 200, email: 400, storage: "10GB", assessorias: 4, destaque: false,
+    id: "ouro", nome: "Ouro", subtitulo: "Escalone sua operação.", preco: "R$597", artistas: "até 6", sms: 200, email: 400, storage: "10GB", assessorias: 4, destaque: false,
     metal: "linear-gradient(135deg, #FFFBEF 0%, #E8C97A 20%, #C9A84C 40%, #FFFBEF 55%, #C9A84C 70%, #E8C97A 85%, #FFFBEF 100%)",
     metalBtn: "linear-gradient(135deg, #FFFDF5 0%, #E8C97A 25%, #C9A84C 50%, #8a6a24 75%, #E8C97A 100%)",
     corBorda: "#6B4F14",
@@ -39,10 +39,10 @@ const DETALHES_PLANOS = [
     cor: "#C88755",
     heranca: null as string | null,
     itens: [
-      { emoji: "🗂️", titulo: "CRM completo", desc: "Pipeline visual, Agenda e Financeiro automático" },
-      { emoji: "📋", titulo: "Ficha de cliente completa", desc: "Histórico, documentos e anamnese" },
-      { emoji: "🌐", titulo: "Site próprio editável", desc: "Seu portfólio, seus artistas, sem designer" },
-      { emoji: "✉️", titulo: "Confirmação automática", desc: "E-mail e SMS a cada agendamento" },
+      { emoji: "🗂️", titulo: "Nunca perca o controle dos seus clientes.", desc: "CRM completo com pipeline, agenda e financeiro automático." },
+      { emoji: "📋", titulo: "Todo o histórico do cliente na palma da mão.", desc: "Ficha completa com histórico, documentos e anamnese." },
+      { emoji: "🌐", titulo: "Tenha um site profissional sem depender de um desenvolvedor.", desc: "Seu portfólio e seus artistas, editáveis por você." },
+      { emoji: "✉️", titulo: "Reduza faltas sem precisar lembrar ninguém.", desc: "E-mail e SMS automáticos a cada agendamento." },
     ],
   },
   {
@@ -51,9 +51,9 @@ const DETALHES_PLANOS = [
     cor: "#C8C8C8",
     heranca: "Tudo do Bronze, mais:",
     itens: [
-      { emoji: "🔔", titulo: "Mensagens automáticas por etapa", desc: "Lembrete, aviso do dia, confirmação de presença" },
-      { emoji: "🎉", titulo: "Campanhas em datas comemorativas", desc: "Dia das Mães, aniversário, Natal — sozinho" },
-      { emoji: "📸", titulo: "Portfólio ampliado", desc: "15 fotos por artista" },
+      { emoji: "🔔", titulo: "Disparos automáticos por etapa.", desc: "Lembrete, aviso do dia e confirmação de presença, prontos pra usar. Pode manter como está ou editar o texto do seu jeito." },
+      { emoji: "🎉", titulo: "Disparos automáticos em datas comemorativas.", desc: "O sistema já possui campanhas prontas para datas como aniversário, Dia das Mães, Natal e outras. Basta ativar. Se preferir, você também pode editar os textos e salvar sua própria versão." },
+      { emoji: "📸", titulo: "Mostre mais do seu trabalho.", desc: "15 fotos por artista no seu site." },
     ],
   },
   {
@@ -62,13 +62,13 @@ const DETALHES_PLANOS = [
     cor: "#E8C97A",
     heranca: "Tudo do Bronze e Prata, mais:",
     itens: [
-      { emoji: "🔑", titulo: "Campanhas com palavra secreta", desc: "Crédito automático pra quem participa" },
-      { emoji: "🔗", titulo: "Rastreio de origem", desc: "Saiba de onde vem cada cliente" },
-      { emoji: "🎨", titulo: "Site com cores personalizadas", desc: "Identidade visual só sua" },
-      { emoji: "💬", titulo: "Depoimentos e história do estúdio", desc: "No próprio site" },
-      { emoji: "🎞️", titulo: "Carrossel em movimento automático", desc: "Fotos do portfólio rodando sozinhas" },
-      { emoji: "🖌️", titulo: "Tema do CRM personalizável", desc: "Do jeito que você preferir" },
-      { emoji: "📸", titulo: "Portfólio máximo", desc: "30 fotos por artista" },
+      { emoji: "🔑", titulo: "Transforme quem já é cliente em divulgador.", desc: "Palavra secreta gera crédito automático pra quem participa." },
+      { emoji: "🔗", titulo: "Saiba exatamente o que está trazendo cliente.", desc: "Veja de onde vem cada pessoa que chega até você." },
+      { emoji: "🎨", titulo: "Seu site com a cara da sua marca.", desc: "Cores e identidade visual só suas." },
+      { emoji: "💬", titulo: "Transforme reputação em prova social.", desc: "Depoimentos e a história do seu estúdio, direto no site." },
+      { emoji: "🎞️", titulo: "Seu portfólio sempre em destaque.", desc: "Fotos rodando sozinhas, sem precisar mexer em nada." },
+      { emoji: "🖌️", titulo: "Um sistema com a cara do seu estúdio.", desc: "Tema do CRM do jeito que você preferir." },
+      { emoji: "📸", titulo: "Mostre tudo que você já fez.", desc: "30 fotos por artista." },
     ],
   },
 ];
@@ -175,7 +175,8 @@ export default function LandingPage() {
           Enquanto você cria arte, o Ink System cuida do resto
         </h1>
         <p style={{ color: "#A79A8A", fontSize: 16, lineHeight: 1.6, maxWidth: 560, margin: "0 auto 28px" }}>
-          Agenda, financeiro, clientes e seu próprio site — tudo em um só lugar, sem planilha, papel ou memória.
+          O sistema operacional criado para estúdios de tatuagem. Organize sua operação, automatize seu atendimento
+          e tenha mais tempo para fazer o que realmente importa: tatuar.
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
           <a href="https://inq-saas.vercel.app/?demo=1" target="_blank" rel="noopener noreferrer" className="hero-btn-primary">
@@ -226,7 +227,8 @@ export default function LandingPage() {
           ))}
         </ul>
         <p style={{ color: "#A79A8A", fontSize: 15, lineHeight: 1.6, maxWidth: 520, margin: "0 auto" }}>
-          O Ink System nasceu dentro de um estúdio de verdade, pra resolver exatamente isso.
+          O Ink System foi criado dentro de um estúdio de tatuagem para resolver problemas que só quem vive essa
+          rotina conhece.
         </p>
       </section>
 
@@ -258,7 +260,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section style={{ maxWidth: 980, margin: "0 auto", padding: "0 24px 96px" }}>
+      <section style={{ maxWidth: 980, margin: "0 auto", padding: "0 24px 112px" }}>
         <h2
           style={{
             textAlign: "center",
@@ -277,10 +279,10 @@ export default function LandingPage() {
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 24 }}>
           {[
-            { emoji: "📅", titulo: "Agenda organizada", desc: "Pipeline visual de cada cliente, do primeiro contato até a sessão marcada — sem confundir horário." },
-            { emoji: "💰", titulo: "Financeiro automático", desc: "Cada entrada e saída registrada na hora, pra você saber quanto entrou sem abrir planilha." },
-            { emoji: "🌐", titulo: "Site e captação próprios", desc: "Seu portfólio online com um chat que já organiza cada pedido — tatuagem, piercing ou consulta — antes de chegar até você." },
-            { emoji: "🔔", titulo: "Relacionamento automático", desc: "Confirmação, lembrete e aviso do dia da sessão, enviados sozinhos pra reduzir falta." },
+            { emoji: "📅", titulo: "Nunca mais perca um horário.", desc: "Pipeline visual de cada cliente, do primeiro contato até a sessão marcada — sem confundir horário." },
+            { emoji: "💰", titulo: "Saiba exatamente quanto entrou no seu estúdio.", desc: "Cada entrada e saída registrada na hora, pra você saber quanto entrou sem abrir planilha." },
+            { emoji: "🌐", titulo: "Transforme seguidores em clientes agendados.", desc: "Seu portfólio online com um chat que já organiza cada pedido — tatuagem, piercing ou consulta — antes de chegar até você." },
+            { emoji: "🔔", titulo: "Seus clientes continuam sendo atendidos enquanto você tatua.", desc: "Confirmação, lembrete e aviso do dia da sessão, enviados sozinhos pra reduzir falta." },
           ].map((item, i) => (
             <div
               key={i}
@@ -300,7 +302,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section style={{ maxWidth: 720, margin: "0 auto", padding: "0 24px 96px" }}>
+      <section style={{ maxWidth: 720, margin: "0 auto", padding: "0 24px 112px" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
           <div
             style={{
@@ -311,7 +313,7 @@ export default function LandingPage() {
             }}
           >
             <div style={{ fontSize: 26, marginBottom: 10 }}>📄</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#E8E2D9", marginBottom: 8 }}>Contrato sem papel</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#E8E2D9", marginBottom: 8 }}>Contratos assinados antes da sessão.</div>
             <div style={{ fontSize: 13, color: "#A79A8A", lineHeight: 1.6 }}>
               Envie o contrato pro cliente e receba de volta assinado, direto pelo sistema — sem imprimir, sem
               perder no WhatsApp e sem guardar papel em gaveta.
@@ -326,7 +328,7 @@ export default function LandingPage() {
             }}
           >
             <div style={{ fontSize: 26, marginBottom: 10 }}>💳</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#E8E2D9", marginBottom: 8 }}>Pagamento e histórico</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#E8E2D9", marginBottom: 8 }}>Toda a história do cliente em um só lugar.</div>
             <div style={{ fontSize: 13, color: "#A79A8A", lineHeight: 1.6 }}>
               Cada pagamento fica registrado por cliente e por mês, com histórico completo à mão — sem
               precisar caçar informação em conversa antiga ou anotação solta.
@@ -335,7 +337,26 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section style={{ maxWidth: 980, margin: "0 auto", padding: "0 24px 96px" }}>
+      <section style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", padding: "0 24px 96px" }}>
+        <h2
+          style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: 26,
+            fontWeight: 700,
+            color: "#C9A84C",
+            margin: "0 0 14px",
+          }}
+        >
+          Criado por quem vive a tatuagem.
+        </h2>
+        <p style={{ color: "#A79A8A", fontSize: 15, lineHeight: 1.6, maxWidth: 520, margin: "0 auto" }}>
+          O Ink System nasceu dentro da Casa dos Carvalho, um estúdio de tatuagem de verdade — não em uma empresa
+          de software. Cada funcionalidade existe porque resolveu um problema real da nossa própria rotina, antes
+          de chegar até você.
+        </p>
+      </section>
+
+      <section style={{ maxWidth: 980, margin: "0 auto", padding: "0 24px 110px" }}>
         <h2
           style={{
             textAlign: "center",
@@ -378,6 +399,9 @@ export default function LandingPage() {
               <Parafuso cor={p.corParafuso} corner="br" />
               <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 700, color: p.corTexto, textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
                 {p.nome}
+              </div>
+              <div style={{ fontSize: 12, color: p.corTexto, opacity: 0.85, fontWeight: 500, textShadow: "0 1px 2px rgba(0,0,0,0.4)", marginTop: -6 }}>
+                {p.subtitulo}
               </div>
               <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 30, fontWeight: 700, color: p.corTexto, textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
                 {p.preco}
@@ -544,8 +568,12 @@ export default function LandingPage() {
             margin: "0 0 14px",
           }}
         >
-          Feito por quem tatua, pra quem tatua
+          Feito por quem tatua, para quem tatua
         </h2>
+        <p style={{ color: "#A79A8A", fontSize: 15, lineHeight: 1.6, maxWidth: 520, margin: "0 auto 18px" }}>
+          O Ink System não nasceu em uma empresa de software. Nasceu dentro de um estúdio que precisava de uma
+          forma melhor de trabalhar.
+        </p>
         <p style={{ color: "#A79A8A", fontSize: 15, lineHeight: 1.6, maxWidth: 520, margin: "0 auto 32px" }}>
           Comece a testar agora, sem compromisso, e veja se o Ink System encaixa na rotina do seu estúdio.
         </p>
