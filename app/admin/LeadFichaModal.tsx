@@ -3,14 +3,22 @@
 import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import LeadCard, { type Lead } from "./LeadCard";
-import { moverFichaEstagio, excluirFicha } from "./actions";
+import { moverFichaEstagio, excluirFicha, aprovarSolicitacao, solicitarComplementacao, encerrarSolicitacao } from "./actions";
 import { ESTAGIOS } from "./pipelineStages";
 import { type Ficha } from "./FichaCard";
+
+const btnDecisao = {
+  approvar: { background: "rgba(39,174,96,.12)", border: "1px solid rgba(39,174,96,.4)", color: "#27AE60" },
+  complementar: { background: "rgba(155,107,181,.12)", border: "1px solid rgba(155,107,181,.4)", color: "#B084C4" },
+  encerrar: { background: "rgba(231,76,60,.08)", border: "1px solid rgba(231,76,60,.35)", color: "#E74C3C" },
+};
 
 export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClose: () => void }) {
   const [movendo, startMover] = useTransition();
   const [excluindo, startExcluir] = useTransition();
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+  const [decidindo, startDecisao] = useTransition();
+  const [acaoStatus, setAcaoStatus] = useState<{ ok: boolean; msg: string } | null>(null);
 
   const mover = (novoEstagio: string) => {
     startMover(async () => { await moverFichaEstagio(ficha.email, novoEstagio); });
@@ -20,6 +28,19 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
     startExcluir(async () => {
       await excluirFicha(ficha.email);
       onClose();
+    });
+  };
+
+  const decidir = (acao: "aprovar" | "complementar" | "encerrar") => {
+    setAcaoStatus(null);
+    startDecisao(async () => {
+      const fn = acao === "aprovar" ? aprovarSolicitacao : acao === "complementar" ? solicitarComplementacao : encerrarSolicitacao;
+      const r = await fn(ficha.email, ficha.nome);
+      setAcaoStatus(
+        r.ok
+          ? { ok: true, msg: acao === "aprovar" ? "Aprovação enviada." : acao === "complementar" ? "E-mail de complementação enviado." : "Solicitação encerrada." }
+          : { ok: false, msg: r.error || "Não deu pra enviar agora." }
+      );
     });
   };
 
@@ -98,12 +119,44 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
           ))}
         </select>
 
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button onClick={() => decidir("aprovar")} disabled={decidindo} style={{ ...btnDecisao.approvar, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 600, cursor: decidindo ? "not-allowed" : "pointer" }}>
+              Aprovar solicitação
+            </button>
+            <button onClick={() => decidir("complementar")} disabled={decidindo} style={{ ...btnDecisao.complementar, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 600, cursor: decidindo ? "not-allowed" : "pointer" }}>
+              Solicitar complementação
+            </button>
+            <button onClick={() => decidir("encerrar")} disabled={decidindo} style={{ ...btnDecisao.encerrar, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 600, cursor: decidindo ? "not-allowed" : "pointer" }}>
+              Encerrar solicitação
+            </button>
+          </div>
+          {decidindo && <div style={{ fontSize: 11, color: "#A09585" }}>Enviando...</div>}
+          {acaoStatus && (
+            <div style={{ fontSize: 11, color: acaoStatus.ok ? "#27AE60" : "#E74C3C" }}>
+              {acaoStatus.ok ? "✓" : "✗"} {acaoStatus.msg}
+            </div>
+          )}
+        </div>
+
+        {(() => {
+          const duvida = [...ficha.solicitacoes].reverse().find((l) => l.mensagem);
+          return duvida ? (
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#6B5E54", marginBottom: 6 }}>
+                Dúvida do lead
+              </div>
+              <LeadCard lead={duvida} />
+            </div>
+          ) : null;
+        })()}
+
         <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#6B5E54", marginBottom: 6 }}>
           Histórico de solicitações ({ficha.solicitacoes.length})
         </div>
         <div>
           {ficha.solicitacoes.map((l) => (
-            <LeadFichaSolicitacao key={l.id} lead={l} />
+            <LeadFichaHistoricoItem key={l.id} lead={l} />
           ))}
         </div>
 
@@ -145,11 +198,18 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
   );
 }
 
-function LeadFichaSolicitacao({ lead }: { lead: Lead }) {
+// Item do histórico é só leitura -- as decisões (aprovar/complementar/
+// encerrar) e a resposta de dúvida já têm suas próprias áreas acima, não
+// precisa de uma caixa de resposta duplicada por solicitação.
+function LeadFichaHistoricoItem({ lead }: { lead: Lead }) {
   return (
-    <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 10, marginTop: 10 }}>
+    <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 10, marginTop: 10, fontSize: 11, color: "#A09585", lineHeight: 1.6 }}>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <span>{lead.plano_sugerido ? `Plano sugerido: ${lead.plano_sugerido}` : lead.tipo === "suporte" ? "Suporte" : "Solicitação"}</span>
+        <span>{new Date(lead.created_at).toLocaleDateString("pt-BR")}</span>
+      </div>
       {lead.respostas && Object.keys(lead.respostas).length > 0 && (
-        <div style={{ fontSize: 11, color: "#A09585", marginBottom: 6, lineHeight: 1.6 }}>
+        <div style={{ marginTop: 4 }}>
           {Object.entries(lead.respostas).map(([chave, valor]) => (
             <div key={chave}>
               <span style={{ textTransform: "capitalize" }}>{chave.replace(/_/g, " ")}</span>: {String(valor)}
@@ -157,7 +217,7 @@ function LeadFichaSolicitacao({ lead }: { lead: Lead }) {
           ))}
         </div>
       )}
-      <LeadCard lead={lead} />
+      {lead.mensagem && <div style={{ marginTop: 4, fontStyle: "italic" }}>"{lead.mensagem}"</div>}
     </div>
   );
 }

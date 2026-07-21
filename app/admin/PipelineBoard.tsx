@@ -5,7 +5,14 @@ import { ESTAGIOS } from "./pipelineStages";
 // Etapa mais "avançada" primeiro -- assim, se a pessoa mandar uma nova
 // solicitação depois de já ter avançado no pipeline, ela não volta pra Lead
 // só porque a solicitação nova nasceu com estagio padrão.
-const RANK: Record<string, number> = { lead: 0, contato_feito: 1, negociacao: 2, perdido: 3 };
+const RANK: Record<string, number> = {
+  lead: 0,
+  em_analise: 1,
+  complementacao_solicitada: 2,
+  documentacao_recebida: 3,
+  aprovado: 4,
+  encerrado: 5,
+};
 
 function agruparPorFicha(leads: Lead[]): Ficha[] {
   const porEmail = new Map<string, Lead[]>();
