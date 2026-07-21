@@ -569,6 +569,12 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", padding: "0 24px 56px" }}>
+        <AuraTriggerButton className="hero-btn-secondary" style={{ textAlign: "center" }}>
+          Ainda tem alguma dúvida?
+        </AuraTriggerButton>
+      </section>
+
       <section style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", padding: "0 24px 96px" }}>
         <h2
           style={{

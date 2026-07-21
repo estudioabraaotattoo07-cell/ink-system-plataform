@@ -132,7 +132,7 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
   const [respostas, setRespostas] = useState<Record<string, string>>({});
   const [planoEscolhido, setPlanoEscolhido] = useState<string | null>(null);
   const [horario, setHorario] = useState("");
-  const [form, setForm] = useState({ nome: "", whatsapp: "", email: "", estudio: "" });
+  const [form, setForm] = useState({ nome: "", whatsapp: "", email: "", estudio: "", mensagem: "" });
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
   const leadIdRef = useRef<string | null>(null);
@@ -142,7 +142,7 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
     setRespostas({});
     setQuizStep(0);
     setHorario("");
-    setForm({ nome: "", whatsapp: "", email: "", estudio: "" });
+    setForm({ nome: "", whatsapp: "", email: "", estudio: "", mensagem: "" });
     setErro("");
     setPlanoFixo(plano);
     setPlanoEscolhido(plano);
@@ -201,7 +201,7 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
       return;
     }
     setErro("");
-    salvar({ nome: form.nome, email: form.email, telefone: form.whatsapp, estudio: form.estudio }, respostas);
+    salvar({ nome: form.nome, email: form.email, telefone: form.whatsapp, estudio: form.estudio, mensagem: form.mensagem || null }, respostas);
     setFase("revisao");
   };
 
@@ -209,7 +209,7 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
     setEnviando(true);
     setErro("");
     const data = await salvar(
-      { nome: form.nome, email: form.email, telefone: form.whatsapp, estudio: form.estudio },
+      { nome: form.nome, email: form.email, telefone: form.whatsapp, estudio: form.estudio, mensagem: form.mensagem || null },
       respostas,
       true
     );
@@ -329,6 +329,13 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
                 <input style={inputStyle} placeholder="(99) 99999-9999" value={form.whatsapp} onChange={(e) => setForm((f) => ({ ...f, whatsapp: maskTel(e.target.value) }))} />
                 <input style={inputStyle} placeholder="Seu e-mail *" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
                 <input style={inputStyle} placeholder="Nome do seu estúdio" value={form.estudio} onChange={(e) => setForm((f) => ({ ...f, estudio: e.target.value }))} />
+                <div style={{ fontSize: 12, color: "#A79A85", marginTop: 4 }}>Ainda tem dúvida?</div>
+                <textarea
+                  style={{ ...inputStyle, resize: "vertical", minHeight: 60, fontFamily: "'DM Sans', sans-serif" }}
+                  placeholder="Descreva aqui sua dúvida"
+                  value={form.mensagem}
+                  onChange={(e) => setForm((f) => ({ ...f, mensagem: e.target.value }))}
+                />
                 {erro && <div style={{ color: "#E08A8A", fontSize: 12 }}>{erro}</div>}
                 <button style={btnPrimary} onClick={enviarContato}>
                   Continuar
@@ -345,6 +352,7 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
                 <div style={{ fontSize: 13, color: "#E8E2D9" }}>WhatsApp: {form.whatsapp || "—"}</div>
                 <div style={{ fontSize: 13, color: "#E8E2D9" }}>E-mail: {form.email}</div>
                 <div style={{ fontSize: 13, color: "#E8E2D9" }}>Melhor horário pra ligar: {horario || "—"}</div>
+                {form.mensagem && <div style={{ fontSize: 13, color: "#E8E2D9" }}>Dúvida: {form.mensagem}</div>}
                 {erro && <div style={{ color: "#E08A8A", fontSize: 12 }}>{erro}</div>}
                 <button style={{ ...btnPrimary, marginTop: 8, opacity: enviando ? 0.6 : 1 }} disabled={enviando} onClick={confirmarEnvio}>
                   {enviando ? "Enviando..." : "Confirmar e enviar"}
@@ -360,7 +368,7 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
                 <div style={{ fontSize: 32, marginBottom: 10 }}>✓</div>
                 <div style={{ fontSize: 14, color: "#E8E2D9", marginBottom: 6 }}>Recebemos seu pedido!</div>
                 <div style={{ fontSize: 12, color: "#A79A85", marginBottom: 18 }}>
-                  Você vai receber um e-mail de confirmação em instantes. Vamos analisar e te chamar em breve.
+                  Fica de olho no seu e-mail — é por lá que você vai receber nossa resposta em breve.
                 </div>
                 <div style={{ fontSize: 12, color: "#A79A85", marginBottom: 14 }}>Enquanto isso, já pode conhecer o sistema por dentro:</div>
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
