@@ -496,6 +496,47 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section style={{ maxWidth: 680, margin: "0 auto", padding: "0 24px 96px" }}>
+        <h2
+          style={{
+            textAlign: "center",
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: 28,
+            fontWeight: 700,
+            color: "#C9A84C",
+            letterSpacing: ".03em",
+            marginBottom: 36,
+          }}
+        >
+          Perguntas frequentes
+        </h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+          {[
+            {
+              p: "Preciso saber mexer em site pra ter meu portfólio online?",
+              r: "Não. O site já vem pronto — você só troca fotos, textos e cores pelo próprio painel, sem precisar de designer ou programador.",
+            },
+            {
+              p: "Dá pra usar pelo celular?",
+              r: "Sim. O sistema roda direto no navegador, tanto no computador quanto no celular, sem precisar instalar nada.",
+            },
+            {
+              p: "Meus dados ficam misturados com os de outro estúdio?",
+              r: "Não. Cada estúdio só enxerga os próprios dados dentro do sistema.",
+            },
+            {
+              p: "Quantos artistas posso cadastrar?",
+              r: "Depende do plano: até 2 no Bronze, até 4 no Prata e até 6 no Ouro.",
+            },
+          ].map((item, i) => (
+            <div key={i} style={{ borderBottom: "1px solid rgba(201,168,76,0.15)", paddingBottom: 20 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#E8E2D9", marginBottom: 8 }}>{item.p}</div>
+              <div style={{ fontSize: 14, color: "#A79A8A", lineHeight: 1.6 }}>{item.r}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", padding: "0 24px 96px" }}>
         <h2
           style={{
