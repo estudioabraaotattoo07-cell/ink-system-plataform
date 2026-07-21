@@ -1,9 +1,9 @@
 import type { CSSProperties } from "react";
+import { AuraFlowRoot, AuraTriggerButton } from "./AuraFlow";
 
 // Vídeo institucional — troque pelo ID real do YouTube quando estiver pronto
 // (o ID é o trecho depois de "v=" na URL do vídeo).
 const YOUTUBE_VIDEO_ID = "";
-const WHATSAPP_SUPORTE = "https://wa.me/5527999598230";
 
 const PLANOS = [
   {
@@ -118,6 +118,7 @@ export default function LandingPage() {
         fontFamily: "'DM Sans', sans-serif",
       }}
     >
+      <AuraFlowRoot>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700&family=DM+Sans:wght@400;500;600&display=swap');
         .hero-btn-primary {
@@ -350,11 +351,9 @@ export default function LandingPage() {
         </h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20 }}>
           {PLANOS.map((p) => (
-            <a
+            <AuraTriggerButton
               key={p.nome}
-              href={WHATSAPP_SUPORTE}
-              target="_blank"
-              rel="noopener noreferrer"
+              plano={p.nome}
               className="plan-card"
               style={{
                 position: "relative",
@@ -412,7 +411,7 @@ export default function LandingPage() {
               >
                 Assinar
               </div>
-            </a>
+            </AuraTriggerButton>
           ))}
         </div>
       </section>
@@ -464,10 +463,8 @@ export default function LandingPage() {
                     </div>
                   ))}
                 </div>
-                <a
-                  href={WHATSAPP_SUPORTE}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <AuraTriggerButton
+                  plano={p.nome}
                   className="plan-detail-cta"
                   style={{
                     marginTop: 20,
@@ -489,7 +486,7 @@ export default function LandingPage() {
                   }}
                 >
                   {p.nome} · Ativar agora
-                </a>
+                </AuraTriggerButton>
               </div>
             );
           })}
@@ -556,11 +553,12 @@ export default function LandingPage() {
           <a href="https://inq-saas.vercel.app/?demo=1" target="_blank" rel="noopener noreferrer" className="hero-btn-primary">
             Experimentar grátis
           </a>
-          <a href={WHATSAPP_SUPORTE} target="_blank" rel="noopener noreferrer" className="hero-btn-secondary">
-            Falar no WhatsApp
-          </a>
+          <AuraTriggerButton className="hero-btn-secondary" style={{ textAlign: "center" }}>
+            Quero começar
+          </AuraTriggerButton>
         </div>
       </section>
+      </AuraFlowRoot>
     </main>
   );
 }
