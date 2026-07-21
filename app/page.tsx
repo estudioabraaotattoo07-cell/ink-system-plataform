@@ -257,22 +257,46 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "0 24px 56px" }}>
-        <h1
+      <section style={{ maxWidth: 980, margin: "0 auto", padding: "0 24px 96px" }}>
+        <h2
           style={{
+            textAlign: "center",
             fontFamily: "'Cormorant Garamond', serif",
             fontSize: 28,
             fontWeight: 700,
-            color: "#E8E2D9",
-            margin: "0 0 14px",
+            color: "#C9A84C",
+            letterSpacing: ".03em",
+            marginBottom: 12,
           }}
         >
-          Tudo que seu estúdio precisa, num só sistema
-        </h1>
-        <p style={{ color: "#A79A8A", fontSize: 16, lineHeight: 1.6 }}>
-          Agenda inteligente, financeiro automático, contratos digitais e uma assistente que cuida do
-          relacionamento com seus clientes enquanto você tatua.
+          Como o Ink System resolve isso
+        </h2>
+        <p style={{ textAlign: "center", color: "#A79A8A", fontSize: 15, maxWidth: 560, margin: "0 auto 44px" }}>
+          Tudo o que seu estúdio precisa, num só sistema — sem depender de planilha, papel ou memória.
         </p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 24 }}>
+          {[
+            { emoji: "📅", titulo: "Agenda organizada", desc: "Pipeline visual de cada cliente, do primeiro contato até a sessão marcada — sem confundir horário." },
+            { emoji: "💰", titulo: "Financeiro automático", desc: "Cada entrada e saída registrada na hora, pra você saber quanto entrou sem abrir planilha." },
+            { emoji: "🌐", titulo: "Site e captação próprios", desc: "Seu portfólio online com um chat que já organiza cada pedido — tatuagem, piercing ou consulta — antes de chegar até você." },
+            { emoji: "🔔", titulo: "Relacionamento automático", desc: "Confirmação, lembrete e aviso do dia da sessão, enviados sozinhos pra reduzir falta." },
+          ].map((item, i) => (
+            <div
+              key={i}
+              style={{
+                borderRadius: 12,
+                padding: 24,
+                background: "#0B0B0F",
+                border: "1px solid rgba(201,168,76,0.25)",
+                textAlign: "center",
+              }}
+            >
+              <div style={{ fontSize: 26, marginBottom: 10 }}>{item.emoji}</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#E8E2D9", marginBottom: 6 }}>{item.titulo}</div>
+              <div style={{ fontSize: 13, color: "#A79A8A", lineHeight: 1.5 }}>{item.desc}</div>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section style={{ maxWidth: 980, margin: "0 auto", padding: "0 24px 96px" }}>
