@@ -91,7 +91,7 @@ const btnPrimary: CSSProperties = {
 
 const btnSecondary: CSSProperties = {
   background: "rgba(201,168,76,0.1)",
-  border: "1px solid rgba(201,168,76,0.5)",
+  border: "1px solid rgba(201,168,76,0.55)",
   color: "#E8C97A",
   borderRadius: 999,
   padding: "12px 16px",
@@ -99,12 +99,12 @@ const btnSecondary: CSSProperties = {
   cursor: "pointer",
   width: "100%",
   textAlign: "center" as const,
-  boxShadow: "0 0 14px rgba(201,168,76,0.1)",
+  boxShadow: "0 0 10px rgba(201,168,76,0.18), inset 0 0 10px rgba(201,168,76,0.05)",
 };
 
 const btnGhost: CSSProperties = {
   background: "transparent",
-  border: "1px solid rgba(201,168,76,0.35)",
+  border: "1px solid rgba(201,168,76,0.45)",
   color: "#B5A896",
   borderRadius: 999,
   padding: "10px 26px",
@@ -113,6 +113,7 @@ const btnGhost: CSSProperties = {
   textAlign: "center" as const,
   alignSelf: "center" as const,
   width: "fit-content",
+  boxShadow: "0 0 8px rgba(201,168,76,0.12)",
 };
 
 export function AuraFlowRoot({ children }: { children: ReactNode }) {
@@ -232,8 +233,10 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
         >
           <div
             style={{
-              background: "#0B0B0F",
-              border: "1px solid rgba(201,168,76,0.5)",
+              background:
+                "radial-gradient(ellipse 380px 260px at 50% -10%, rgba(139,92,222,0.22), transparent 65%), #0B0B0F",
+              border: "2px solid rgba(201,168,76,0.65)",
+              boxShadow: "0 0 18px rgba(201,168,76,0.25), 0 0 42px rgba(201,168,76,0.12), inset 0 0 26px rgba(139,92,222,0.06)",
               borderRadius: 14,
               padding: 26,
               minWidth: 300,
