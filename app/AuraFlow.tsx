@@ -357,7 +357,7 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
                 <div style={{ fontSize: 12, color: "#A79A85", marginBottom: 14 }}>Enquanto isso, já pode conhecer o sistema por dentro:</div>
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
                   <a
-                    href="https://inq-saas.vercel.app/?demo=1"
+                    href="/demo"
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ ...btnPrimary, textDecoration: "none", display: "inline-block" }}
