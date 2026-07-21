@@ -331,8 +331,19 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
               <div style={{ textAlign: "center", padding: "20px 0" }}>
                 <div style={{ fontSize: 32, marginBottom: 10 }}>✓</div>
                 <div style={{ fontSize: 14, color: "#E8E2D9", marginBottom: 6 }}>Recebemos seu pedido!</div>
-                <div style={{ fontSize: 12, color: "#A79A85" }}>Você vai receber um e-mail de confirmação em instantes. Vamos analisar e te chamar em breve.</div>
-                <button style={{ ...btnSecondary, textAlign: "center", marginTop: 16 }} onClick={fechar}>
+                <div style={{ fontSize: 12, color: "#A79A85", marginBottom: 18 }}>
+                  Você vai receber um e-mail de confirmação em instantes. Vamos analisar e te chamar em breve.
+                </div>
+                <div style={{ fontSize: 12, color: "#A79A85", marginBottom: 10 }}>Enquanto isso, já pode conhecer o sistema por dentro:</div>
+                <a
+                  href="https://inq-saas.vercel.app/?demo=1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ ...btnPrimary, textDecoration: "none", display: "block", boxSizing: "border-box" }}
+                >
+                  Experimentar agora
+                </a>
+                <button style={{ ...btnSecondary, textAlign: "center", marginTop: 10 }} onClick={fechar}>
                   Fechar
                 </button>
               </div>
