@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import LeadCard, { type Lead } from "./LeadCard";
+import { type Lead } from "./LeadCard";
 import { moverFichaEstagio } from "./actions";
 import { ESTAGIOS } from "./pipelineStages";
+import LeadFichaModal from "./LeadFichaModal";
 
 export type Ficha = {
   email: string;
@@ -21,7 +22,7 @@ export type Ficha = {
 // faz com o histórico de um cliente. A etapa (Lead/Contato Feito/...) é da
 // pessoa inteira, não de uma solicitação isolada.
 export default function FichaCard({ ficha }: { ficha: Ficha }) {
-  const [aberto, setAberto] = useState(false);
+  const [modalAberto, setModalAberto] = useState(false);
   const [movendo, startMover] = useTransition();
 
   const mover = (novoEstagio: string) => {
@@ -46,10 +47,9 @@ export default function FichaCard({ ficha }: { ficha: Ficha }) {
       }}
     >
       <style>{`.ficha-card:hover{border-color:rgba(201,168,76,0.45);box-shadow:0 0 0 1px rgba(201,168,76,0.45),0 0 20px 1px rgba(201,168,76,0.29),0 10px 24px rgba(0,0,0,.4);transform:translateY(-2px);}`}</style>
-      <div style={{ cursor: "pointer" }} onClick={() => setAberto((v) => !v)}>
+      <div style={{ cursor: "pointer" }} onClick={() => setModalAberto(true)}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 6 }}>
           <span className="text-neutral-100" style={{ fontSize: 13, fontWeight: 600 }}>{ficha.nome || "(sem nome)"}</span>
-          <span className="text-neutral-500" style={{ fontSize: 10 }}>{aberto ? "▲" : "▼"}</span>
         </div>
         <div className="text-neutral-500" style={{ fontSize: 11 }}>
           {ficha.email}
@@ -65,12 +65,6 @@ export default function FichaCard({ ficha }: { ficha: Ficha }) {
         </div>
       </div>
 
-      {aberto && (
-        <div className="mt-2">
-          {ficha.solicitacoes.map((l) => <LeadCard key={l.id} lead={l} />)}
-        </div>
-      )}
-
       <select
         value={ficha.estagio}
         onClick={(e) => e.stopPropagation()}
@@ -82,6 +76,8 @@ export default function FichaCard({ ficha }: { ficha: Ficha }) {
           <option key={e.id} value={e.id}>{e.emoji} Mover para: {e.label}</option>
         ))}
       </select>
+
+      {modalAberto && <LeadFichaModal ficha={ficha} onClose={() => setModalAberto(false)} />}
     </div>
   );
 }
