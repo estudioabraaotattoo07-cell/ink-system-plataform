@@ -7,7 +7,26 @@ import {
   uploadDocumento,
   removerDocumento,
   avancarParaDocumentosConcluidos,
+  aceitarPolitica,
+  aceitarTermos,
 } from "./actions";
+
+const POLITICA_TEXTO = [
+  "No Ink System, a privacidade e a segurança das informações do seu estúdio são tratadas com seriedade.",
+  "Os dados informados durante o cadastro e durante a utilização da plataforma são utilizados exclusivamente para o funcionamento do sistema, incluindo organização do estúdio, atendimento aos clientes, agendamentos, comunicações relacionadas ao serviço e suporte técnico.",
+  "Seus dados nunca serão vendidos ou compartilhados com outros estúdios. Cada conta possui acesso apenas às próprias informações, mantendo total isolamento entre os ambientes.",
+  "O tratamento dessas informações é realizado em conformidade com a LGPD. Sempre que permitido pela legislação, o titular poderá solicitar acesso, atualização ou exclusão dos seus dados.",
+  "Nosso compromisso é utilizar essas informações apenas para oferecer uma plataforma segura, estável e confiável para a gestão do seu estúdio.",
+];
+
+const TERMOS_TEXTO = [
+  "O Ink System é disponibilizado por meio de uma licença mensal de uso, sem período mínimo de permanência.",
+  "A assinatura é renovada automaticamente enquanto permanecer ativa. Caso o cliente deseje cancelar, basta solicitar o cancelamento antes da próxima renovação. O acesso permanecerá disponível normalmente até o término do período já pago.",
+  "Não existe reembolso proporcional referente ao período vigente da assinatura.",
+  "Durante a vigência da assinatura, o cliente continuará recebendo melhorias, atualizações e correções disponibilizadas para o seu plano.",
+  "O suporte será prestado conforme os recursos previstos no plano contratado.",
+  "Ao utilizar a plataforma, ambas as partes comprometem-se a respeitar estes Termos de Uso e a Política de Privacidade.",
+];
 
 function maskTel(v: string) {
   v = v.replace(/\D/g, "").slice(0, 11);
@@ -89,6 +108,9 @@ export default function ComplementarWizard({
   const [documentos, setDocumentos] = useState<Documento[]>(documentosIniciais);
   const [enviandoArquivo, setEnviandoArquivo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [politicaMarcada, setPoliticaMarcada] = useState(!!registro.politica_aceita_em);
+  const [termosMarcada, setTermosMarcada] = useState(!!registro.termos_aceito_em);
+  const [concluidoLocal, setConcluidoLocal] = useState(!!registro.concluido);
 
   const salvarResponsavel = (e: FormEvent) => {
     e.preventDefault();
@@ -130,6 +152,26 @@ export default function ComplementarWizard({
     startSalvar(async () => {
       await avancarParaDocumentosConcluidos(token);
       setEtapa(4);
+    });
+  };
+
+  const confirmarPolitica = () => {
+    if (!politicaMarcada) { setErro("Marque a caixa pra confirmar que você leu a Política de Privacidade."); return; }
+    setErro("");
+    startSalvar(async () => {
+      const r = await aceitarPolitica(token);
+      if (!r.ok) { setErro(r.error || "Não deu pra registrar agora."); return; }
+      setEtapa(5);
+    });
+  };
+
+  const confirmarTermos = () => {
+    if (!termosMarcada) { setErro("Marque a caixa pra confirmar que você leu os Termos de Uso."); return; }
+    setErro("");
+    startSalvar(async () => {
+      const r = await aceitarTermos(token);
+      if (!r.ok) { setErro(r.error || "Não deu pra registrar agora."); return; }
+      setConcluidoLocal(true);
     });
   };
 
@@ -236,14 +278,55 @@ export default function ComplementarWizard({
         </div>
       )}
 
-      {etapa >= 4 && (
+      {concluidoLocal ? (
         <div style={{ textAlign: "center", padding: "20px 0" }}>
-          <div style={{ fontSize: 28, marginBottom: 10 }}>🛠️</div>
+          <div style={{ fontSize: 32, marginBottom: 10 }}>✓</div>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, color: "#C9A84C", margin: "0 0 10px" }}>
+            Documentação concluída
+          </h2>
           <p style={{ color: "#A79A8A", fontSize: 13, lineHeight: 1.7 }}>
-            As etapas de Política de Privacidade e Termos de Uso ainda estão sendo finalizadas. Seus dados até aqui já
-            estão salvos — em breve você receberá um e-mail pra concluir o restante.
+            Recebemos todas as suas informações. Sua solicitação voltou para análise, e você será avisado por e-mail
+            assim que a implantação for aprovada.
           </p>
         </div>
+      ) : (
+        <>
+          {etapa === 4 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, color: "#C9A84C", margin: "0 0 4px" }}>
+                Política de Privacidade
+              </h2>
+              <div style={{ maxHeight: 220, overflowY: "auto", background: "#050505", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 8, padding: 14 }}>
+                {POLITICA_TEXTO.map((p, i) => (
+                  <p key={i} style={{ color: "#A79A8A", fontSize: 12, lineHeight: 1.7, margin: i === 0 ? 0 : "10px 0 0" }}>{p}</p>
+                ))}
+              </div>
+              <label style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: "#E8E2D9", cursor: "pointer" }}>
+                <input type="checkbox" checked={politicaMarcada} onChange={(e) => setPoliticaMarcada(e.target.checked)} style={{ marginTop: 2 }} />
+                Li e concordo com a Política de Privacidade.
+              </label>
+              <button type="button" onClick={confirmarPolitica} style={btnPrimary} disabled={salvando}>{salvando ? "Salvando..." : "Continuar"}</button>
+            </div>
+          )}
+
+          {etapa === 5 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, color: "#C9A84C", margin: "0 0 4px" }}>
+                Termos de Uso
+              </h2>
+              <div style={{ maxHeight: 220, overflowY: "auto", background: "#050505", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 8, padding: 14 }}>
+                {TERMOS_TEXTO.map((p, i) => (
+                  <p key={i} style={{ color: "#A79A8A", fontSize: 12, lineHeight: 1.7, margin: i === 0 ? 0 : "10px 0 0" }}>{p}</p>
+                ))}
+              </div>
+              <label style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: "#E8E2D9", cursor: "pointer" }}>
+                <input type="checkbox" checked={termosMarcada} onChange={(e) => setTermosMarcada(e.target.checked)} style={{ marginTop: 2 }} />
+                Li e aceito os Termos de Uso.
+              </label>
+              <button type="button" onClick={confirmarTermos} style={btnPrimary} disabled={salvando}>{salvando ? "Enviando..." : "Aceitar e continuar"}</button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

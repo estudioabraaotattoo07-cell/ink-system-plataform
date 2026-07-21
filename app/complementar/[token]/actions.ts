@@ -1,10 +1,24 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
-import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+
+// Versão dos documentos aceitos no aceite eletrônico -- se o texto mudar no
+// futuro, sobe esse número; o aceite antigo já registrado não muda. Não pode
+// ser "export const" aqui -- um arquivo "use server" só pode exportar
+// funções async, exportar uma constante quebra o módulo inteiro.
+const POLITICA_VERSAO = "1.0";
+const TERMOS_VERSAO = "1.0";
 
 function getAdminClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
+}
+
+async function obterIP() {
+  const h = await headers();
+  const fwd = h.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0].trim();
+  return h.get("x-real-ip") || "desconhecido";
 }
 
 async function buscarPorToken(token: string) {
@@ -100,5 +114,40 @@ export async function avancarParaDocumentosConcluidos(token: string) {
   return { ok: true };
 }
 
-// Etapas 4 e 5 (Política de Privacidade / Termos de Uso) -- ver abaixo,
-// aguardando aprovação do texto antes de completar a implementação.
+export async function aceitarPolitica(token: string) {
+  const registro = await buscarPorToken(token);
+  if (!registro) return { ok: false, error: "Link inválido." };
+  const ip = await obterIP();
+  const sb = getAdminClient();
+  const { error } = await sb.from("ink_implantacao_dados").update({
+    politica_aceita_em: new Date().toISOString(),
+    politica_aceita_ip: ip,
+    politica_versao: POLITICA_VERSAO,
+    etapa_atual: Math.max(registro.etapa_atual, 5),
+    atualizado_em: new Date().toISOString(),
+  }).eq("token", token);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+// Última etapa -- ao aceitar os Termos, a documentação vira "concluída" e
+// volta pra fila de análise. Não cria conta nem libera ambiente aqui: isso
+// é decisão manual do admin (botão "Aprovar solicitação"), como combinado.
+export async function aceitarTermos(token: string) {
+  const registro = await buscarPorToken(token);
+  if (!registro) return { ok: false, error: "Link inválido." };
+  const ip = await obterIP();
+  const sb = getAdminClient();
+  const { error } = await sb.from("ink_implantacao_dados").update({
+    termos_aceito_em: new Date().toISOString(),
+    termos_aceito_ip: ip,
+    termos_versao: TERMOS_VERSAO,
+    concluido: true,
+    atualizado_em: new Date().toISOString(),
+  }).eq("token", token);
+  if (error) return { ok: false, error: error.message };
+
+  const { error: errLead } = await sb.from("ink_leads").update({ estagio: "documentacao_recebida" }).eq("email", registro.email);
+  if (errLead) return { ok: false, error: errLead.message };
+  return { ok: true };
+}
