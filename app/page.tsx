@@ -179,9 +179,9 @@ export default function LandingPage() {
           e tenha mais tempo para fazer o que realmente importa: tatuar.
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="https://inq-saas.vercel.app/?demo=1" target="_blank" rel="noopener noreferrer" className="hero-btn-primary">
-            Experimentar grátis
-          </a>
+          <AuraTriggerButton className="hero-btn-primary" style={{ textAlign: "center" }}>
+            Começar agora
+          </AuraTriggerButton>
           <a href="/login" className="hero-btn-secondary">
             Já sou cliente
           </a>
@@ -281,7 +281,7 @@ export default function LandingPage() {
           {[
             { emoji: "📅", titulo: "Nunca mais perca um horário.", desc: "Pipeline visual de cada cliente, do primeiro contato até a sessão marcada — sem confundir horário." },
             { emoji: "💰", titulo: "Saiba exatamente quanto entrou no seu estúdio.", desc: "Cada entrada e saída registrada na hora, pra você saber quanto entrou sem abrir planilha." },
-            { emoji: "🌐", titulo: "Transforme seguidores em clientes agendados.", desc: "Seu portfólio online com um chat que já organiza cada pedido — tatuagem, piercing ou consulta — antes de chegar até você." },
+            { emoji: "🌐", titulo: "Receba novos clientes já com as informações organizadas.", desc: "Seu portfólio online com um chat que já organiza cada pedido — tatuagem, piercing ou consulta — antes de chegar até você." },
             { emoji: "🔔", titulo: "Seus clientes continuam sendo atendidos enquanto você tatua.", desc: "Confirmação, lembrete e aviso do dia da sessão, enviados sozinhos pra reduzir falta." },
           ].map((item, i) => (
             <div
@@ -433,7 +433,7 @@ export default function LandingPage() {
                   ].join(", "),
                 }}
               >
-                Assinar
+                Solicitar plano {p.nome}
               </div>
             </AuraTriggerButton>
           ))}
@@ -509,7 +509,7 @@ export default function LandingPage() {
                     ].join(", "),
                   }}
                 >
-                  {p.nome} · Ativar agora
+                  Solicitar plano {p.nome}
                 </AuraTriggerButton>
               </div>
             );
@@ -575,14 +575,11 @@ export default function LandingPage() {
           forma melhor de trabalhar.
         </p>
         <p style={{ color: "#A79A8A", fontSize: 15, lineHeight: 1.6, maxWidth: 520, margin: "0 auto 32px" }}>
-          Comece a testar agora, sem compromisso, e veja se o Ink System encaixa na rotina do seu estúdio.
+          Conheça o Ink System e veja se ele encaixa na rotina do seu estúdio, sem compromisso.
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="https://inq-saas.vercel.app/?demo=1" target="_blank" rel="noopener noreferrer" className="hero-btn-primary">
-            Experimentar grátis
-          </a>
-          <AuraTriggerButton className="hero-btn-secondary" style={{ textAlign: "center" }}>
-            Quero começar
+          <AuraTriggerButton className="hero-btn-primary" style={{ textAlign: "center" }}>
+            Quero conhecer o Ink System
           </AuraTriggerButton>
         </div>
       </section>
