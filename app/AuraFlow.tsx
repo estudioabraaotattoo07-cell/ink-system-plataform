@@ -384,11 +384,14 @@ export function AuraTriggerButton({
   children: ReactNode;
 }) {
   const abrir = useAuraFlow();
+  const reset: CSSProperties = className
+    ? { padding: 0, font: "inherit", textAlign: "inherit", cursor: "pointer", color: "inherit" }
+    : { background: "none", border: "none", padding: 0, font: "inherit", textAlign: "inherit", cursor: "pointer", color: "inherit" };
   return (
     <button
       type="button"
       className={className}
-      style={{ background: "none", border: "none", padding: 0, font: "inherit", textAlign: "inherit", cursor: "pointer", color: "inherit", ...style }}
+      style={{ ...reset, ...style }}
       onClick={() => abrir(plano ?? null)}
     >
       {children}

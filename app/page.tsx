@@ -280,12 +280,14 @@ export default function LandingPage() {
         <p style={{ textAlign: "center", color: "#A79A8A", fontSize: 15, maxWidth: 560, margin: "0 auto 44px" }}>
           Tudo o que seu estúdio precisa, num só sistema — sem depender de planilha, papel ou memória.
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
           {[
             { emoji: "📅", titulo: "Nunca mais perca um horário.", desc: "Pipeline visual de cada cliente, do primeiro contato até a sessão marcada — sem confundir horário." },
             { emoji: "💰", titulo: "Saiba exatamente quanto entrou no seu estúdio.", desc: "Cada entrada e saída registrada na hora, pra você saber quanto entrou sem abrir planilha." },
             { emoji: "🌐", titulo: "Receba novos clientes já com as informações organizadas.", desc: "Seu site trabalha por você, organizando cada novo contato antes mesmo de ele chegar ao seu WhatsApp." },
             { emoji: "🔔", titulo: "Seus clientes continuam sendo atendidos enquanto você tatua.", desc: "Confirmação, lembrete e aviso do dia da sessão, enviados sozinhos pra reduzir falta." },
+            { emoji: "📄", titulo: "Contratos assinados antes da sessão.", desc: "Envie o contrato pro cliente e receba de volta assinado, direto pelo sistema — sem imprimir, sem perder no WhatsApp e sem guardar papel em gaveta." },
+            { emoji: "💳", titulo: "Toda a história do cliente em um só lugar.", desc: "Cada pagamento fica registrado por cliente e por mês, com histórico completo à mão — sem precisar caçar informação em conversa antiga ou anotação solta." },
           ].map((item, i) => (
             <div
               key={i}
@@ -303,41 +305,6 @@ export default function LandingPage() {
               <div style={{ fontSize: 13, color: "#A79A8A", lineHeight: 1.5 }}>{item.desc}</div>
             </div>
           ))}
-        </div>
-      </section>
-
-      <section style={{ maxWidth: 720, margin: "0 auto", padding: "0 24px 112px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
-          <div
-            style={{
-              borderRadius: 12,
-              padding: 26,
-              background: "#0B0B0F",
-              border: "1px solid rgba(201,168,76,0.25)",
-            }}
-          >
-            <div style={{ fontSize: 26, marginBottom: 10 }}>📄</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#E8E2D9", marginBottom: 8 }}>Contratos assinados antes da sessão.</div>
-            <div style={{ fontSize: 13, color: "#A79A8A", lineHeight: 1.6 }}>
-              Envie o contrato pro cliente e receba de volta assinado, direto pelo sistema — sem imprimir, sem
-              perder no WhatsApp e sem guardar papel em gaveta.
-            </div>
-          </div>
-          <div
-            style={{
-              borderRadius: 12,
-              padding: 26,
-              background: "#0B0B0F",
-              border: "1px solid rgba(201,168,76,0.25)",
-            }}
-          >
-            <div style={{ fontSize: 26, marginBottom: 10 }}>💳</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#E8E2D9", marginBottom: 8 }}>Toda a história do cliente em um só lugar.</div>
-            <div style={{ fontSize: 13, color: "#A79A8A", lineHeight: 1.6 }}>
-              Cada pagamento fica registrado por cliente e por mês, com histórico completo à mão — sem
-              precisar caçar informação em conversa antiga ou anotação solta.
-            </div>
-          </div>
         </div>
       </section>
 
