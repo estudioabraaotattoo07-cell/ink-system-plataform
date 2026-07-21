@@ -186,6 +186,9 @@ export default function LandingPage() {
             Já sou cliente
           </a>
         </div>
+        <p style={{ color: "#6B5E54", fontSize: 12, marginTop: 16, maxWidth: 440, marginInline: "auto" }}>
+          Você responderá algumas perguntas rápidas para que a Aura recomende o plano ideal e libere sua demonstração.
+        </p>
       </section>
 
       <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "56px 24px 0" }}>
@@ -290,12 +293,13 @@ export default function LandingPage() {
                 borderRadius: 12,
                 padding: 24,
                 background: "#0B0B0F",
-                border: "1px solid rgba(201,168,76,0.25)",
+                border: i === 0 ? "1px solid rgba(201,168,76,0.6)" : "1px solid rgba(201,168,76,0.25)",
+                boxShadow: i === 0 ? "0 0 24px rgba(201,168,76,0.18)" : "none",
                 textAlign: "center",
               }}
             >
-              <div style={{ fontSize: 26, marginBottom: 10 }}>{item.emoji}</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#E8E2D9", marginBottom: 6 }}>{item.titulo}</div>
+              <div style={{ fontSize: i === 0 ? 30 : 26, marginBottom: 10 }}>{item.emoji}</div>
+              <div style={{ fontSize: i === 0 ? 16 : 15, fontWeight: 700, color: i === 0 ? "#C9A84C" : "#E8E2D9", marginBottom: 6 }}>{item.titulo}</div>
               <div style={{ fontSize: 13, color: "#A79A8A", lineHeight: 1.5 }}>{item.desc}</div>
             </div>
           ))}
@@ -579,6 +583,10 @@ export default function LandingPage() {
             {
               p: "Preciso entender de tecnologia para usar?",
               r: "Não. O sistema foi pensado para a rotina de quem trabalha com tatuagem, com uma navegação simples e acompanhamento na implantação.",
+            },
+            {
+              p: "Os meus dados ficam seguros?",
+              r: "Sim. Cada estúdio possui seu próprio ambiente e só tem acesso às próprias informações. Seus dados não são compartilhados com outros estúdios.",
             },
           ].map((item, i) => (
             <div key={i} style={{ borderBottom: "1px solid rgba(201,168,76,0.15)", paddingBottom: 20 }}>
