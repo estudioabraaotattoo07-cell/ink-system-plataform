@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import TestarEnvioButton from "./TestarEnvioButton";
 
 function diasParaVencimento(dataVenc: string | null) {
@@ -32,7 +33,9 @@ export default function ClienteFichaModal({ linha, onClose }: { linha: LinhaClie
   const planoCor = c.plano === "ouro" ? "#C9A84C" : c.plano === "prata" ? "#B8BCC4" : c.plano === "bronze" ? "#CD7F32" : "#A09585";
   const statusCor = c.status === "ativo" ? "#27AE60" : ["suspenso", "inativo", "cancelado", "vencido"].includes(c.status) ? "#E74C3C" : c.status === "teste" ? "#4A9EBF" : "#A09585";
 
-  return (
+  // Portal pro <body> -- mesma correção do LeadFichaModal, pra não ficar
+  // preso na largura de nenhum container ancestral.
+  return createPortal(
     <div
       style={{
         position: "fixed",
@@ -122,6 +125,7 @@ export default function ClienteFichaModal({ linha, onClose }: { linha: LinhaClie
 
         <TestarEnvioButton clienteId={c.id} />
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

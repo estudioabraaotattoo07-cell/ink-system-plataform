@@ -1210,8 +1210,11 @@ export default function CrmClient({
     { sel: ".srch", title: "Busca Global", desc: "Busque clientes por nome, telefone, Instagram, estilo ou qualquer campo." },
   ];
 
-  const [onboardingDone, setOnboardingDone] = useState(() => !!localStorage.getItem("inq_onb"));
-  const [showSplash, setShowSplash] = useState(() => !!localStorage.getItem("inq_onb"));
+  // Demo: pula onboarding E o splash "Entrar →", cai direto no painel já
+  // populado com os clientes fictícios -- essa experiência de configurar o
+  // estúdio do zero é só pra quem realmente contratou.
+  const [onboardingDone, setOnboardingDone] = useState(() => !!demoMode || !!localStorage.getItem("inq_onb"));
+  const [showSplash, setShowSplash] = useState(() => !demoMode && !!localStorage.getItem("inq_onb"));
   const [onbStep, setOnbStep] = useState(0);
   const [dark, setDark] = useState(true);
   const [tema, setTema] = useState<ThemeId>("carvalho");

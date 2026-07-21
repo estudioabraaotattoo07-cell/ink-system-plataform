@@ -46,8 +46,8 @@ export default function DemoGate({ children }: { children: ReactNode }) {
           Isso é uma demonstração
         </h1>
         <p style={{ color: "#A79A8A", fontSize: 14, lineHeight: 1.7, margin: "0 0 24px" }}>
-          Os dados aqui são fictícios, só pra você conhecer o sistema por dentro. Nada que você preencher é
-          salvo de verdade, e se recarregar a página, tudo volta ao início.
+          Os dados aqui são fictícios — é só pra você conhecer o sistema por dentro. Nada do que você
+          preencher é salvo de verdade, então pode brincar à vontade. Recarregar a página reinicia tudo do zero.
         </p>
         <button
           onClick={() => setEntrou(true)}

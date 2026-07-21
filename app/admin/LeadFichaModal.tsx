@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { createPortal } from "react-dom";
 import LeadCard, { type Lead } from "./LeadCard";
 import { moverFichaEstagio } from "./actions";
 import { ESTAGIOS } from "./pipelineStages";
@@ -13,7 +14,10 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
     startMover(async () => { await moverFichaEstagio(ficha.email, novoEstagio); });
   };
 
-  return (
+  // Renderizado direto no <body> via portal -- o card fica dentro de uma
+  // coluna estreita do kanban (160px), e um position:fixed comum acaba
+  // preso nesse container em vez de cobrir a tela inteira.
+  return createPortal(
     <div
       style={{
         position: "fixed",
@@ -94,7 +98,8 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
           ))}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
