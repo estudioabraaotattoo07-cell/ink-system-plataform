@@ -495,6 +495,31 @@ export default function LandingPage() {
           })}
         </div>
       </section>
+
+      <section style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", padding: "0 24px 96px" }}>
+        <h2
+          style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: 26,
+            fontWeight: 700,
+            color: "#E8E2D9",
+            margin: "0 0 14px",
+          }}
+        >
+          Feito por quem tatua, pra quem tatua
+        </h2>
+        <p style={{ color: "#A79A8A", fontSize: 15, lineHeight: 1.6, maxWidth: 520, margin: "0 auto 32px" }}>
+          Comece a testar agora, sem compromisso, e veja se o Ink System encaixa na rotina do seu estúdio.
+        </p>
+        <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+          <a href="https://inq-saas.vercel.app/?demo=1" target="_blank" rel="noopener noreferrer" className="hero-btn-primary">
+            Experimentar grátis
+          </a>
+          <a href={WHATSAPP_SUPORTE} target="_blank" rel="noopener noreferrer" className="hero-btn-secondary">
+            Falar no WhatsApp
+          </a>
+        </div>
+      </section>
     </main>
   );
 }
