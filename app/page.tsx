@@ -573,6 +573,9 @@ export default function LandingPage() {
         <AuraTriggerButton className="hero-btn-secondary" style={{ textAlign: "center" }}>
           Ainda tem alguma dúvida?
         </AuraTriggerButton>
+        <p style={{ color: "#6B5E54", fontSize: 12, marginTop: 16, maxWidth: 440, marginInline: "auto" }}>
+          Pra te responder, a gente vai precisar entrar em contato — por isso vamos pedir alguns dados antes.
+        </p>
       </section>
 
       <section style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", padding: "0 24px 96px" }}>
