@@ -130,7 +130,6 @@ export default function LandingPage() {
           font-size: 14px;
           text-decoration: none;
           letter-spacing: .03em;
-          text-shadow: -1px 0 0 rgba(74,44,10,0.35), 1px 0 0 rgba(74,44,10,0.35), 0 -1px 0 rgba(74,44,10,0.35), 0 1px 0 rgba(74,44,10,0.35);
           box-shadow: 0 6px 24px rgba(201,168,76,0.35), inset 0 1px 0 rgba(255,255,255,0.4);
           border: 1px solid rgba(255,224,160,0.6);
           transition: transform .15s ease, box-shadow .15s ease;

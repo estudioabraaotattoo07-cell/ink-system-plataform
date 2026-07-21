@@ -4,6 +4,14 @@ import { createContext, useContext, useRef, useState, type CSSProperties, type R
 
 const LEAD_ENDPOINT = "https://inq-saas.vercel.app/api/lead?acao=criarSolicitacao";
 
+function maskTel(v: string) {
+  if (!v) return "";
+  v = v.replace(/\D/g, "").slice(0, 11);
+  if (v.length <= 2) return v.length ? "(" + v : v;
+  if (v.length <= 7) return "(" + v.slice(0, 2) + ") " + v.slice(2);
+  return "(" + v.slice(0, 2) + ") " + v.slice(2, 7) + "-" + v.slice(7);
+}
+
 const QUIZ_PERGUNTAS = [
   {
     chave: "artistas",
@@ -318,7 +326,7 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <div style={{ fontSize: 12, color: "#A79A85" }}>Só mais um passo — deixa seu contato que a gente te chama.</div>
                 <input style={inputStyle} placeholder="Seu nome" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} />
-                <input style={inputStyle} placeholder="Seu WhatsApp" value={form.whatsapp} onChange={(e) => setForm((f) => ({ ...f, whatsapp: e.target.value }))} />
+                <input style={inputStyle} placeholder="(99) 99999-9999" value={form.whatsapp} onChange={(e) => setForm((f) => ({ ...f, whatsapp: maskTel(e.target.value) }))} />
                 <input style={inputStyle} placeholder="Seu e-mail *" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
                 <input style={inputStyle} placeholder="Nome do seu estúdio" value={form.estudio} onChange={(e) => setForm((f) => ({ ...f, estudio: e.target.value }))} />
                 {erro && <div style={{ color: "#E08A8A", fontSize: 12 }}>{erro}</div>}
