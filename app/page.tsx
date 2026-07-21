@@ -175,8 +175,8 @@ export default function LandingPage() {
           Enquanto você cria arte, o Ink System cuida do resto
         </h1>
         <p style={{ color: "#A79A8A", fontSize: 16, lineHeight: 1.6, maxWidth: 560, margin: "0 auto 28px" }}>
-          O sistema operacional criado para estúdios de tatuagem. Organize sua operação, automatize seu atendimento
-          e tenha mais tempo para fazer o que realmente importa: tatuar.
+          Um único sistema para organizar toda a operação do seu estúdio, automatizar o atendimento e devolver
+          mais tempo para o que realmente importa: tatuar.
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
           <AuraTriggerButton className="hero-btn-primary" style={{ textAlign: "center" }}>
@@ -281,7 +281,7 @@ export default function LandingPage() {
           {[
             { emoji: "📅", titulo: "Nunca mais perca um horário.", desc: "Pipeline visual de cada cliente, do primeiro contato até a sessão marcada — sem confundir horário." },
             { emoji: "💰", titulo: "Saiba exatamente quanto entrou no seu estúdio.", desc: "Cada entrada e saída registrada na hora, pra você saber quanto entrou sem abrir planilha." },
-            { emoji: "🌐", titulo: "Receba novos clientes já com as informações organizadas.", desc: "Seu portfólio online com um chat que já organiza cada pedido — tatuagem, piercing ou consulta — antes de chegar até você." },
+            { emoji: "🌐", titulo: "Receba novos clientes já com as informações organizadas.", desc: "Seu site trabalha por você, organizando cada novo contato antes mesmo de ele chegar ao seu WhatsApp." },
             { emoji: "🔔", titulo: "Seus clientes continuam sendo atendidos enquanto você tatua.", desc: "Confirmação, lembrete e aviso do dia da sessão, enviados sozinhos pra reduzir falta." },
           ].map((item, i) => (
             <div
@@ -355,6 +355,21 @@ export default function LandingPage() {
           de chegar até você.
         </p>
       </section>
+
+      <p
+        style={{
+          textAlign: "center",
+          fontFamily: "'Cormorant Garamond', serif",
+          fontStyle: "italic",
+          fontSize: 20,
+          color: "#C9A84C",
+          maxWidth: 560,
+          margin: "0 auto 64px",
+          padding: "0 24px",
+        }}
+      >
+        O Ink System não organiza apenas informações. Ele organiza a operação inteira do seu estúdio.
+      </p>
 
       <section style={{ maxWidth: 980, margin: "0 auto", padding: "0 24px 110px" }}>
         <h2
@@ -549,6 +564,22 @@ export default function LandingPage() {
               p: "Quantos artistas posso cadastrar?",
               r: "Depende do plano: até 2 no Bronze, até 4 no Prata e até 6 no Ouro.",
             },
+            {
+              p: "Posso testar antes de contratar?",
+              r: "Sim. Depois de responder às perguntas da Aura, você poderá conhecer a demonstração do sistema antes de decidir seguir com a implantação.",
+            },
+            {
+              p: "Como funciona a implantação?",
+              r: "Depois que você decide seguir, analisamos os dados do seu estúdio, enviamos o contrato para assinatura e liberamos o seu ambiente no Ink System.",
+            },
+            {
+              p: "Preciso instalar alguma coisa?",
+              r: "Não. O Ink System funciona diretamente no navegador, tanto no computador quanto no celular.",
+            },
+            {
+              p: "Preciso entender de tecnologia para usar?",
+              r: "Não. O sistema foi pensado para a rotina de quem trabalha com tatuagem, com uma navegação simples e acompanhamento na implantação.",
+            },
           ].map((item, i) => (
             <div key={i} style={{ borderBottom: "1px solid rgba(201,168,76,0.15)", paddingBottom: 20 }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: "#E8E2D9", marginBottom: 8 }}>{item.p}</div>
@@ -575,7 +606,7 @@ export default function LandingPage() {
           forma melhor de trabalhar.
         </p>
         <p style={{ color: "#A79A8A", fontSize: 15, lineHeight: 1.6, maxWidth: 520, margin: "0 auto 32px" }}>
-          Conheça o Ink System e veja se ele encaixa na rotina do seu estúdio, sem compromisso.
+          Conheça o Ink System e descubra como ele pode transformar a rotina do seu estúdio.
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
           <AuraTriggerButton className="hero-btn-primary" style={{ textAlign: "center" }}>
