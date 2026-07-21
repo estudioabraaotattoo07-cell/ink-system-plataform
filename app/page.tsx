@@ -112,12 +112,20 @@ export default function LandingPage() {
     <main
       style={{
         minHeight: "100vh",
+        position: "relative",
         background:
           "radial-gradient(ellipse 900px 500px at 50% -10%, rgba(139,92,222,0.35), transparent 65%), #05040A",
         color: "#E8E2D9",
         fontFamily: "'DM Sans', sans-serif",
       }}
     >
+      <a
+        href="/login"
+        className="hero-btn-secondary"
+        style={{ position: "absolute", top: 20, right: 24, padding: "8px 20px", fontSize: 12, zIndex: 10 }}
+      >
+        Login
+      </a>
       <AuraFlowRoot>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700&family=DM+Sans:wght@400;500;600&display=swap');
@@ -180,11 +188,8 @@ export default function LandingPage() {
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
           <AuraTriggerButton className="hero-btn-primary" style={{ textAlign: "center" }}>
-            Começar agora
+            Teste grátis
           </AuraTriggerButton>
-          <a href="/login" className="hero-btn-secondary">
-            Já sou cliente
-          </a>
         </div>
         <p style={{ color: "#6B5E54", fontSize: 12, marginTop: 16, maxWidth: 440, marginInline: "auto" }}>
           Você responderá algumas perguntas rápidas para que a Aura recomende o plano ideal e libere sua demonstração.
