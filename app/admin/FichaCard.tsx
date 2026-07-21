@@ -29,7 +29,14 @@ export default function FichaCard({ ficha }: { ficha: Ficha }) {
     startMover(async () => { await moverFichaEstagio(ficha.email, novoEstagio); });
   };
 
-  const ultima = ficha.solicitacoes[0];
+  // Mais antiga primeiro (ver PipelineBoard) -- a data de solicitação
+  // exibida no card é a da primeira vez que essa pessoa apareceu.
+  const primeira = ficha.solicitacoes[0];
+  const planoCor =
+    ficha.planoSugerido === "Ouro" ? "#C9A84C" :
+    ficha.planoSugerido === "Prata" ? "#B8BCC4" :
+    ficha.planoSugerido === "Bronze" ? "#CD7F32" :
+    "#A09585";
 
   return (
     <div
@@ -57,11 +64,19 @@ export default function FichaCard({ ficha }: { ficha: Ficha }) {
           {ficha.estudio && <> · {ficha.estudio}</>}
         </div>
         {ficha.planoSugerido && (
-          <div className="text-neutral-400 mt-1" style={{ fontSize: 12 }}>Plano sugerido: <strong className="text-neutral-200">{ficha.planoSugerido}</strong></div>
+          <span
+            style={{
+              display: "inline-block", marginTop: 6, fontSize: 10, fontWeight: 700, padding: "3px 9px",
+              borderRadius: 999, textTransform: "uppercase", background: planoCor + "22", color: planoCor,
+              border: "1px solid " + planoCor + "55",
+            }}
+          >
+            {ficha.planoSugerido}
+          </span>
         )}
         <div className="text-neutral-500 mt-1" style={{ fontSize: 11 }}>
           {ficha.solicitacoes.length} solicitaç{ficha.solicitacoes.length > 1 ? "ões" : "ão"}
-          {ultima && <> · última em {new Date(ultima.created_at).toLocaleDateString("pt-BR")}</>}
+          {primeira && <> · solicitado em {new Date(primeira.created_at).toLocaleDateString("pt-BR")}</>}
         </div>
       </div>
 

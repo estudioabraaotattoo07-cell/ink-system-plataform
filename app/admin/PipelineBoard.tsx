@@ -16,21 +16,29 @@ function agruparPorFicha(leads: Lead[]): Ficha[] {
   }
 
   const fichas: Ficha[] = [];
-  for (const [email, solicitacoes] of porEmail) {
-    solicitacoes.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
+  for (const [email, solicitacoesRaw] of porEmail) {
+    // Mais antiga primeiro -- a ficha representa uma fila de atendimento,
+    // então a solicitação mais antiga é a "primeira da fila".
+    const solicitacoes = [...solicitacoesRaw].sort((a, b) => +new Date(a.created_at) - +new Date(b.created_at));
     const maisAvancada = solicitacoes.reduce((acc, l) => (RANK[l.estagio] ?? 0) > (RANK[acc.estagio] ?? 0) ? l : acc, solicitacoes[0]);
+    // Plano sugerido pode mudar ao longo da conversa (a Aura recalcula a
+    // cada resposta do quiz) -- pega o mais recente que tiver um valor,
+    // não o primeiro.
+    const planoSugerido = [...solicitacoes].reverse().find((l) => l.plano_sugerido)?.plano_sugerido ?? null;
     fichas.push({
       email,
       nome: solicitacoes.find((l) => l.nome)?.nome ?? null,
       telefone: solicitacoes.find((l) => l.telefone)?.telefone ?? null,
       estudio: solicitacoes.find((l) => l.estudio)?.estudio ?? null,
-      planoSugerido: solicitacoes.find((l) => l.plano_sugerido)?.plano_sugerido ?? null,
+      planoSugerido,
       estagio: maisAvancada.estagio || "lead",
       temNaoRespondida: solicitacoes.some((l) => l.status !== "respondido"),
       solicitacoes,
     });
   }
-  fichas.sort((a, b) => +new Date(b.solicitacoes[0].created_at) - +new Date(a.solicitacoes[0].created_at));
+  // Fila real: quem solicitou primeiro aparece no topo; quanto mais recente
+  // a solicitação, mais pro fim da lista a ficha vai.
+  fichas.sort((a, b) => +new Date(a.solicitacoes[0].created_at) - +new Date(b.solicitacoes[0].created_at));
   return fichas;
 }
 
