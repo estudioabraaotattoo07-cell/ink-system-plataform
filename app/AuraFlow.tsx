@@ -79,23 +79,40 @@ const btnPrimary: CSSProperties = {
   color: "#17140A",
   fontWeight: 700,
   borderRadius: 999,
-  padding: "12px 0",
+  padding: "12px 30px",
   fontSize: 13,
-  border: "none",
+  border: "1px solid rgba(255,224,160,0.6)",
   cursor: "pointer",
-  width: "100%",
+  textAlign: "center" as const,
+  boxShadow: "0 6px 20px rgba(201,168,76,0.35), inset 0 1px 0 rgba(255,255,255,0.4)",
+  alignSelf: "center" as const,
+  width: "fit-content",
 };
 
 const btnSecondary: CSSProperties = {
-  background: "rgba(201,168,76,0.06)",
-  border: "1px solid rgba(201,168,76,0.4)",
+  background: "rgba(201,168,76,0.1)",
+  border: "1px solid rgba(201,168,76,0.5)",
   color: "#E8C97A",
   borderRadius: 999,
-  padding: "12px 0",
+  padding: "12px 16px",
   fontSize: 13,
   cursor: "pointer",
   width: "100%",
-  textAlign: "left" as const,
+  textAlign: "center" as const,
+  boxShadow: "0 0 14px rgba(201,168,76,0.1)",
+};
+
+const btnGhost: CSSProperties = {
+  background: "transparent",
+  border: "1px solid rgba(201,168,76,0.35)",
+  color: "#B5A896",
+  borderRadius: 999,
+  padding: "10px 26px",
+  fontSize: 12,
+  cursor: "pointer",
+  textAlign: "center" as const,
+  alignSelf: "center" as const,
+  width: "fit-content",
 };
 
 export function AuraFlowRoot({ children }: { children: ReactNode }) {
@@ -321,7 +338,7 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
                 <button style={{ ...btnPrimary, marginTop: 8, opacity: enviando ? 0.6 : 1 }} disabled={enviando} onClick={confirmarEnvio}>
                   {enviando ? "Enviando..." : "Confirmar e enviar"}
                 </button>
-                <button style={{ ...btnSecondary, textAlign: "center" }} onClick={() => setFase("contato")}>
+                <button style={btnGhost} onClick={() => setFase("contato")}>
                   Corrigir
                 </button>
               </div>
@@ -339,11 +356,11 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
                   href="https://inq-saas.vercel.app/?demo=1"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ ...btnPrimary, textDecoration: "none", display: "block", boxSizing: "border-box" }}
+                  style={{ ...btnPrimary, textDecoration: "none", display: "inline-block" }}
                 >
                   Experimentar agora
                 </a>
-                <button style={{ ...btnSecondary, textAlign: "center", marginTop: 10 }} onClick={fechar}>
+                <button style={{ ...btnGhost, marginTop: 10 }} onClick={fechar}>
                   Fechar
                 </button>
               </div>
