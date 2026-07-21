@@ -53,6 +53,17 @@ export async function moverFichaEstagio(email: string, estagio: string) {
   return { ok: true };
 }
 
+// Apaga a FICHA inteira (todas as solicitações da mesma pessoa, por e-mail)
+// -- ação definitiva, sem soft-delete. A confirmação de verdade acontece na
+// UI antes de chamar isso aqui.
+export async function excluirFicha(email: string) {
+  const sb = getAdminClient();
+  const { error } = await sb.from("ink_leads").delete().eq("email", email);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 // Teste de envio isolado por estúdio-cliente — mora só aqui no admin (não no
 // CRM de cada estúdio), pra você conseguir diagnosticar se a falha é de um
 // cliente específico sem depender de nenhum botão dentro do CRM dele.

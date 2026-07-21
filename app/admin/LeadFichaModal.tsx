@@ -1,17 +1,26 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import LeadCard, { type Lead } from "./LeadCard";
-import { moverFichaEstagio } from "./actions";
+import { moverFichaEstagio, excluirFicha } from "./actions";
 import { ESTAGIOS } from "./pipelineStages";
 import { type Ficha } from "./FichaCard";
 
 export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClose: () => void }) {
   const [movendo, startMover] = useTransition();
+  const [excluindo, startExcluir] = useTransition();
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
 
   const mover = (novoEstagio: string) => {
     startMover(async () => { await moverFichaEstagio(ficha.email, novoEstagio); });
+  };
+
+  const excluir = () => {
+    startExcluir(async () => {
+      await excluirFicha(ficha.email);
+      onClose();
+    });
   };
 
   // Renderizado direto no <body> via portal -- o card fica dentro de uma
@@ -96,6 +105,39 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
           {ficha.solicitacoes.map((l) => (
             <LeadFichaSolicitacao key={l.id} lead={l} />
           ))}
+        </div>
+
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 18, paddingTop: 16 }}>
+          {!confirmandoExclusao ? (
+            <button
+              onClick={() => setConfirmandoExclusao(true)}
+              style={{ background: "none", border: "1px solid rgba(231,76,60,.4)", color: "#E74C3C", borderRadius: 8, padding: "8px 16px", fontSize: 12, cursor: "pointer" }}
+            >
+              Excluir
+            </button>
+          ) : (
+            <div style={{ background: "rgba(231,76,60,.08)", border: "1px solid rgba(231,76,60,.35)", borderRadius: 8, padding: 14 }}>
+              <div style={{ fontSize: 12, color: "#E8E2D9", marginBottom: 12 }}>
+                Tem certeza? Ao excluir, esta ação é definitiva.
+              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  onClick={() => setConfirmandoExclusao(false)}
+                  disabled={excluindo}
+                  style={{ background: "none", border: "1px solid rgba(255,255,255,0.2)", color: "#A09585", borderRadius: 8, padding: "8px 16px", fontSize: 12, cursor: excluindo ? "not-allowed" : "pointer" }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={excluir}
+                  disabled={excluindo}
+                  style={{ background: "#E74C3C", border: "1px solid #E74C3C", color: "#fff", borderRadius: 8, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: excluindo ? "not-allowed" : "pointer", opacity: excluindo ? 0.6 : 1 }}
+                >
+                  {excluindo ? "Excluindo..." : "Confirmar"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>,
