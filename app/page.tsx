@@ -161,6 +161,21 @@ export default function LandingPage() {
           alt="Ink System — Gestão, Relacionamento, Tempo"
           style={{ width: "100%", maxWidth: 400, height: "auto", display: "block", margin: "0 auto 24px" }}
         />
+        <h1
+          style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: "clamp(26px, 4vw, 38px)",
+            fontWeight: 700,
+            color: "#E8E2D9",
+            margin: "0 0 14px",
+            lineHeight: 1.25,
+          }}
+        >
+          Enquanto você cria arte, o Ink System cuida do resto
+        </h1>
+        <p style={{ color: "#A79A8A", fontSize: 16, lineHeight: 1.6, maxWidth: 560, margin: "0 auto 28px" }}>
+          Agenda, financeiro, clientes e seu próprio site — tudo em um só lugar, sem planilha, papel ou memória.
+        </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
           <a href="https://inq-saas.vercel.app/?demo=1" target="_blank" rel="noopener noreferrer" className="hero-btn-primary">
             Experimentar grátis
@@ -169,6 +184,49 @@ export default function LandingPage() {
             Já sou cliente
           </a>
         </div>
+      </section>
+
+      <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "56px 24px 0" }}>
+        <h2
+          style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: 24,
+            fontWeight: 700,
+            color: "#C9A84C",
+            margin: "0 0 24px",
+          }}
+        >
+          Você reconhece isso no seu estúdio?
+        </h2>
+        <ul
+          style={{
+            listStyle: "none",
+            padding: 0,
+            margin: "0 0 28px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 14,
+            textAlign: "left",
+            maxWidth: 520,
+            marginInline: "auto",
+          }}
+        >
+          {[
+            "Agenda dividida entre caderno, WhatsApp e a própria memória",
+            "Cliente que erra o horário porque ninguém lembrou ele",
+            "Fim do mês sem saber ao certo quanto entrou e quanto saiu",
+            "Portfólio desatualizado, ou nenhum site pra mostrar o trabalho",
+            "Tempo perdido respondendo a mesma pergunta pra cada lead novo",
+          ].map((item, i) => (
+            <li key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", color: "#C9BDAF", fontSize: 15, lineHeight: 1.5 }}>
+              <span style={{ color: "#C9A84C", flexShrink: 0 }}>—</span>
+              {item}
+            </li>
+          ))}
+        </ul>
+        <p style={{ color: "#A79A8A", fontSize: 15, lineHeight: 1.6, maxWidth: 520, margin: "0 auto" }}>
+          O Ink System nasceu dentro de um estúdio de verdade, pra resolver exatamente isso.
+        </p>
       </section>
 
       <section style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px 24px" }}>
