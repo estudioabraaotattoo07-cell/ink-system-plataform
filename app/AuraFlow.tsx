@@ -365,12 +365,13 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
 
             {fase === "sucesso" && (
               <div style={{ textAlign: "center", padding: "20px 0" }}>
-                <div style={{ fontSize: 32, marginBottom: 10 }}>✓</div>
-                <div style={{ fontSize: 14, color: "#E8E2D9", marginBottom: 6 }}>Recebemos seu pedido!</div>
-                <div style={{ fontSize: 12, color: "#A79A85", marginBottom: 18 }}>
-                  Fica de olho no seu e-mail — é por lá que você vai receber nossa resposta em breve.
+                <div style={{ fontSize: 32, marginBottom: 10 }}>✅</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#E8E2D9", marginBottom: 10 }}>Solicitação enviada com sucesso</div>
+                <div style={{ fontSize: 12, color: "#A79A85", marginBottom: 18, lineHeight: 1.7 }}>
+                  Recebemos sua solicitação. Nossa equipe fará uma análise inicial e entrará em contato pelo e-mail
+                  informado para dar continuidade à implantação do Ink System.
                 </div>
-                <div style={{ fontSize: 12, color: "#A79A85", marginBottom: 14 }}>Enquanto isso, já pode conhecer o sistema por dentro:</div>
+                <div style={{ fontSize: 12, color: "#A79A85", marginBottom: 14 }}>Enquanto isso, você pode conhecer uma demonstração completa do sistema:</div>
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
                   <a
                     href="/demo"
@@ -378,7 +379,7 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
                     rel="noopener noreferrer"
                     style={{ ...btnPrimary, textDecoration: "none", display: "inline-block" }}
                   >
-                    Experimentar agora
+                    Conhecer demonstração
                   </a>
                   <button style={btnGhost} onClick={fechar}>
                     Fechar
