@@ -1,6 +1,7 @@
 import FichaCard, { type Ficha } from "./FichaCard";
 import { type Lead } from "./LeadCard";
 import { ESTAGIOS } from "./pipelineStages";
+import { PLANOS_ATIVOS } from "@/lib/planos";
 
 // Etapa mais "avançada" primeiro -- assim, se a pessoa mandar uma nova
 // solicitação depois de já ter avançado no pipeline, ela não volta pra Lead
@@ -32,12 +33,15 @@ function agruparPorFicha(leads: Lead[]): Ficha[] {
     // cada resposta do quiz) -- pega o mais recente que tiver um valor,
     // não o primeiro.
     const planoSugerido = [...solicitacoes].reverse().find((l) => l.plano_sugerido)?.plano_sugerido ?? null;
+    // Canal de tráfego é fixado no primeiro contato -- não muda depois.
+    const origemTrafego = solicitacoes.find((l) => l.origem_trafego)?.origem_trafego ?? null;
     fichas.push({
       email,
       nome: solicitacoes.find((l) => l.nome)?.nome ?? null,
       telefone: solicitacoes.find((l) => l.telefone)?.telefone ?? null,
       estudio: solicitacoes.find((l) => l.estudio)?.estudio ?? null,
       planoSugerido,
+      origemTrafego,
       estagio: maisAvancada.estagio || "lead",
       temNaoRespondida: solicitacoes.some((l) => l.status !== "respondido"),
       solicitacoes,
@@ -49,25 +53,50 @@ function agruparPorFicha(leads: Lead[]): Ficha[] {
   return fichas;
 }
 
+type Coluna = { id: string; label: string; emoji: string; fichas: Ficha[] };
+
+// A etapa "Lead" não é um pipeline de venda -- é a porta de entrada, antes
+// do processo comercial começar de verdade. Por isso, só ela é subdividida
+// em filas por interesse (Teste Grátis + um plano por vez, lidos de
+// PLANOS_ATIVOS). Assim que a ficha avança pra "Em Análise", ela vira um
+// card normal, sem rastro dessas filas -- não são etapas novas do pipeline,
+// só uma organização visual de entrada.
+function construirColunas(fichas: Ficha[]): Coluna[] {
+  const leads = fichas.filter((f) => f.estagio === "lead");
+  const colunasEntrada: Coluna[] = [
+    { id: "entrada-teste", label: "Teste Grátis", emoji: "🧪", fichas: leads.filter((f) => !f.planoSugerido) },
+    ...PLANOS_ATIVOS.map((plano) => ({
+      id: `entrada-${plano.toLowerCase()}`,
+      label: plano,
+      emoji: "🎯",
+      fichas: leads.filter((f) => f.planoSugerido === plano),
+    })),
+  ];
+
+  const colunasPipeline: Coluna[] = ESTAGIOS.filter((e) => e.id !== "lead").map((estagio) => ({
+    id: estagio.id,
+    label: estagio.label,
+    emoji: estagio.emoji,
+    fichas: fichas.filter((f) => (ESTAGIOS.some((e) => e.id === f.estagio) ? f.estagio : "lead") === estagio.id),
+  }));
+
+  return [...colunasEntrada, ...colunasPipeline];
+}
+
 export default function PipelineBoard({ leads }: { leads: Lead[] }) {
   if (leads.length === 0) {
     return <div className="text-sm text-neutral-500">Nenhuma solicitação recebida ainda.</div>;
   }
 
   const fichas = agruparPorFicha(leads);
-  const porEstagio = new Map<string, Ficha[]>();
-  for (const estagio of ESTAGIOS) porEstagio.set(estagio.id, []);
-  for (const f of fichas) {
-    const key = porEstagio.has(f.estagio) ? f.estagio : "lead";
-    porEstagio.get(key)!.push(f);
-  }
+  const colunas = construirColunas(fichas);
 
   return (
     <div style={{ display: "flex", gap: 14, overflowX: "auto", padding: "54px 4px 4px" }}>
-      {ESTAGIOS.map((estagio) => {
-        const cards = porEstagio.get(estagio.id) ?? [];
+      {colunas.map((coluna) => {
+        const cards = coluna.fichas;
         return (
-          <div key={estagio.id} style={{ minWidth: 160, maxWidth: 160, position: "relative" }}>
+          <div key={coluna.id} style={{ minWidth: 160, maxWidth: 160, position: "relative" }}>
             <div style={{
               position: "absolute", top: -14, left: 8, right: 8, height: 56,
               background: "#C9A84C", filter: "blur(28px)", opacity: 0.36,
@@ -79,9 +108,9 @@ export default function PipelineBoard({ leads }: { leads: Lead[] }) {
               display: "flex", alignItems: "center", justifyContent: "space-between",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontSize: 13 }}>{estagio.emoji}</span>
+                <span style={{ fontSize: 13 }}>{coluna.emoji}</span>
                 <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".09em", textTransform: "uppercase", color: "#C9A84C" }}>
-                  {estagio.label}
+                  {coluna.label}
                 </span>
               </div>
               <span style={{

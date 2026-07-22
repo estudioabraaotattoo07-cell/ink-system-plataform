@@ -17,6 +17,7 @@ export type Lead = {
   status: string;
   estagio: string;
   resposta_admin: string | null;
+  origem_trafego: string | null;
 };
 
 // Um item de histórico dentro da ficha do cliente -- representa UMA

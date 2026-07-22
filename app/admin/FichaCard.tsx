@@ -12,6 +12,7 @@ export type Ficha = {
   telefone: string | null;
   estudio: string | null;
   planoSugerido: string | null;
+  origemTrafego: string | null;
   estagio: string;
   temNaoRespondida: boolean;
   solicitacoes: Lead[];
@@ -63,29 +64,52 @@ export default function FichaCard({ ficha }: { ficha: Ficha }) {
           {ficha.telefone && <> · {ficha.telefone}</>}
           {ficha.estudio && <> · {ficha.estudio}</>}
         </div>
-        {ficha.planoSugerido && (
-          <span
-            style={{
-              display: "inline-block", marginTop: 6, fontSize: 10, fontWeight: 700, padding: "3px 9px",
-              borderRadius: 999, textTransform: "uppercase", background: planoCor + "22", color: planoCor,
-              border: "1px solid " + planoCor + "55",
-            }}
-          >
-            {ficha.planoSugerido}
-          </span>
-        )}
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
+          {ficha.planoSugerido && (
+            <span
+              style={{
+                display: "inline-block", fontSize: 10, fontWeight: 700, padding: "3px 9px",
+                borderRadius: 999, textTransform: "uppercase", background: planoCor + "22", color: planoCor,
+                border: "1px solid " + planoCor + "55",
+              }}
+            >
+              {ficha.planoSugerido}
+            </span>
+          )}
+          {ficha.origemTrafego && (
+            <span
+              style={{
+                display: "inline-block", fontSize: 10, fontWeight: 600, padding: "3px 9px",
+                borderRadius: 999, background: "rgba(255,255,255,0.06)", color: "#A09585",
+                border: "1px solid rgba(255,255,255,0.12)",
+              }}
+            >
+              {ficha.origemTrafego}
+            </span>
+          )}
+        </div>
         <div className="text-neutral-500 mt-1" style={{ fontSize: 11 }}>
           {ficha.solicitacoes.length} solicitaç{ficha.solicitacoes.length > 1 ? "ões" : "ão"}
           {primeira && <> · solicitado em {new Date(primeira.created_at).toLocaleDateString("pt-BR")}</>}
         </div>
       </div>
 
+      {ficha.estagio === "lead" && (
+        <button
+          onClick={(e) => { e.stopPropagation(); mover("em_analise"); }}
+          disabled={movendo}
+          style={{ marginTop: 10, width: "100%", background: "rgba(232,168,56,0.15)", border: "1px solid rgba(232,168,56,0.4)", color: "#E8A838", borderRadius: 6, fontSize: 11, fontWeight: 700, padding: "6px 8px", cursor: movendo ? "not-allowed" : "pointer" }}
+        >
+          Assumir lead
+        </button>
+      )}
+
       <select
         value={ficha.estagio}
         onClick={(e) => e.stopPropagation()}
         onChange={(e) => mover(e.target.value)}
         disabled={movendo}
-        style={{ marginTop: 10, width: "100%", background: "#0A0A0A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 6, color: "#A09585", fontSize: 11, padding: "5px 8px", cursor: movendo ? "not-allowed" : "pointer" }}
+        style={{ marginTop: 8, width: "100%", background: "#0A0A0A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 6, color: "#A09585", fontSize: 11, padding: "5px 8px", cursor: movendo ? "not-allowed" : "pointer" }}
       >
         {ESTAGIOS.map((e) => (
           <option key={e.id} value={e.id}>{e.emoji} Mover para: {e.label}</option>

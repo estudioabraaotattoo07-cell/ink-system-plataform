@@ -187,12 +187,12 @@ export default function LandingPage() {
           mais tempo para o que realmente importa: tatuar.
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <AuraTriggerButton className="hero-btn-primary" style={{ textAlign: "center" }}>
+          <AuraTriggerButton modo="teste" className="hero-btn-primary" style={{ textAlign: "center" }}>
             Teste grátis
           </AuraTriggerButton>
         </div>
         <p style={{ color: "#6B5E54", fontSize: 12, marginTop: 16, maxWidth: 440, marginInline: "auto" }}>
-          Você responderá algumas perguntas rápidas para que a Aura recomende o plano ideal e libere sua demonstração.
+          É rápido: nome, WhatsApp e e-mail, e seu acesso à demonstração já é liberado.
         </p>
       </section>
 

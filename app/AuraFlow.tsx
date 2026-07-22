@@ -4,6 +4,27 @@ import { createContext, useContext, useRef, useState, type CSSProperties, type R
 
 const LEAD_ENDPOINT = "https://inq-saas.vercel.app/api/lead?acao=criarSolicitacao";
 
+// Detecta o canal de tráfego pra registrar na ficha do admin -- Instagram e
+// Google saem automáticos pelo referrer; um link marcado com ?utm_source=
+// permite marcar qualquer canal manualmente (ex: indicação).
+function detectarOrigemTrafego(): string {
+  try {
+    const utm = new URLSearchParams(window.location.search).get("utm_source");
+    if (utm) return utm.charAt(0).toUpperCase() + utm.slice(1);
+    const ref = document.referrer;
+    if (!ref) return "Site";
+    const host = new URL(ref).hostname.replace("www.", "");
+    if (host.includes(window.location.hostname)) return "Site";
+    if (host.includes("instagram")) return "Instagram";
+    if (host.includes("google")) return "Google";
+    if (host.includes("facebook")) return "Facebook";
+    if (host.includes("whatsapp")) return "WhatsApp";
+    return host;
+  } catch {
+    return "Site";
+  }
+}
+
 function maskTel(v: string) {
   if (!v) return "";
   v = v.replace(/\D/g, "").slice(0, 11);
@@ -64,9 +85,9 @@ function calcularPlanoRecomendado(respostas: Record<string, string>): string {
   return melhor;
 }
 
-type Fase = "quiz" | "resultado" | "horario" | "contato" | "revisao" | "sucesso";
+type Fase = "quiz" | "resultado" | "horario" | "contato" | "revisao" | "sucesso" | "teste";
 
-const AuraFlowContext = createContext<(plano: string | null) => void>(() => {});
+const AuraFlowContext = createContext<(plano: string | null, modo?: "teste") => void>(() => {});
 export function useAuraFlow() {
   return useContext(AuraFlowContext);
 }
@@ -136,8 +157,12 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
   const leadIdRef = useRef<string | null>(null);
+  const origemTrafegoRef = useRef<string | null>(null);
+  if (origemTrafegoRef.current === null && typeof window !== "undefined") {
+    origemTrafegoRef.current = detectarOrigemTrafego();
+  }
 
-  const abrir = (plano: string | null) => {
+  const abrir = (plano: string | null, modo?: "teste") => {
     leadIdRef.current = null;
     setRespostas({});
     setQuizStep(0);
@@ -146,7 +171,7 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
     setErro("");
     setPlanoFixo(plano);
     setPlanoEscolhido(plano);
-    setFase(plano ? "horario" : "quiz");
+    setFase(modo === "teste" ? "teste" : plano ? "horario" : "quiz");
     setOpen(true);
   };
 
@@ -163,6 +188,7 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
           plano_sugerido: planoEscolhido,
           respostas: respostasAtual,
           finalizado,
+          origem_trafego: origemTrafegoRef.current,
           ...extra,
         }),
       });
@@ -221,6 +247,30 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
     setFase("sucesso");
   };
 
+  const enviarTeste = async () => {
+    if (!form.nome.trim()) {
+      setErro("Preenche seu nome.");
+      return;
+    }
+    if (!form.email || !form.email.includes("@")) {
+      setErro("Preenche um e-mail válido pra gente liberar seu acesso.");
+      return;
+    }
+    setEnviando(true);
+    setErro("");
+    const data = await salvar(
+      { nome: form.nome, email: form.email, telefone: form.whatsapp, estudio: null, mensagem: null },
+      {},
+      true
+    );
+    setEnviando(false);
+    if (!data?.ok) {
+      setErro("Não deu pra enviar agora. Tenta de novo em instantes.");
+      return;
+    }
+    setFase("sucesso");
+  };
+
   return (
     <AuraFlowContext.Provider value={abrir}>
       {children}
@@ -262,6 +312,21 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
                 ✕
               </button>
             </div>
+
+            {fase === "teste" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ fontSize: 14, color: "#E8E2D9", lineHeight: 1.6 }}>
+                  Deixa seu nome, WhatsApp e e-mail pra liberar seu acesso à demonstração agora mesmo.
+                </div>
+                <input style={inputStyle} placeholder="Seu nome *" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} />
+                <input style={inputStyle} placeholder="(99) 99999-9999" value={form.whatsapp} onChange={(e) => setForm((f) => ({ ...f, whatsapp: maskTel(e.target.value) }))} />
+                <input style={inputStyle} placeholder="Seu e-mail *" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+                {erro && <div style={{ color: "#E08A8A", fontSize: 12 }}>{erro}</div>}
+                <button style={{ ...btnPrimary, opacity: enviando ? 0.6 : 1 }} disabled={enviando} onClick={enviarTeste}>
+                  {enviando ? "Enviando..." : "Liberar meu acesso"}
+                </button>
+              </div>
+            )}
 
             {fase === "quiz" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -396,11 +461,13 @@ export function AuraFlowRoot({ children }: { children: ReactNode }) {
 
 export function AuraTriggerButton({
   plano,
+  modo,
   className,
   style,
   children,
 }: {
   plano?: string | null;
+  modo?: "teste";
   className?: string;
   style?: CSSProperties;
   children: ReactNode;
@@ -419,7 +486,7 @@ export function AuraTriggerButton({
       type="button"
       className={className}
       style={{ ...reset, ...style }}
-      onClick={() => abrir(plano ?? null)}
+      onClick={() => abrir(plano ?? null, modo)}
     >
       {children}
     </button>
