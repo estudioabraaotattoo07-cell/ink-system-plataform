@@ -41,8 +41,8 @@ const DETALHES_PLANOS = [
     itens: [
       { emoji: "🗂️", titulo: "Nunca perca o controle dos seus clientes.", desc: "CRM completo com pipeline, agenda e financeiro automático." },
       { emoji: "📋", titulo: "Todo o histórico do cliente na palma da mão.", desc: "Ficha completa com histórico, documentos e anamnese." },
-      { emoji: "🌐", titulo: "Tenha um site profissional sem depender de um desenvolvedor.", desc: "Seu portfólio e seus artistas, editáveis por você." },
-      { emoji: "✉️", titulo: "Reduza faltas sem precisar lembrar ninguém.", desc: "E-mail e SMS automáticos a cada agendamento." },
+      { emoji: "🌐", titulo: "Tenha um site profissional sem depender de um desenvolvedor.", desc: "Seu estúdio já conta com um site integrado ao CRM, totalmente editável por você. Atualize artistas, portfólio e informações sem depender de programador." },
+      { emoji: "✉️", titulo: "Reduza faltas sem precisar lembrar ninguém.", desc: "O sistema envia lembretes automáticos antes de cada sessão, reduzindo esquecimentos e faltas." },
     ],
   },
   {
@@ -53,7 +53,7 @@ const DETALHES_PLANOS = [
     itens: [
       { emoji: "🔔", titulo: "Disparos automáticos por etapa.", desc: "Lembrete, aviso do dia e confirmação de presença, prontos pra usar. Pode manter como está ou editar o texto do seu jeito." },
       { emoji: "🎉", titulo: "Disparos automáticos em datas comemorativas.", desc: "O sistema já possui campanhas prontas para datas como aniversário, Dia das Mães, Natal e outras. Basta ativar. Se preferir, você também pode editar os textos e salvar sua própria versão." },
-      { emoji: "📸", titulo: "Mostre mais do seu trabalho.", desc: "15 fotos por artista no seu site." },
+      { emoji: "📸", titulo: "Mostre mais do seu trabalho.", desc: "Amplie a galeria do site integrado ao CRM para até 15 fotos por artista." },
     ],
   },
   {
@@ -65,10 +65,10 @@ const DETALHES_PLANOS = [
       { emoji: "🔑", titulo: "Transforme quem já é cliente em divulgador.", desc: "Palavra secreta gera crédito automático pra quem participa." },
       { emoji: "🔗", titulo: "Saiba exatamente o que está trazendo cliente.", desc: "Veja de onde vem cada pessoa que chega até você." },
       { emoji: "🎨", titulo: "Seu site com a cara da sua marca.", desc: "Cores e identidade visual só suas." },
-      { emoji: "💬", titulo: "Transforme reputação em prova social.", desc: "Depoimentos e a história do seu estúdio, direto no site." },
-      { emoji: "🎞️", titulo: "Seu portfólio sempre em destaque.", desc: "Fotos rodando sozinhas, sem precisar mexer em nada." },
-      { emoji: "🖌️", titulo: "Um sistema com a cara do seu estúdio.", desc: "Tema do CRM do jeito que você preferir." },
-      { emoji: "📸", titulo: "Mostre tudo que você já fez.", desc: "30 fotos por artista." },
+      { emoji: "💬", titulo: "Transforme reputação em prova social.", desc: "Exiba depoimentos reais e conte a história do seu estúdio no site integrado ao CRM." },
+      { emoji: "🎞️", titulo: "Seu portfólio sempre em destaque.", desc: "Destaque automaticamente seus trabalhos no banner e nas galerias do site, sem precisar atualizar manualmente." },
+      { emoji: "🖌️", titulo: "Um sistema com a cara do seu estúdio.", desc: "Personalize a identidade visual do CRM com as cores e a marca do seu estúdio." },
+      { emoji: "📸", titulo: "Mostre tudo que você já fez.", desc: "Expanda a galeria do site para até 30 fotos por artista, organizadas automaticamente." },
     ],
   },
 ];
@@ -361,6 +361,10 @@ export default function LandingPage() {
         >
           Planos
         </h2>
+        <p style={{ textAlign: "center", color: "#A79A8A", fontSize: 15, maxWidth: 620, margin: "-16px auto 36px" }}>
+          Todos os planos incluem um site profissional integrado ao CRM, desenvolvido para apresentar seu estúdio,
+          receber novos clientes e permitir que você atualize tudo sozinho, sem depender de desenvolvedores.
+        </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20 }}>
           {PLANOS.map((p) => (
             <AuraTriggerButton
