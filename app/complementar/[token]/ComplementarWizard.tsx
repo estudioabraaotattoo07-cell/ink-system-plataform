@@ -4,12 +4,12 @@ import { useState, useRef, useTransition, type FormEvent } from "react";
 import {
   salvarEtapaResponsavel,
   salvarEtapaEstudio,
-  uploadDocumento,
-  removerDocumento,
+  uploadArquivoItem,
   avancarParaDocumentosConcluidos,
   aceitarPolitica,
   aceitarTermos,
 } from "./actions";
+import { tipoDeItem, type StatusItem } from "@/lib/implantacaoItens";
 
 const POLITICA_TEXTO = [
   "No Ink System, a privacidade e a segurança das informações do seu estúdio são tratadas com seriedade.",
@@ -76,16 +76,22 @@ const btnPrimary = {
   cursor: "pointer",
 } as const;
 
-type Documento = { id: string; nome_arquivo: string; url: string; tipo: string | null };
+type ItemImplantacao = {
+  id: string;
+  tipo: string;
+  status: StatusItem;
+  observacao_admin: string | null;
+  arquivo: { nome_arquivo: string } | null;
+};
 
 export default function ComplementarWizard({
   token,
   registro,
-  documentosIniciais,
+  itensIniciais,
 }: {
   token: string;
   registro: Record<string, any>;
-  documentosIniciais: Documento[];
+  itensIniciais: ItemImplantacao[];
 }) {
   const [etapa, setEtapa] = useState<number>(Math.min(registro.etapa_atual || 1, 5));
   const [salvando, startSalvar] = useTransition();
@@ -96,6 +102,7 @@ export default function ComplementarWizard({
     cpf: registro.cpf || "",
     telefone: registro.telefone || "",
   });
+  const [tipoPessoa, setTipoPessoa] = useState<"fisica" | "juridica">(registro.tipo_pessoa || "fisica");
   const [estudio, setEstudio] = useState({
     cnpj: registro.cnpj || "",
     nomeFantasia: registro.nome_fantasia || "",
@@ -105,9 +112,9 @@ export default function ComplementarWizard({
     instagram: registro.instagram || "",
     qtdArtistas: registro.qtd_artistas || "",
   });
-  const [documentos, setDocumentos] = useState<Documento[]>(documentosIniciais);
-  const [enviandoArquivo, setEnviandoArquivo] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [itens, setItens] = useState<ItemImplantacao[]>(itensIniciais);
+  const [enviandoItem, setEnviandoItem] = useState<string | null>(null);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [politicaMarcada, setPoliticaMarcada] = useState(!!registro.politica_aceita_em);
   const [termosMarcada, setTermosMarcada] = useState(!!registro.termos_aceito_em);
   const [concluidoLocal, setConcluidoLocal] = useState(!!registro.concluido);
@@ -126,31 +133,28 @@ export default function ComplementarWizard({
     e.preventDefault();
     setErro("");
     startSalvar(async () => {
-      const r = await salvarEtapaEstudio(token, estudio);
+      const r = await salvarEtapaEstudio(token, { tipoPessoa, ...estudio });
       if (!r.ok) { setErro(r.error || "Não deu pra salvar agora."); return; }
       setEtapa(3);
     });
   };
 
-  const enviarArquivo = async (file: File) => {
-    setEnviandoArquivo(true);
+  const enviarArquivoItem = async (itemId: string, file: File) => {
+    setEnviandoItem(itemId);
     setErro("");
     const fd = new FormData();
     fd.set("arquivo", file);
-    const r = await uploadDocumento(token, fd);
-    setEnviandoArquivo(false);
+    const r = await uploadArquivoItem(itemId, fd);
+    setEnviandoItem(null);
     if (!r.ok) { setErro(r.error || "Não deu pra enviar o arquivo."); return; }
-    setDocumentos((d) => [{ id: crypto.randomUUID(), nome_arquivo: file.name, url: "", tipo: file.type }, ...d]);
-  };
-
-  const excluirDocumento = async (doc: Documento) => {
-    setDocumentos((d) => d.filter((x) => x.id !== doc.id));
-    await removerDocumento(doc.id, doc.url);
+    setItens((prev) => prev.map((i) => (i.id === itemId ? { ...i, status: "recebido", arquivo: { nome_arquivo: file.name } } : i)));
   };
 
   const concluirDocumentos = () => {
+    setErro("");
     startSalvar(async () => {
-      await avancarParaDocumentosConcluidos(token);
+      const r = await avancarParaDocumentosConcluidos(token);
+      if (!r.ok) { setErro(r.error || "Não deu pra continuar."); return; }
       setEtapa(4);
     });
   };
@@ -174,6 +178,58 @@ export default function ComplementarWizard({
       setConcluidoLocal(true);
     });
   };
+
+  const itensPendentesDeReenvio = itens.filter((i) => i.status === "solicitar_novo");
+
+  function ItemUpload({ item }: { item: ItemImplantacao }) {
+    const trait = tipoDeItem(item.tipo);
+    return (
+      <div style={{ background: "#141414", borderRadius: 8, padding: 12 }}>
+        <div style={{ fontSize: 13, color: "#E8E2D9", fontWeight: 600, marginBottom: 4 }}>{trait.rotulo}</div>
+        {item.observacao_admin && (
+          <div style={{ fontSize: 11, color: "#E0A85A", marginBottom: 6, fontStyle: "italic" }}>{item.observacao_admin}</div>
+        )}
+        {item.arquivo && (
+          <div style={{ fontSize: 11, color: "#A79A85", marginBottom: 6 }}>Enviado: {item.arquivo.nome_arquivo}</div>
+        )}
+        <input
+          ref={(el) => { fileInputRefs.current[item.id] = el; }}
+          type="file"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) enviarArquivoItem(item.id, file);
+            e.target.value = "";
+          }}
+          style={{ display: "none" }}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRefs.current[item.id]?.click()}
+          disabled={enviandoItem === item.id}
+          style={{ ...inputStyle, textAlign: "left", cursor: enviandoItem === item.id ? "not-allowed" : "pointer", color: "#C9A84C", padding: "8px 10px", fontSize: 12 }}
+        >
+          {enviandoItem === item.id ? "Enviando..." : item.arquivo ? "📎 Substituir arquivo" : "📎 Escolher arquivo"}
+        </button>
+      </div>
+    );
+  }
+
+  if (concluidoLocal && itensPendentesDeReenvio.length > 0) {
+    return (
+      <div style={{ maxWidth: 480, width: "100%", background: "#0B0B0F", border: "1px solid rgba(201,168,76,0.4)", borderRadius: 14, padding: "32px 30px", boxShadow: "0 0 30px rgba(201,168,76,0.1)" }}>
+        <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, color: "#C9A84C", margin: "0 0 8px" }}>
+          Precisamos que você reenvie um documento
+        </h2>
+        <p style={{ color: "#A79A8A", fontSize: 13, lineHeight: 1.7, margin: "0 0 16px" }}>
+          O restante da sua documentação já está em análise. Só falta reenviar o(s) item(ns) abaixo.
+        </p>
+        {erro && <div style={{ color: "#E08A8A", fontSize: 12, marginBottom: 12 }}>{erro}</div>}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {itensPendentesDeReenvio.map((item) => <ItemUpload key={item.id} item={item} />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -226,9 +282,23 @@ export default function ComplementarWizard({
           <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, color: "#C9A84C", margin: "0 0 4px" }}>
             Dados do estúdio
           </h2>
-          <input style={inputStyle} placeholder="CNPJ (caso possua)" value={estudio.cnpj} onChange={(e) => setEstudio((f) => ({ ...f, cnpj: maskCNPJ(e.target.value) }))} />
+          <div style={{ display: "flex", gap: 16, marginBottom: 4 }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#E8E2D9", cursor: "pointer" }}>
+              <input type="radio" checked={tipoPessoa === "fisica"} onChange={() => setTipoPessoa("fisica")} />
+              Pessoa Física
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#E8E2D9", cursor: "pointer" }}>
+              <input type="radio" checked={tipoPessoa === "juridica"} onChange={() => setTipoPessoa("juridica")} />
+              Pessoa Jurídica
+            </label>
+          </div>
+          {tipoPessoa === "juridica" && (
+            <>
+              <input style={inputStyle} placeholder="CNPJ" value={estudio.cnpj} onChange={(e) => setEstudio((f) => ({ ...f, cnpj: maskCNPJ(e.target.value) }))} required />
+              <input style={inputStyle} placeholder="Razão social (se houver)" value={estudio.razaoSocial} onChange={(e) => setEstudio((f) => ({ ...f, razaoSocial: e.target.value }))} />
+            </>
+          )}
           <input style={inputStyle} placeholder="Nome fantasia" value={estudio.nomeFantasia} onChange={(e) => setEstudio((f) => ({ ...f, nomeFantasia: e.target.value }))} required />
-          <input style={inputStyle} placeholder="Razão social (se houver)" value={estudio.razaoSocial} onChange={(e) => setEstudio((f) => ({ ...f, razaoSocial: e.target.value }))} />
           <div style={{ display: "flex", gap: 10 }}>
             <input style={inputStyle} placeholder="Cidade" value={estudio.cidade} onChange={(e) => setEstudio((f) => ({ ...f, cidade: e.target.value }))} required />
             <input style={{ ...inputStyle, maxWidth: 80 }} placeholder="UF" maxLength={2} value={estudio.estado} onChange={(e) => setEstudio((f) => ({ ...f, estado: e.target.value.toUpperCase() }))} required />
@@ -244,36 +314,10 @@ export default function ComplementarWizard({
           <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, color: "#C9A84C", margin: "0 0 4px" }}>
             Documentos
           </h2>
-          <p style={{ color: "#A79A8A", fontSize: 13, margin: 0 }}>Anexe os documentos do seu estúdio (pode enviar mais de um).</p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple={false}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) enviarArquivo(file);
-              e.target.value = "";
-            }}
-            style={{ display: "none" }}
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={enviandoArquivo}
-            style={{ ...inputStyle, textAlign: "left", cursor: enviandoArquivo ? "not-allowed" : "pointer", color: "#C9A84C" }}
-          >
-            {enviandoArquivo ? "Enviando..." : "📎 Escolher arquivo"}
-          </button>
-          {documentos.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {documentos.map((d) => (
-                <div key={d.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#141414", borderRadius: 6, padding: "8px 10px", fontSize: 12, color: "#E8E2D9" }}>
-                  <span>{d.nome_arquivo}</span>
-                  <button type="button" onClick={() => excluirDocumento(d)} style={{ background: "none", border: "none", color: "#E74C3C", cursor: "pointer", fontSize: 12 }}>Remover</button>
-                </div>
-              ))}
-            </div>
-          )}
+          <p style={{ color: "#A79A8A", fontSize: 13, margin: 0 }}>Envie os documentos abaixo pra continuar.</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {itens.map((item) => <ItemUpload key={item.id} item={item} />)}
+          </div>
           <button type="button" onClick={concluirDocumentos} style={btnPrimary} disabled={salvando}>{salvando ? "Salvando..." : "Continuar"}</button>
         </div>
       )}

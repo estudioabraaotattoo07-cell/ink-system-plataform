@@ -3,6 +3,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "node:crypto";
+import { tipoDeItem } from "@/lib/implantacaoItens";
 
 function getAdminClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
@@ -219,15 +220,21 @@ function maskCPF(cpf: string | null) {
 
 export async function buscarImplantacao(email: string) {
   const sb = getAdminClient();
-  const [{ data: dados }, { data: documentos }, { data: historico }] = await Promise.all([
-    sb.from("ink_implantacao_dados").select("*").eq("email", email).maybeSingle(),
-    sb.from("ink_implantacao_documentos").select("*").eq("email", email).order("enviado_em", { ascending: false }),
-    sb.from("ink_implantacao_historico").select("*").eq("email", email).order("criado_em", { ascending: false }),
-  ]);
+  const { data: dados } = await sb.from("ink_implantacao_dados").select("*").eq("email", email).maybeSingle();
   if (!dados) return null;
+
+  const [{ data: itensData }, { data: historico }] = await Promise.all([
+    sb.from("ink_implantacao_itens").select("*").eq("implantacao_id", dados.id).order("criado_em"),
+    sb.from("ink_implantacao_historico").select("*").eq("implantacao_id", dados.id).order("criado_em", { ascending: false }),
+  ]);
+  const itens = itensData ?? [];
+  const { data: arquivos } = itens.length > 0
+    ? await sb.from("ink_implantacao_arquivos").select("*").in("item_id", itens.map((i) => i.id)).eq("substituido", false)
+    : { data: [] };
+
   return {
     dados: { ...dados, cpf: maskCPF(dados.cpf) },
-    documentos: documentos ?? [],
+    itens: itens.map((item) => ({ ...item, arquivo: arquivos?.find((a) => a.item_id === item.id) ?? null })),
     historico: historico ?? [],
   };
 }
@@ -239,17 +246,58 @@ export async function revelarCPF(email: string) {
   return { ok: true, cpf: data.cpf || "" };
 }
 
-export async function gerarUrlDocumento(caminho: string) {
+export async function gerarUrlArquivo(caminho: string) {
   const sb = getAdminClient();
   const { data, error } = await sb.storage.from("implantacao-docs").createSignedUrl(caminho, 300);
   if (error || !data) return { ok: false, error: error?.message || "Não foi possível gerar o link." };
   return { ok: true, url: data.signedUrl };
 }
 
-export async function atualizarStatusDocumento(id: string, status: "pendente" | "aprovado" | "reenviar") {
+// Muda o status de um item de implantação. Só "solicitar_novo" dispara
+// e-mail automático (decisão explícita do Abraão) -- "aprovado" e
+// "rejeitado" ficam só como marcação interna por enquanto.
+export async function atualizarStatusItem(
+  itemId: string,
+  status: "pendente" | "recebido" | "aprovado" | "solicitar_novo" | "rejeitado",
+  observacao?: string
+) {
   const sb = getAdminClient();
-  const { error } = await sb.from("ink_implantacao_documentos").update({ status }).eq("id", id);
+  const { data: item, error: errItem } = await sb.from("ink_implantacao_itens").select("*").eq("id", itemId).maybeSingle();
+  if (errItem || !item) return { ok: false, error: "Item não encontrado." };
+
+  const { error } = await sb.from("ink_implantacao_itens").update({
+    status,
+    observacao_admin: observacao ?? item.observacao_admin,
+    atualizado_em: new Date().toISOString(),
+  }).eq("id", itemId);
   if (error) return { ok: false, error: error.message };
+
+  if (status === "solicitar_novo") {
+    const { data: implantacao } = await sb.from("ink_implantacao_dados").select("email, nome_completo").eq("id", item.implantacao_id).maybeSingle();
+    if (implantacao?.email) {
+      const rotulo = tipoDeItem(item.tipo).rotulo;
+      const primeiroNome = implantacao.nome_completo?.split(" ")[0] || "";
+      const html = paragrafos([
+        `Olá, ${primeiroNome}.`,
+        `Durante a análise da sua documentação, identificamos que o item "${rotulo}" precisa ser reenviado.`,
+        ...(observacao ? [`Motivo: ${observacao}`] : []),
+        "Clique no botão abaixo para enviar novamente apenas este item — não é necessário refazer o restante da complementação.",
+      ]) + BOTAO_HTML("Reenviar documento", "https://inksystem.com.br/complementar/" + await tokenDaImplantacao(sb, item.implantacao_id))
+        + RODAPE;
+      await enviarEmail(implantacao.email, "Sua solicitação precisa de algumas informações complementares", html);
+    }
+  }
+
+  await sb.from("ink_implantacao_historico").insert({
+    implantacao_id: item.implantacao_id,
+    evento: `Item "${status === "solicitar_novo" ? "reenvio solicitado" : status}": ${item.tipo}`,
+  });
+
   revalidatePath("/admin");
   return { ok: true };
+}
+
+async function tokenDaImplantacao(sb: ReturnType<typeof getAdminClient>, implantacaoId: string) {
+  const { data } = await sb.from("ink_implantacao_dados").select("token").eq("id", implantacaoId).maybeSingle();
+  return data?.token || "";
 }

@@ -1,17 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { buscarImplantacao, revelarCPF, gerarUrlDocumento, atualizarStatusDocumento } from "./actions";
+import { buscarImplantacao, revelarCPF, gerarUrlArquivo, atualizarStatusItem } from "./actions";
+import { tipoDeItem, STATUS_LABEL, type StatusItem } from "@/lib/implantacaoItens";
 
 type Dados = Record<string, any>;
-type Documento = { id: string; nome_arquivo: string; tipo: string | null; url: string; status: string | null; enviado_em: string };
+type ItemImplantacao = { id: string; tipo: string; status: StatusItem; observacao_admin: string | null; arquivo: { nome_arquivo: string; caminho: string; enviado_em: string } | null };
 type HistoricoItem = { id: string; evento: string; criado_em: string };
-
-const STATUS_LABEL: Record<string, string> = {
-  pendente: "Pendente de análise",
-  aprovado: "Aprovado",
-  reenviar: "Precisa ser reenviado",
-};
 
 function Campo({ label, valor }: { label: string; valor: React.ReactNode }) {
   return (
@@ -25,9 +20,11 @@ function Campo({ label, valor }: { label: string; valor: React.ReactNode }) {
 export default function ImplantacaoResumo({ email, estagioFicha }: { email: string; estagioFicha: string }) {
   const [carregado, setCarregado] = useState(false);
   const [dados, setDados] = useState<Dados | null>(null);
-  const [documentos, setDocumentos] = useState<Documento[]>([]);
+  const [itens, setItens] = useState<ItemImplantacao[]>([]);
   const [historico, setHistorico] = useState<HistoricoItem[]>([]);
   const [cpfRevelado, setCpfRevelado] = useState<string | null>(null);
+  const [pedindoMotivo, setPedindoMotivo] = useState<string | null>(null);
+  const [motivo, setMotivo] = useState("");
 
   useEffect(() => {
     let ativo = true;
@@ -35,7 +32,7 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
       if (!ativo) return;
       if (r) {
         setDados(r.dados);
-        setDocumentos(r.documentos);
+        setItens(r.itens);
         setHistorico(r.historico);
       }
       setCarregado(true);
@@ -50,20 +47,34 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
     if (r.ok) setCpfRevelado(r.cpf);
   };
 
-  const abrirDocumento = async (doc: Documento) => {
-    const r = await gerarUrlDocumento(doc.url);
+  const abrirArquivo = async (item: ItemImplantacao) => {
+    if (!item.arquivo) return;
+    const r = await gerarUrlArquivo(item.arquivo.caminho);
     if (r.ok) window.open(r.url, "_blank");
   };
 
-  const mudarStatusDocumento = (id: string, status: string) => {
-    setDocumentos((docs) => docs.map((d) => (d.id === id ? { ...d, status } : d)));
-    atualizarStatusDocumento(id, status as any);
+  const mudarStatus = (itemId: string, status: StatusItem) => {
+    if (status === "solicitar_novo") {
+      setPedindoMotivo(itemId);
+      setMotivo("");
+      return;
+    }
+    setItens((prev) => prev.map((i) => (i.id === itemId ? { ...i, status } : i)));
+    atualizarStatusItem(itemId, status);
   };
+
+  const confirmarSolicitarNovo = (itemId: string) => {
+    setItens((prev) => prev.map((i) => (i.id === itemId ? { ...i, status: "solicitar_novo", observacao_admin: motivo || null } : i)));
+    atualizarStatusItem(itemId, "solicitar_novo", motivo || undefined);
+    setPedindoMotivo(null);
+  };
+
+  const todosItensRecebidos = itens.length > 0 && itens.every((i) => i.status !== "pendente");
 
   const etapas = [
     { label: "Dados do responsável", ok: dados.etapa_atual >= 2 },
     { label: "Dados do estúdio", ok: dados.etapa_atual >= 3 },
-    { label: "Documentos", ok: dados.etapa_atual >= 4 },
+    { label: "Documentos", ok: dados.etapa_atual >= 4 || todosItensRecebidos },
     { label: "Política de Privacidade", ok: !!dados.politica_aceita_em },
     { label: "Termos de Uso", ok: !!dados.termos_aceito_em },
     { label: "Aprovação final", ok: estagioFicha === "aprovado" },
@@ -114,7 +125,7 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
       </div>
 
       <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#6B5E54", marginBottom: 8 }}>
-        Estúdio
+        Estúdio {dados.tipo_pessoa && <span style={{ textTransform: "none", fontWeight: 400 }}>({dados.tipo_pessoa === "fisica" ? "Pessoa Física" : "Pessoa Jurídica"})</span>}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10, marginBottom: 16 }}>
         <Campo label="Nome fantasia" valor={dados.nome_fantasia} />
@@ -125,34 +136,65 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
         <Campo label="Qtd. artistas" valor={dados.qtd_artistas} />
       </div>
 
-      {documentos.length > 0 && (
+      {itens.length > 0 && (
         <>
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#6B5E54", marginBottom: 8 }}>
-            Documentos ({documentos.length})
+            Documentos ({itens.length})
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
-            {documentos.map((d) => (
-              <div key={d.id} style={{ background: "#141414", borderRadius: 6, padding: "8px 10px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                  <div style={{ fontSize: 12, color: "#E8E2D9", overflowWrap: "anywhere" }}>{d.nome_arquivo}</div>
-                  <button onClick={() => abrirDocumento(d)} style={{ background: "none", border: "1px solid rgba(201,168,76,0.4)", color: "#C9A84C", borderRadius: 6, padding: "3px 10px", fontSize: 11, cursor: "pointer", flexShrink: 0 }}>
-                    Ver
-                  </button>
+            {itens.map((item) => {
+              const trait = tipoDeItem(item.tipo);
+              return (
+                <div key={item.id} style={{ background: "#141414", borderRadius: 6, padding: "8px 10px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                    <div style={{ fontSize: 12, color: "#E8E2D9", fontWeight: 600 }}>{trait.rotulo}</div>
+                    {item.arquivo && (
+                      <button onClick={() => abrirArquivo(item)} style={{ background: "none", border: "1px solid rgba(201,168,76,0.4)", color: "#C9A84C", borderRadius: 6, padding: "3px 10px", fontSize: 11, cursor: "pointer", flexShrink: 0 }}>
+                        Ver
+                      </button>
+                    )}
+                  </div>
+                  {item.arquivo && (
+                    <div style={{ fontSize: 10, color: "#6B5E54", marginTop: 2, overflowWrap: "anywhere" }}>
+                      {item.arquivo.nome_arquivo} · {new Date(item.arquivo.enviado_em).toLocaleDateString("pt-BR")}
+                    </div>
+                  )}
+                  {item.observacao_admin && item.status === "solicitar_novo" && (
+                    <div style={{ fontSize: 10, color: "#E0A85A", marginTop: 4, fontStyle: "italic" }}>Motivo enviado: {item.observacao_admin}</div>
+                  )}
+                  <div style={{ marginTop: 6 }}>
+                    {pedindoMotivo === item.id ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        <textarea
+                          value={motivo}
+                          onChange={(e) => setMotivo(e.target.value)}
+                          placeholder="Motivo (opcional) — aparece no e-mail pro cliente"
+                          style={{ background: "#0A0A0A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 6, color: "#E8E2D9", fontSize: 11, padding: 6, resize: "vertical", minHeight: 40 }}
+                        />
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button onClick={() => setPedindoMotivo(null)} style={{ background: "none", border: "1px solid rgba(255,255,255,0.2)", color: "#A09585", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer" }}>
+                            Cancelar
+                          </button>
+                          <button onClick={() => confirmarSolicitarNovo(item.id)} style={{ background: "#C9A84C", border: "none", color: "#17140A", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                            Enviar solicitação
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <select
+                        value={item.status}
+                        onChange={(e) => mudarStatus(item.id, e.target.value as StatusItem)}
+                        style={{ background: "#0A0A0A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 6, color: "#A09585", fontSize: 10, padding: "2px 6px", cursor: "pointer" }}
+                      >
+                        {Object.entries(STATUS_LABEL).map(([v, l]) => (
+                          <option key={v} value={v}>{l}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-                  <span style={{ fontSize: 10, color: "#6B5E54" }}>{new Date(d.enviado_em).toLocaleDateString("pt-BR")}</span>
-                  <select
-                    value={d.status || "pendente"}
-                    onChange={(e) => mudarStatusDocumento(d.id, e.target.value)}
-                    style={{ background: "#0A0A0A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 6, color: "#A09585", fontSize: 10, padding: "2px 6px", cursor: "pointer" }}
-                  >
-                    {Object.entries(STATUS_LABEL).map(([v, l]) => (
-                      <option key={v} value={v}>{l}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}

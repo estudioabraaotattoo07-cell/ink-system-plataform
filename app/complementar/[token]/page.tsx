@@ -9,9 +9,14 @@ export default async function ComplementarTokenPage({ params }: { params: Promis
   const { token } = await params;
   const sb = getAdminClient();
   const { data: registro } = await sb.from("ink_implantacao_dados").select("*").eq("token", token).maybeSingle();
-  const { data: documentos } = registro
-    ? await sb.from("ink_implantacao_documentos").select("*").eq("email", registro.email).order("enviado_em", { ascending: false })
-    : { data: [] };
+  let itens: any[] = [];
+  if (registro) {
+    const { data: itensData } = await sb.from("ink_implantacao_itens").select("*").eq("implantacao_id", registro.id).order("criado_em");
+    if (itensData && itensData.length > 0) {
+      const { data: arquivos } = await sb.from("ink_implantacao_arquivos").select("*").in("item_id", itensData.map((i) => i.id)).eq("substituido", false);
+      itens = itensData.map((item) => ({ ...item, arquivo: arquivos?.find((a) => a.item_id === item.id) ?? null }));
+    }
+  }
 
   return (
     <main
@@ -38,7 +43,7 @@ export default async function ComplementarTokenPage({ params }: { params: Promis
           </p>
         </div>
       ) : (
-        <ComplementarWizard token={token} registro={registro} documentosIniciais={documentos ?? []} />
+        <ComplementarWizard token={token} registro={registro} itensIniciais={itens} />
       )}
     </main>
   );
