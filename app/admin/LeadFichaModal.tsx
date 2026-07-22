@@ -169,12 +169,13 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
               onClick={() => setConfirmandoExclusao(true)}
               style={{ background: "none", border: "1px solid rgba(231,76,60,.4)", color: "#E74C3C", borderRadius: 8, padding: "8px 16px", fontSize: 12, cursor: "pointer" }}
             >
-              Excluir
+              Excluir tudo (ficha + implantação)
             </button>
           ) : (
             <div style={{ background: "rgba(231,76,60,.08)", border: "1px solid rgba(231,76,60,.35)", borderRadius: 8, padding: 14 }}>
               <div style={{ fontSize: 12, color: "#E8E2D9", marginBottom: 12 }}>
-                Tem certeza? Ao excluir, esta ação é definitiva.
+                Tem certeza? Isso apaga a ficha, as solicitações, os dados de implantação, os documentos enviados,
+                os aceites de Política/Termos e o histórico — tudo vinculado a este e-mail. Ação definitiva.
               </div>
               <div style={{ display: "flex", gap: 10 }}>
                 <button

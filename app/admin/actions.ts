@@ -154,11 +154,23 @@ export async function encerrarSolicitacao(email: string, nome: string | null) {
   return { ok: true };
 }
 
-// Apaga a FICHA inteira (todas as solicitações da mesma pessoa, por e-mail)
-// -- ação definitiva, sem soft-delete. A confirmação de verdade acontece na
-// UI antes de chamar isso aqui.
+// Apaga a FICHA inteira e TUDO relacionado àquele e-mail -- solicitações,
+// dados de implantação, documentos (banco + arquivos no Storage), histórico
+// e aceites. Ação definitiva, sem soft-delete -- pensada pra limpar ambiente
+// de teste (ambiente único, não existe banco de dev separado do de
+// produção). A confirmação de verdade acontece na UI antes de chamar isso.
 export async function excluirFicha(email: string) {
   const sb = getAdminClient();
+
+  const { data: documentos } = await sb.from("ink_implantacao_documentos").select("url").eq("email", email);
+  if (documentos && documentos.length > 0) {
+    await sb.storage.from("implantacao-docs").remove(documentos.map((d) => d.url));
+  }
+
+  await sb.from("ink_implantacao_documentos").delete().eq("email", email);
+  await sb.from("ink_implantacao_historico").delete().eq("email", email);
+  await sb.from("ink_implantacao_dados").delete().eq("email", email);
+
   const { error } = await sb.from("ink_leads").delete().eq("email", email);
   if (error) return { ok: false, error: error.message };
   revalidatePath("/admin");
