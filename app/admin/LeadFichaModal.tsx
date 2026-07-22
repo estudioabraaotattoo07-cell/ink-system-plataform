@@ -173,9 +173,21 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
             </button>
           ) : (
             <div style={{ background: "rgba(231,76,60,.08)", border: "1px solid rgba(231,76,60,.35)", borderRadius: 8, padding: 14 }}>
-              <div style={{ fontSize: 12, color: "#E8E2D9", marginBottom: 12 }}>
-                Tem certeza? Isso apaga a ficha, as solicitações, os dados de implantação, os documentos enviados,
-                os aceites de Política/Termos e o histórico — tudo vinculado a este e-mail. Ação definitiva.
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#E8E2D9", marginBottom: 8 }}>
+                Excluir permanentemente este cliente?
+              </div>
+              <div style={{ fontSize: 12, color: "#A09585", marginBottom: 6 }}>Esta ação removerá permanentemente:</div>
+              <ul style={{ fontSize: 12, color: "#A09585", margin: "0 0 10px", paddingLeft: 18, lineHeight: 1.7 }}>
+                <li>ficha do cliente;</li>
+                <li>todas as solicitações;</li>
+                <li>dados da implantação;</li>
+                <li>documentos enviados;</li>
+                <li>registros de aceite;</li>
+                <li>histórico;</li>
+                <li>arquivos armazenados.</li>
+              </ul>
+              <div style={{ fontSize: 12, color: "#E8E2D9", marginBottom: 12, fontWeight: 600 }}>
+                Esta ação não poderá ser desfeita.
               </div>
               <div style={{ display: "flex", gap: 10 }}>
                 <button
