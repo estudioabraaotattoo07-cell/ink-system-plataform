@@ -46,8 +46,9 @@ export default function DemoGate({ children }: { children: ReactNode }) {
           Isso é uma demonstração
         </h1>
         <p style={{ color: "#A79A8A", fontSize: 14, lineHeight: 1.7, margin: "0 0 24px" }}>
-          Os dados aqui são fictícios — é só pra você conhecer o sistema por dentro. Nada do que você
-          preencher é salvo de verdade, então pode brincar à vontade. Recarregar a página reinicia tudo do zero.
+          Você está entrando em um ambiente de demonstração. Todos os clientes, agendas e informações exibidos
+          são fictícios e servem apenas para apresentar o funcionamento do Ink System. Nenhuma alteração
+          realizada aqui será salva.
         </p>
         <button
           onClick={() => setEntrou(true)}

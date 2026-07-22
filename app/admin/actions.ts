@@ -119,10 +119,9 @@ export async function aprovarSolicitacao(email: string, nome: string | null) {
   const primeiroNome = nome?.split(" ")[0] || "";
   const html = paragrafos([
     `Olá, ${primeiroNome}.`,
-    "Sua documentação foi analisada e a implantação do Ink System para o seu estúdio foi aprovada.",
-    "Agora vamos preparar o seu ambiente com as informações enviadas.",
-    "Assim que essa etapa for concluída, você receberá os dados de acesso e as orientações para começar a utilizar o sistema.",
-    "Seja bem-vindo ao Ink System.",
+    "Sua documentação foi analisada e aprovada.",
+    "A partir de agora, nossa equipe vai iniciar a implantação do Ink System para o seu estúdio.",
+    "Você receberá um novo e-mail assim que o seu ambiente estiver pronto, com os dados de acesso e as orientações para começar a utilizar o sistema.",
   ]) + RODAPE;
 
   const envio = await enviarEmail(email, "Sua implantação foi aprovada", html);
