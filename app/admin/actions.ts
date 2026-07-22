@@ -194,3 +194,51 @@ export async function testarEnvioTenant(clienteId: string) {
   if (!resp.ok) return { ok: false, error: data?.message || data?.error || `Erro ${resp.status}` };
   return { ok: true, destino: cliente.email };
 }
+
+// ── Painel de Implantação (Fase 3) ──────────────────────────────────────
+// Só leitura/gestão do lado do admin -- o preenchimento de verdade acontece
+// no fluxo público /complementar/[token]. CPF nunca sai daqui mascarado por
+// padrão: só é revelado sob pedido explícito, numa chamada separada.
+
+function maskCPF(cpf: string | null) {
+  if (!cpf) return null;
+  const digitos = cpf.replace(/\D/g, "");
+  return digitos.length >= 2 ? "•••.•••.•••-" + digitos.slice(-2) : "•••.•••.•••-••";
+}
+
+export async function buscarImplantacao(email: string) {
+  const sb = getAdminClient();
+  const [{ data: dados }, { data: documentos }, { data: historico }] = await Promise.all([
+    sb.from("ink_implantacao_dados").select("*").eq("email", email).maybeSingle(),
+    sb.from("ink_implantacao_documentos").select("*").eq("email", email).order("enviado_em", { ascending: false }),
+    sb.from("ink_implantacao_historico").select("*").eq("email", email).order("criado_em", { ascending: false }),
+  ]);
+  if (!dados) return null;
+  return {
+    dados: { ...dados, cpf: maskCPF(dados.cpf) },
+    documentos: documentos ?? [],
+    historico: historico ?? [],
+  };
+}
+
+export async function revelarCPF(email: string) {
+  const sb = getAdminClient();
+  const { data, error } = await sb.from("ink_implantacao_dados").select("cpf").eq("email", email).maybeSingle();
+  if (error || !data) return { ok: false, error: "Não encontrado." };
+  return { ok: true, cpf: data.cpf || "" };
+}
+
+export async function gerarUrlDocumento(caminho: string) {
+  const sb = getAdminClient();
+  const { data, error } = await sb.storage.from("implantacao-docs").createSignedUrl(caminho, 300);
+  if (error || !data) return { ok: false, error: error?.message || "Não foi possível gerar o link." };
+  return { ok: true, url: data.signedUrl };
+}
+
+export async function atualizarStatusDocumento(id: string, status: "pendente" | "aprovado" | "reenviar") {
+  const sb = getAdminClient();
+  const { error } = await sb.from("ink_implantacao_documentos").update({ status }).eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/admin");
+  return { ok: true };
+}

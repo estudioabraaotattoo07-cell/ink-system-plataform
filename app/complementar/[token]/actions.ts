@@ -28,6 +28,13 @@ async function buscarPorToken(token: string) {
   return data;
 }
 
+// Só o resumo da ação, nunca o conteúdo -- CPF/CNPJ/documentos nunca
+// aparecem aqui, só a confirmação de que a etapa aconteceu.
+async function registrarHistorico(email: string, evento: string) {
+  const sb = getAdminClient();
+  await sb.from("ink_implantacao_historico").insert({ email, evento });
+}
+
 export async function salvarEtapaResponsavel(token: string, dados: { nomeCompleto: string; cpf: string; telefone: string }) {
   const registro = await buscarPorToken(token);
   if (!registro) return { ok: false, error: "Link inválido." };
@@ -40,6 +47,7 @@ export async function salvarEtapaResponsavel(token: string, dados: { nomeComplet
     atualizado_em: new Date().toISOString(),
   }).eq("token", token);
   if (error) return { ok: false, error: error.message };
+  await registrarHistorico(registro.email, "Dados do responsável enviados");
   return { ok: true };
 }
 
@@ -61,6 +69,7 @@ export async function salvarEtapaEstudio(token: string, dados: {
     atualizado_em: new Date().toISOString(),
   }).eq("token", token);
   if (error) return { ok: false, error: error.message };
+  await registrarHistorico(registro.email, "Dados do estúdio enviados");
   return { ok: true };
 }
 
@@ -111,6 +120,7 @@ export async function avancarParaDocumentosConcluidos(token: string) {
     atualizado_em: new Date().toISOString(),
   }).eq("token", token);
   if (error) return { ok: false, error: error.message };
+  await registrarHistorico(registro.email, "Documentos enviados");
   return { ok: true };
 }
 
@@ -127,6 +137,7 @@ export async function aceitarPolitica(token: string) {
     atualizado_em: new Date().toISOString(),
   }).eq("token", token);
   if (error) return { ok: false, error: error.message };
+  await registrarHistorico(registro.email, `Política de Privacidade v${POLITICA_VERSAO} aceita`);
   return { ok: true };
 }
 
@@ -146,8 +157,10 @@ export async function aceitarTermos(token: string) {
     atualizado_em: new Date().toISOString(),
   }).eq("token", token);
   if (error) return { ok: false, error: error.message };
+  await registrarHistorico(registro.email, `Termos de Uso v${TERMOS_VERSAO} aceitos`);
 
   const { error: errLead } = await sb.from("ink_leads").update({ estagio: "documentacao_recebida" }).eq("email", registro.email);
   if (errLead) return { ok: false, error: errLead.message };
+  await registrarHistorico(registro.email, "Documentação concluída e encaminhada para aprovação final");
   return { ok: true };
 }

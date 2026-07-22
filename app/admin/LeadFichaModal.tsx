@@ -6,6 +6,7 @@ import LeadCard, { type Lead } from "./LeadCard";
 import { moverFichaEstagio, excluirFicha, aprovarSolicitacao, solicitarComplementacao, encerrarSolicitacao } from "./actions";
 import { ESTAGIOS } from "./pipelineStages";
 import { type Ficha } from "./FichaCard";
+import ImplantacaoResumo from "./ImplantacaoResumo";
 
 const btnDecisao = {
   approvar: { background: "rgba(39,174,96,.12)", border: "1px solid rgba(39,174,96,.4)", color: "#27AE60" },
@@ -151,7 +152,9 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
           ) : null;
         })()}
 
-        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#6B5E54", marginBottom: 6 }}>
+        <ImplantacaoResumo email={ficha.email} estagioFicha={ficha.estagio} />
+
+        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#6B5E54", marginBottom: 6, marginTop: 18 }}>
           Histórico de solicitações ({ficha.solicitacoes.length})
         </div>
         <div>
