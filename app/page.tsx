@@ -1,9 +1,16 @@
 import type { CSSProperties } from "react";
 import { AuraFlowRoot, AuraTriggerButton } from "./AuraFlow";
+import LandingVideoSection from "./LandingVideoSection";
 
-// Vídeo institucional — troque pelo ID real do YouTube quando estiver pronto
-// (o ID é o trecho depois de "v=" na URL do vídeo).
-const YOUTUBE_VIDEO_ID = "";
+// Vídeo 1 — Manifesto: identificação emocional, logo após o Hero. Sem
+// funcionalidade, sem produto -- só propósito. Troque pelo ID do YouTube
+// quando o vídeo estiver produzido (o ID é o trecho depois de "v=" na URL).
+const VIDEO_MANIFESTO_ID = "";
+
+// Vídeo 2 — jornada técnica do sistema (Instagram → Site → Aura → CRM →
+// Agenda → Financeiro → Contratos → Pós-venda → Reengajamento). Responde à
+// pergunta que o Manifesto plantou, já depois do bloco "Você reconhece isso".
+const VIDEO_TECNICO_ID = "";
 
 const PLANOS = [
   {
@@ -196,6 +203,8 @@ export default function LandingPage() {
         </p>
       </section>
 
+      <LandingVideoSection source={{ type: "youtube", id: VIDEO_MANIFESTO_ID }} immersive eager />
+
       <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "56px 24px 0" }}>
         <h2
           style={{
@@ -240,33 +249,7 @@ export default function LandingPage() {
         </p>
       </section>
 
-      <section style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px 24px" }}>
-        <div
-          style={{
-            aspectRatio: "16/9",
-            width: "100%",
-            borderRadius: 14,
-            overflow: "hidden",
-            border: "1px solid rgba(201,168,76,0.15)",
-            background: "#0B0B0F",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {YOUTUBE_VIDEO_ID ? (
-            <iframe
-              style={{ width: "100%", height: "100%", border: 0 }}
-              src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}`}
-              title="Apresentação do INK SYSTEM"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          ) : (
-            <p style={{ color: "#6B5E54", fontSize: 13 }}>Vídeo de apresentação em breve</p>
-          )}
-        </div>
-      </section>
+      <LandingVideoSection source={{ type: "youtube", id: VIDEO_TECNICO_ID }} />
 
       <section style={{ maxWidth: 980, margin: "0 auto", padding: "0 24px 112px" }}>
         <h2
