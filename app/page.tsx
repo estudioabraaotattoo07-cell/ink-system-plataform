@@ -189,17 +189,9 @@ export default function LandingPage() {
         >
           Enquanto você cria arte, o Ink System cuida do resto
         </h1>
-        <p style={{ color: "#A79A8A", fontSize: 16, lineHeight: 1.6, maxWidth: 560, margin: "0 auto 28px" }}>
+        <p style={{ color: "#A79A8A", fontSize: 16, lineHeight: 1.6, maxWidth: 560, margin: "0 auto" }}>
           Um único sistema para organizar toda a operação do seu estúdio, automatizar o atendimento e devolver
           mais tempo para o que realmente importa: tatuar.
-        </p>
-        <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <AuraTriggerButton modo="teste" className="hero-btn-primary" style={{ textAlign: "center" }}>
-            Teste grátis
-          </AuraTriggerButton>
-        </div>
-        <p style={{ color: "#6B5E54", fontSize: 12, marginTop: 16, maxWidth: 440, marginInline: "auto" }}>
-          É rápido: nome, WhatsApp e e-mail, e seu acesso à demonstração já é liberado.
         </p>
       </section>
 
@@ -250,6 +242,17 @@ export default function LandingPage() {
       </section>
 
       <LandingVideoSection source={{ type: "youtube", id: VIDEO_TECNICO_ID }} />
+
+      <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "40px 24px 0" }}>
+        <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+          <AuraTriggerButton modo="teste" className="hero-btn-primary" style={{ textAlign: "center" }}>
+            Teste grátis
+          </AuraTriggerButton>
+        </div>
+        <p style={{ color: "#6B5E54", fontSize: 12, marginTop: 16, maxWidth: 440, marginInline: "auto" }}>
+          É rápido: nome, WhatsApp e e-mail, e seu acesso à demonstração já é liberado.
+        </p>
+      </section>
 
       <section style={{ maxWidth: 980, margin: "0 auto", padding: "0 24px 112px" }}>
         <h2
