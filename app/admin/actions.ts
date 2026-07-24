@@ -12,10 +12,18 @@ function getAdminClient() {
 // Envio de e-mail de verdade continua no inq-saas (é lá que a chave do Resend
 // já está configurada) -- reaproveitado por todas as ações de decisão da
 // ficha, em vez de duplicar o fetch em cada uma.
+// Bloco 1 de hardening: esta é uma chamada server-to-server (Server Action do
+// admin, sem sessão Supabase -- o /admin usa senha própria, não Supabase
+// Auth), autenticada por um segredo de serviço num header dedicado, nunca o
+// mesmo header usado por sessão de usuário. O segredo só existe em variável
+// de ambiente dos dois projetos, nunca em código de navegador.
 async function enviarEmail(to: string, subject: string, html: string) {
   const resp = await fetch("https://inq-saas.vercel.app/api/resend", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "X-Internal-Service-Key": process.env.INTERNAL_SERVICE_SECRET || "",
+    },
     body: JSON.stringify({ to, subject, html }),
   }).catch(() => null);
   if (!resp || !resp.ok) return { ok: false, error: "Não foi possível enviar o e-mail agora. Tenta de novo em instantes." };
@@ -44,7 +52,10 @@ export async function responderLead(leadId: string, resposta: string) {
 
   const respEmail = await fetch("https://inq-saas.vercel.app/api/resend", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "X-Internal-Service-Key": process.env.INTERNAL_SERVICE_SECRET || "",
+    },
     body: JSON.stringify({ to: lead.email, subject: assunto, html: corpo }),
   }).catch(() => null);
 
@@ -197,7 +208,10 @@ export async function testarEnvioTenant(clienteId: string) {
 
   const resp = await fetch("https://inq-saas.vercel.app/api/resend", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "X-Internal-Service-Key": process.env.INTERNAL_SERVICE_SECRET || "",
+    },
     body: JSON.stringify({ from: remetente, to: cliente.email, subject: `Teste de envio — ${cliente.nome_estudio || "INK SYSTEM"}`, html }),
   }).catch((e) => null);
 
