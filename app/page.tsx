@@ -1,118 +1,98 @@
 import type { CSSProperties } from "react";
 import { AuraFlowRoot, AuraTriggerButton } from "./AuraFlow";
-import LandingVideoSection from "./LandingVideoSection";
 
-// Vídeo 1 — Manifesto: identificação emocional, logo após o Hero. Sem
-// funcionalidade, sem produto -- só propósito. Troque pelo ID do YouTube
-// quando o vídeo estiver produzido (o ID é o trecho depois de "v=" na URL).
-const VIDEO_MANIFESTO_ID = "";
+// Fase B1 — landing institucional única (Ink System 1.0). Sem planos, sem
+// comparação, sem vídeos (LandingVideoSection.tsx segue intacto, só não é
+// renderizado aqui até haver conteúdo gravado). Aura ainda abre o fluxo
+// antigo (quiz por plano) até a Etapa 2 reescrever AuraFlow.tsx.
 
-// Vídeo 2 — jornada técnica do sistema (Instagram → Site → Aura → CRM →
-// Agenda → Financeiro → Contratos → Pós-venda → Reengajamento). Responde à
-// pergunta que o Manifesto plantou, já depois do bloco "Você reconhece isso".
-const VIDEO_TECNICO_ID = "";
+const sectionHeading: CSSProperties = {
+  fontFamily: "'Cormorant Garamond', serif",
+  fontWeight: 700,
+  color: "#C9A84C",
+  textAlign: "center",
+  letterSpacing: ".02em",
+  margin: "0 0 20px",
+};
 
-const PLANOS = [
+const bodyText: CSSProperties = {
+  color: "#A79A8A",
+  fontSize: 15.5,
+  lineHeight: 1.75,
+};
+
+const emphasisLine: CSSProperties = {
+  fontFamily: "'Cormorant Garamond', serif",
+  fontStyle: "italic",
+  fontSize: "clamp(19px, 2.4vw, 23px)",
+  color: "#E8C97A",
+  lineHeight: 1.5,
+  margin: "18px 0 0",
+};
+
+const PILARES = [
   {
-    id: "bronze", nome: "Bronze", subtitulo: "Estruture seu estúdio.", preco: "R$297", artistas: "até 2", sms: 50, email: 120, storage: "1GB", assessorias: 1, destaque: false,
-    metal: "linear-gradient(135deg, #B8703F 0%, #8B4226 25%, #3D2410 50%, #8B4226 75%, #B8703F 100%)",
-    metalBtn: "linear-gradient(135deg, #C88755 0%, #8B4226 30%, #B8703F 55%, #6B3418 80%, #C88755 100%)",
-    corBorda: "#2A1508",
-    corParafuso: "#8B4226",
-    corTexto: "#FBF0E4",
+    titulo: "Você chega e o estúdio já está pronto pra começar o dia",
+    desc: "Agenda, clientes e pendências do dia — tudo já organizado antes de você abrir a porta, sem precisar correr atrás de nada.",
   },
   {
-    id: "prata", nome: "Prata", subtitulo: "Automatize sua rotina.", preco: "R$497", artistas: "até 4", sms: 100, email: 200, storage: "3GB", assessorias: 2, destaque: true,
-    metal: "linear-gradient(135deg, #B8B8B8 0%, #888888 25%, #4A4A4A 50%, #888888 75%, #B8B8B8 100%)",
-    metalBtn: "linear-gradient(135deg, #D0D0D0 0%, #888888 30%, #B8B8B8 55%, #5A5A5A 80%, #D0D0D0 100%)",
-    corBorda: "#1E1E1E",
-    corParafuso: "#8A8A8A",
-    corTexto: "#F5F5F5",
+    titulo: "O cliente sente que alguém realmente acompanhou ele",
+    desc: "Ele não precisa reexplicar tudo de novo — o histórico dele está ali, junto com você, sessão após sessão.",
   },
   {
-    id: "ouro", nome: "Ouro", subtitulo: "Escalone sua operação.", preco: "R$597", artistas: "até 6", sms: 200, email: 400, storage: "10GB", assessorias: 4, destaque: false,
-    metal: "linear-gradient(135deg, #FFFBEF 0%, #E8C97A 20%, #C9A84C 40%, #FFFBEF 55%, #C9A84C 70%, #E8C97A 85%, #FFFBEF 100%)",
-    metalBtn: "linear-gradient(135deg, #FFFDF5 0%, #E8C97A 25%, #C9A84C 50%, #8a6a24 75%, #E8C97A 100%)",
-    corBorda: "#6B4F14",
-    corParafuso: "#C9A84C",
-    corTexto: "#1A1006",
+    titulo: "No fim do mês, você já sabe a resposta antes de perguntar",
+    desc: "Quanto entrou, quanto saiu, o que sobrou — sem precisar juntar recibo por recibo pra descobrir.",
+  },
+  {
+    titulo: "Você termina o dia tendo tatuado mais e organizado menos",
+    desc: "Boa parte do trabalho repetitivo passa a ser cuidada pelo sistema — pra sobrar mais tempo de fazer aquilo que só você sabe fazer: tatuar.",
   },
 ];
 
-const DETALHES_PLANOS = [
-  {
-    id: "bronze",
-    nome: "Bronze",
-    cor: "#C88755",
-    heranca: null as string | null,
-    itens: [
-      { emoji: "🗂️", titulo: "Nunca perca o controle dos seus clientes.", desc: "CRM completo com pipeline, agenda e financeiro automático." },
-      { emoji: "📋", titulo: "Todo o histórico do cliente na palma da mão.", desc: "Ficha completa com histórico, documentos e anamnese." },
-      { emoji: "🌐", titulo: "Tenha um site profissional sem depender de um desenvolvedor.", desc: "Seu estúdio já conta com um site integrado ao CRM, totalmente editável por você. Atualize artistas, portfólio e informações sem depender de programador." },
-      { emoji: "✉️", titulo: "Reduza faltas sem precisar lembrar ninguém.", desc: "O sistema envia lembretes automáticos antes de cada sessão, reduzindo esquecimentos e faltas." },
-    ],
-  },
-  {
-    id: "prata",
-    nome: "Prata",
-    cor: "#C8C8C8",
-    heranca: "Tudo do Bronze, mais:",
-    itens: [
-      { emoji: "🔔", titulo: "Disparos automáticos por etapa.", desc: "Lembrete, aviso do dia e confirmação de presença, prontos pra usar. Pode manter como está ou editar o texto do seu jeito." },
-      { emoji: "🎉", titulo: "Disparos automáticos em datas comemorativas.", desc: "O sistema já possui campanhas prontas para datas como aniversário, Dia das Mães, Natal e outras. Basta ativar. Se preferir, você também pode editar os textos e salvar sua própria versão." },
-      { emoji: "📸", titulo: "Mostre mais do seu trabalho.", desc: "Amplie a galeria do site integrado ao CRM para até 15 fotos por artista." },
-    ],
-  },
-  {
-    id: "ouro",
-    nome: "Ouro",
-    cor: "#E8C97A",
-    heranca: "Tudo do Bronze e Prata, mais:",
-    itens: [
-      { emoji: "🔑", titulo: "Transforme quem já é cliente em divulgador.", desc: "Palavra secreta gera crédito automático pra quem participa." },
-      { emoji: "🔗", titulo: "Saiba exatamente o que está trazendo cliente.", desc: "Veja de onde vem cada pessoa que chega até você." },
-      { emoji: "🎨", titulo: "Seu site com a cara da sua marca.", desc: "Cores e identidade visual só suas." },
-      { emoji: "💬", titulo: "Transforme reputação em prova social.", desc: "Exiba depoimentos reais e conte a história do seu estúdio no site integrado ao CRM." },
-      { emoji: "🎞️", titulo: "Seu portfólio sempre em destaque.", desc: "Destaque automaticamente seus trabalhos no banner e nas galerias do site, sem precisar atualizar manualmente." },
-      { emoji: "🖌️", titulo: "Um sistema com a cara do seu estúdio.", desc: "Personalize a identidade visual do CRM com as cores e a marca do seu estúdio." },
-      { emoji: "📸", titulo: "Mostre tudo que você já fez.", desc: "Expanda a galeria do site para até 30 fotos por artista, organizadas automaticamente." },
-    ],
-  },
+const ANTES = [
+  "Informação espalhada em caderno, planilha e WhatsApp",
+  "Cliente que some sem ninguém notar",
+  "Agenda que depende da sua memória",
+  "Financeiro sem clareza no fim do mês",
+  "Excesso de tarefa administrativa",
+  "Pouco tempo pra criar e tatuar",
 ];
 
-function Parafuso({ cor, corner }: { cor: string; corner: "tl" | "tr" | "bl" | "br" }) {
-  const pos: CSSProperties =
-    corner === "tl" ? { top: 8, left: 8 } :
-    corner === "tr" ? { top: 8, right: 8 } :
-    corner === "bl" ? { bottom: 8, left: 8 } :
-    { bottom: 8, right: 8 };
-  return (
-    <div
-      style={{
-        position: "absolute",
-        width: 13,
-        height: 13,
-        borderRadius: "50%",
-        background: `radial-gradient(circle at 35% 30%, #fff 0%, ${cor} 45%, rgba(0,0,0,0.75) 100%)`,
-        boxShadow: "0 1px 3px rgba(0,0,0,0.7), inset 0 0 2px rgba(0,0,0,0.5)",
-        ...pos,
-      }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "18%",
-          right: "18%",
-          height: 1.5,
-          background: "rgba(0,0,0,0.6)",
-          transform: "translateY(-50%) rotate(18deg)",
-          borderRadius: 1,
-        }}
-      />
-    </div>
-  );
-}
+const DEPOIS = [
+  "Você abre uma tela e encontra tudo o que precisa, sem precisar lembrar onde anotou",
+  "O cliente sente que alguém acompanhou sua jornada, do primeiro atendimento ao último retorno",
+  "A agenda fica sob controle, sem depender só de você lembrar de tudo pra não haver furo",
+  "No fim do mês, você sabe exatamente quanto entrou e quanto saiu — sem precisar adivinhar",
+  "As decisões ficam mais claras, porque a rotina parou de te sobrecarregar",
+  "E sobra tempo, de verdade, pra fazer o que só você sabe fazer: tatuar",
+];
+
+const FAQ = [
+  {
+    p: "Preciso entender de tecnologia pra usar?",
+    r: "Não. O Ink System foi pensado pra quem tatua, não pra quem programa. Se você usa WhatsApp, já sabe o suficiente pra começar.",
+  },
+  {
+    p: "Funciona pra quem trabalha sozinho, sem equipe?",
+    r: "Sim. O Ink System organiza tanto a rotina de quem trabalha sozinho quanto a de um estúdio com vários artistas — a estrutura se adapta ao tamanho do seu estúdio, não o contrário.",
+  },
+  {
+    p: "Dá pra usar pelo celular?",
+    r: "Dá. Boa parte da rotina de um estúdio acontece em pé, entre uma sessão e outra — o Ink System foi pensado pra isso.",
+  },
+  {
+    p: "Quanto custa?",
+    r: "Isso a Aura te conta na conversa, com total transparência — não existe tabela genérica porque cada estúdio tem uma realidade diferente, e o valor é sempre claro antes de qualquer decisão.",
+  },
+  {
+    p: "Como funciona o início? Preciso migrar tudo de uma vez?",
+    r: "Não. Depois da conversa com a Aura, alguém da nossa equipe caminha com você em cada etapa da implantação, no seu ritmo — você não vai organizar essa transição sozinho, do mesmo jeito que não vai organizar o resto sozinho.",
+  },
+  {
+    p: "Existe alguma demonstração antes de decidir?",
+    r: "Sim. Você poderá conhecer uma demonstração completa do sistema depois da sua conversa com a Aura, sem compromisso.",
+  },
+];
 
 export default function LandingPage() {
   return (
@@ -126,473 +106,269 @@ export default function LandingPage() {
         fontFamily: "'DM Sans', sans-serif",
       }}
     >
-      <a
-        href="/login"
-        className="hero-btn-secondary"
-        style={{ position: "absolute", top: 20, right: 24, padding: "8px 20px", fontSize: 12, zIndex: 10 }}
-      >
-        Login
-      </a>
       <AuraFlowRoot>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700&family=DM+Sans:wght@400;500;600&display=swap');
-        .hero-btn-primary {
-          background: linear-gradient(135deg, #E8C97A, #C9A84C 45%, #8a6a24);
-          color: #17140A;
-          font-weight: 700;
-          border-radius: 999px;
-          padding: 16px 46px;
-          font-size: 14px;
-          text-decoration: none;
-          letter-spacing: .03em;
-          box-shadow: 0 6px 24px rgba(201,168,76,0.35), inset 0 1px 0 rgba(255,255,255,0.4);
-          border: 1px solid rgba(255,224,160,0.6);
-          transition: transform .15s ease, box-shadow .15s ease;
-          display: inline-block;
-        }
-        .hero-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 30px rgba(201,168,76,0.45), inset 0 1px 0 rgba(255,255,255,0.5); }
-        .hero-btn-secondary {
-          background: rgba(201,168,76,0.06);
-          backdrop-filter: blur(6px);
-          border: 1px solid rgba(201,168,76,0.4);
-          color: #E8C97A;
-          border-radius: 999px;
-          padding: 16px 38px;
-          font-size: 14px;
-          text-decoration: none;
-          letter-spacing: .03em;
-          transition: background .15s ease, border-color .15s ease;
-          display: inline-block;
-        }
-        .hero-btn-secondary:hover { background: rgba(201,168,76,0.14); border-color: rgba(201,168,76,0.65); }
-        .plan-card { transition: transform .15s ease, filter .15s ease; }
-        .plan-card:hover { transform: translateY(-4px); filter: brightness(1.08); }
-        .plan-detail-cta { transition: filter .2s ease, transform .15s ease; }
-        .plan-detail-cta:hover { filter: brightness(1.1); transform: translateY(-2px); }
-      `}</style>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,600&family=DM+Sans:wght@400;500;600&display=swap');
+          .hero-btn-primary {
+            background: linear-gradient(135deg, #E8C97A, #C9A84C 45%, #8a6a24);
+            color: #17140A;
+            font-weight: 700;
+            border-radius: 999px;
+            padding: 16px 46px;
+            font-size: 14px;
+            text-decoration: none;
+            letter-spacing: .03em;
+            box-shadow: 0 6px 24px rgba(201,168,76,0.35), inset 0 1px 0 rgba(255,255,255,0.4);
+            border: 1px solid rgba(255,224,160,0.6);
+            transition: transform .15s ease, box-shadow .15s ease;
+            display: inline-block;
+          }
+          .hero-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 30px rgba(201,168,76,0.45), inset 0 1px 0 rgba(255,255,255,0.5); }
+          .login-link {
+            color: #A79A8A;
+            font-size: 13px;
+            text-decoration: none;
+            letter-spacing: .02em;
+            transition: color .15s ease;
+          }
+          .login-link:hover { color: #E8C97A; }
+          .pilar-card, .faq-item { transition: border-color .2s ease, transform .2s ease; }
+          .pilar-card:hover { transform: translateY(-3px); border-color: rgba(201,168,76,0.55); }
+          @media (prefers-reduced-motion: reduce) {
+            .hero-btn-primary, .pilar-card, .login-link { transition: none !important; }
+            .hero-btn-primary:hover, .pilar-card:hover { transform: none !important; }
+          }
+        `}</style>
 
-      <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "56px 24px 8px" }}>
-        <img
-          src="/logo-ink-system.png"
-          alt="Ink System — Gestão, Relacionamento, Tempo"
-          style={{ width: "100%", maxWidth: 400, height: "auto", display: "block", margin: "0 auto 24px" }}
-        />
-        <h1
+        {/* 01 — Cabeçalho: discreto, não compete com o Hero */}
+        <header
           style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: "clamp(26px, 4vw, 38px)",
-            fontWeight: 700,
-            color: "#E8E2D9",
-            margin: "0 0 14px",
-            lineHeight: 1.25,
-          }}
-        >
-          Enquanto você cria arte, o Ink System cuida do resto
-        </h1>
-        <p style={{ color: "#A79A8A", fontSize: 16, lineHeight: 1.6, maxWidth: 560, margin: "0 auto" }}>
-          Um único sistema para organizar toda a operação do seu estúdio, automatizar o atendimento e devolver
-          mais tempo para o que realmente importa: tatuar.
-        </p>
-      </section>
-
-      <LandingVideoSection source={{ type: "youtube", id: VIDEO_MANIFESTO_ID }} immersive eager />
-
-      <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "56px 24px 0" }}>
-        <h2
-          style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 24,
-            fontWeight: 700,
-            color: "#C9A84C",
-            margin: "0 0 24px",
-          }}
-        >
-          Você reconhece isso no seu estúdio?
-        </h2>
-        <ul
-          style={{
-            listStyle: "none",
-            padding: 0,
-            margin: "0 0 28px",
+            maxWidth: 1120,
+            margin: "0 auto",
+            padding: "24px 24px 0",
             display: "flex",
-            flexDirection: "column",
-            gap: 14,
-            textAlign: "left",
-            maxWidth: 520,
-            marginInline: "auto",
+            alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
-          {[
-            "Agenda dividida entre caderno, WhatsApp e a própria memória",
-            "Cliente que erra o horário porque ninguém lembrou ele",
-            "Fim do mês sem saber ao certo quanto entrou e quanto saiu",
-            "Portfólio desatualizado, ou nenhum site pra mostrar o trabalho",
-            "Tempo perdido respondendo a mesma pergunta pra cada lead novo",
-          ].map((item, i) => (
-            <li key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", color: "#C9BDAF", fontSize: 15, lineHeight: 1.5 }}>
-              <span style={{ color: "#C9A84C", flexShrink: 0 }}>—</span>
-              {item}
-            </li>
-          ))}
-        </ul>
-        <p style={{ color: "#A79A8A", fontSize: 15, lineHeight: 1.6, maxWidth: 520, margin: "0 auto" }}>
-          O Ink System foi criado dentro de um estúdio de tatuagem para resolver problemas que só quem vive essa
-          rotina conhece.
-        </p>
-      </section>
+          <img src="/logo-ink-system.png" alt="Ink System" style={{ height: 28, width: "auto", display: "block" }} />
+          <a href="/login" className="login-link">
+            Já é cliente? Entrar
+          </a>
+        </header>
 
-      <LandingVideoSection source={{ type: "youtube", id: VIDEO_TECNICO_ID }} />
+        {/* 02 — Hero: identificação → promessa */}
+        <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "72px 24px 8px" }}>
+          <h1
+            style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "clamp(28px, 4.4vw, 42px)",
+              fontWeight: 700,
+              color: "#E8E2D9",
+              margin: "0 0 22px",
+              lineHeight: 1.28,
+            }}
+          >
+            Entre agenda, clientes e financeiro, onde ficou o tempo pra tatuar?
+          </h1>
+          <p style={{ ...bodyText, fontSize: 16.5, maxWidth: 560, margin: "0 auto" }}>
+            Você responde mensagem, organiza agenda, confere pagamento e tenta lembrar quem ainda precisa de
+            retorno — e o dia termina sem sobrar tempo pra tatuar.
+          </p>
+          <p
+            style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "clamp(20px, 2.6vw, 25px)",
+              fontWeight: 600,
+              color: "#C9A84C",
+              maxWidth: 560,
+              margin: "22px auto 0",
+              lineHeight: 1.4,
+            }}
+          >
+            O sistema que devolve o artista à sua arte.
+          </p>
+          <div style={{ marginTop: 36 }}>
+            <AuraTriggerButton className="hero-btn-primary">Quero organizar meu estúdio</AuraTriggerButton>
+          </div>
+          <p style={{ color: "#6B5E54", fontSize: 12.5, marginTop: 16, maxWidth: 420, marginInline: "auto" }}>
+            Antes de te apresentar o Ink System, a Aura quer entender como é a rotina do seu estúdio.
+          </p>
+        </section>
 
-      <section style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", padding: "40px 24px 0" }}>
-        <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <AuraTriggerButton modo="teste" className="hero-btn-primary" style={{ textAlign: "center" }}>
-            Teste grátis
-          </AuraTriggerButton>
-        </div>
-        <p style={{ color: "#6B5E54", fontSize: 12, marginTop: 16, maxWidth: 440, marginInline: "auto" }}>
-          É rápido: nome, WhatsApp e e-mail, e seu acesso à demonstração já é liberado.
-        </p>
-      </section>
+        {/* 03 — O custo da desorganização */}
+        <section style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", padding: "104px 24px 0" }}>
+          <h2 style={{ ...sectionHeading, fontSize: "clamp(22px, 3vw, 27px)" }}>Quando o estúdio deixa de ser liberdade</h2>
+          <p style={{ ...bodyText, maxWidth: 560, margin: "0 auto" }}>
+            Ninguém abre um estúdio pra virar refém da própria operação. Mas é isso que acontece quando tudo
+            depende só da sua memória: o cliente que não recebeu retorno e foi tatuar em outro lugar, a sessão
+            marcada duas vezes no mesmo horário, o mês que fechou sem ninguém saber dizer se deu lucro ou só deu
+            trabalho.
+          </p>
+          <p style={{ ...bodyText, maxWidth: 560, margin: "18px auto 0" }}>
+            Aos poucos, o estúdio deixa de libertar e passa a prender.
+          </p>
+          <p style={{ color: "#E8E2D9", fontSize: 18, fontWeight: 600, maxWidth: 560, margin: "18px auto 0", lineHeight: 1.5 }}>
+            Você vira empresidiário: dono de tudo, livre pra nada.
+          </p>
+        </section>
 
-      <section style={{ maxWidth: 980, margin: "0 auto", padding: "0 24px 112px" }}>
-        <h2
-          style={{
-            textAlign: "center",
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 28,
-            fontWeight: 700,
-            color: "#C9A84C",
-            letterSpacing: ".03em",
-            marginBottom: 12,
-          }}
-        >
-          Como o Ink System resolve isso
-        </h2>
-        <p style={{ textAlign: "center", color: "#A79A8A", fontSize: 15, maxWidth: 560, margin: "0 auto 44px" }}>
-          Tudo o que seu estúdio precisa, num só sistema — sem depender de planilha, papel ou memória.
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
-          {[
-            { emoji: "📅", titulo: "Nunca mais perca um horário.", desc: "Pipeline visual de cada cliente, do primeiro contato até a sessão marcada — sem confundir horário." },
-            { emoji: "💰", titulo: "Saiba exatamente quanto entrou no seu estúdio.", desc: "Cada entrada e saída registrada na hora, pra você saber quanto entrou sem abrir planilha." },
-            { emoji: "🌐", titulo: "Receba novos clientes já com as informações organizadas.", desc: "Seu site trabalha por você, organizando cada novo contato antes mesmo de ele chegar ao seu WhatsApp." },
-            { emoji: "🔔", titulo: "Seus clientes continuam sendo atendidos enquanto você tatua.", desc: "Confirmação, lembrete e aviso do dia da sessão, enviados sozinhos pra reduzir falta." },
-            { emoji: "📄", titulo: "Contratos assinados antes da sessão.", desc: "Envie o contrato pro cliente e receba de volta assinado, direto pelo sistema — sem imprimir, sem perder no WhatsApp e sem guardar papel em gaveta." },
-            { emoji: "💳", titulo: "Toda a história do cliente em um só lugar.", desc: "Cada pagamento fica registrado por cliente e por mês, com histórico completo à mão — sem precisar caçar informação em conversa antiga ou anotação solta." },
-          ].map((item, i) => (
-            <div
-              key={i}
-              style={{
-                borderRadius: 12,
-                padding: 24,
-                background: "#0B0B0F",
-                border: i === 0 ? "1px solid rgba(201,168,76,0.6)" : "1px solid rgba(201,168,76,0.25)",
-                boxShadow: i === 0 ? "0 0 24px rgba(201,168,76,0.18)" : "none",
-                textAlign: "center",
-              }}
-            >
-              <div style={{ fontSize: i === 0 ? 30 : 26, marginBottom: 10 }}>{item.emoji}</div>
-              <div style={{ fontSize: i === 0 ? 16 : 15, fontWeight: 700, color: i === 0 ? "#C9A84C" : "#E8E2D9", marginBottom: 6 }}>{item.titulo}</div>
-              <div style={{ fontSize: 13, color: "#A79A8A", lineHeight: 1.5 }}>{item.desc}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", padding: "0 24px 96px" }}>
-        <h2
-          style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 26,
-            fontWeight: 700,
-            color: "#C9A84C",
-            margin: "0 0 14px",
-          }}
-        >
-          Criado por quem vive a tatuagem.
-        </h2>
-        <p style={{ color: "#A79A8A", fontSize: 15, lineHeight: 1.6, maxWidth: 520, margin: "0 auto" }}>
-          O Ink System nasceu dentro da Casa dos Carvalho, um estúdio de tatuagem de verdade — não em uma empresa
-          de software. Cada funcionalidade existe porque resolveu um problema real da nossa própria rotina, antes
-          de chegar até você.
-        </p>
-      </section>
-
-      <p
-        style={{
-          textAlign: "center",
-          fontFamily: "'Cormorant Garamond', serif",
-          fontStyle: "italic",
-          fontSize: 20,
-          color: "#C9A84C",
-          maxWidth: 560,
-          margin: "0 auto 64px",
-          padding: "0 24px",
-        }}
-      >
-        O Ink System não organiza apenas informações. Ele organiza a operação inteira do seu estúdio.
-      </p>
-
-      <section style={{ maxWidth: 980, margin: "0 auto", padding: "0 24px 110px" }}>
-        <h2
-          style={{
-            textAlign: "center",
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 32,
-            fontWeight: 700,
-            color: "#C9A84C",
-            letterSpacing: ".03em",
-            marginBottom: 40,
-          }}
-        >
-          Planos
-        </h2>
-        <p style={{ textAlign: "center", color: "#A79A8A", fontSize: 15, maxWidth: 620, margin: "-16px auto 36px" }}>
-          Todos os planos incluem um site profissional integrado ao CRM, desenvolvido para apresentar seu estúdio,
-          receber novos clientes e permitir que você atualize tudo sozinho, sem depender de desenvolvedores.
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20 }}>
-          {PLANOS.map((p) => (
-            <AuraTriggerButton
-              key={p.nome}
-              plano={p.nome}
-              className="plan-card"
-              style={{
-                position: "relative",
-                borderRadius: 14,
-                padding: 26,
-                display: "flex",
-                flexDirection: "column",
-                gap: 10,
-                background: p.metal,
-                textDecoration: "none",
-                border: `3px solid ${p.corBorda}`,
-                boxShadow: [
-                  "inset 0 2px 0 rgba(255,255,255,0.35)",
-                  "inset 0 -4px 8px rgba(0,0,0,0.4)",
-                  p.destaque ? "0 12px 32px rgba(220,220,220,0.2)" : "0 12px 32px rgba(0,0,0,0.5)",
-                ].join(", "),
-              }}
-            >
-              <Parafuso cor={p.corParafuso} corner="tl" />
-              <Parafuso cor={p.corParafuso} corner="tr" />
-              <Parafuso cor={p.corParafuso} corner="bl" />
-              <Parafuso cor={p.corParafuso} corner="br" />
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 700, color: p.corTexto, textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
-                {p.nome}
+        {/* 04 — A transformação Ink System */}
+        <section style={{ maxWidth: 900, margin: "0 auto", padding: "96px 24px 0" }}>
+          <h2 style={{ ...sectionHeading, fontSize: "clamp(22px, 3vw, 27px)" }}>O que muda quando a rotina se organiza</h2>
+          <p style={{ ...bodyText, textAlign: "center", maxWidth: 480, margin: "0 auto 40px" }}>
+            Aqui, você tira o estúdio das costas — e da cabeça.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 32 }}>
+            <div>
+              <div style={{ fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", color: "#6B5E54", marginBottom: 16 }}>
+                Antes
               </div>
-              <div style={{ fontSize: 12, color: p.corTexto, opacity: 0.85, fontWeight: 500, textShadow: "0 1px 2px rgba(0,0,0,0.4)", marginTop: -6 }}>
-                {p.subtitulo}
-              </div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 30, fontWeight: 700, color: p.corTexto, textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
-                {p.preco}
-                <span style={{ fontSize: 13, opacity: 0.75, fontFamily: "'DM Sans', sans-serif", fontWeight: 400 }}>/mês</span>
-              </div>
-              <ul style={{ fontSize: 13, color: p.corTexto, opacity: 0.9, fontWeight: 500, textShadow: "0 1px 2px rgba(0,0,0,0.4)", display: "flex", flexDirection: "column", gap: 6, marginTop: 6, paddingLeft: 0, listStyle: "none" }}>
-                <li>Artistas: {p.artistas}</li>
-                <li>SMS/mês: {p.sms}</li>
-                <li>E-mail/mês: {p.email}</li>
-                <li>Storage: {p.storage}</li>
-                <li>Assessorias/mês: {p.assessorias}</li>
+              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+                {ANTES.map((item, i) => (
+                  <li key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", color: "#8a7d70", fontSize: 14.5, lineHeight: 1.5 }}>
+                    <span style={{ flexShrink: 0 }}>—</span>
+                    {item}
+                  </li>
+                ))}
               </ul>
-              <div
-                style={{
-                  marginTop: 14,
-                  textAlign: "center",
-                  background: p.metalBtn,
-                  color: p.corTexto,
-                  fontWeight: 700,
-                  borderRadius: 8,
-                  padding: "12px 0",
-                  fontSize: 13,
-                  border: `1px solid ${p.corBorda}`,
-                  textShadow: "0 1px 2px rgba(0,0,0,0.35)",
-                  boxShadow: [
-                    "inset 0 1px 0 rgba(255,255,255,0.6)",
-                    "inset 0 -2px 3px rgba(0,0,0,0.3)",
-                    "0 8px 18px rgba(0,0,0,0.55)",
-                  ].join(", "),
-                }}
-              >
-                Solicitar plano {p.nome}
+            </div>
+            <div>
+              <div style={{ fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", color: "#C9A84C", marginBottom: 16 }}>
+                Depois
               </div>
-            </AuraTriggerButton>
-          ))}
-        </div>
-      </section>
+              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+                {DEPOIS.map((item, i) => (
+                  <li key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", color: "#E8E2D9", fontSize: 14.5, lineHeight: 1.5 }}>
+                    <span style={{ color: "#C9A84C", flexShrink: 0 }}>—</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <p
+            style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontStyle: "italic",
+              fontSize: "clamp(19px, 2.4vw, 23px)",
+              color: "#E8C97A",
+              textAlign: "center",
+              lineHeight: 1.5,
+              maxWidth: 560,
+              margin: "48px auto 32px",
+            }}
+          >
+            Esse é o caminho de volta: o sistema que devolve o artista à sua arte.
+          </p>
+          <div style={{ textAlign: "center" }}>
+            <AuraTriggerButton className="hero-btn-primary">Quero essa transformação no meu estúdio</AuraTriggerButton>
+          </div>
+        </section>
 
-      <section style={{ maxWidth: 980, margin: "0 auto", padding: "0 24px 96px" }}>
-        <h2
-          style={{
-            textAlign: "center",
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 28,
-            fontWeight: 700,
-            color: "#C9A84C",
-            letterSpacing: ".03em",
-            marginBottom: 40,
-          }}
-        >
-          O que cada plano inclui
-        </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 28 }}>
-          {DETALHES_PLANOS.map((p) => {
-            const plano = PLANOS.find((pl) => pl.id === p.id)!;
-            return (
+        {/* 05 — Como o sistema organiza a rotina */}
+        <section style={{ maxWidth: 980, margin: "0 auto", padding: "112px 24px 0" }}>
+          <h2 style={{ ...sectionHeading, fontSize: "clamp(24px, 3.2vw, 29px)" }}>Como o Ink System organiza sua rotina</h2>
+          <p style={{ ...bodyText, textAlign: "center", maxWidth: 480, margin: "0 auto 44px" }}>
+            É assim, no dia a dia do seu estúdio, que esse caminho acontece.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
+            {PILARES.map((item, i) => (
               <div
-                key={p.id}
+                key={i}
+                className="pilar-card"
                 style={{
                   borderRadius: 12,
-                  padding: 22,
+                  padding: 26,
                   background: "#0B0B0F",
-                  border: `2.5px solid ${p.cor}`,
-                  boxShadow: `0 0 6px ${p.cor}66, 0 0 16px ${p.cor}33, 0 0 30px ${p.cor}15, inset 0 0 8px ${p.cor}0d`,
-                  display: "flex",
-                  flexDirection: "column",
+                  border: "1px solid rgba(201,168,76,0.25)",
                 }}
               >
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700, color: p.cor, marginBottom: 4, textShadow: `0 0 5px ${p.cor}40` }}>
-                  {p.nome}
-                </div>
-                {p.heranca && (
-                  <div style={{ fontSize: 11, color: "#6B5E54", marginBottom: 14, fontStyle: "italic" }}>{p.heranca}</div>
-                )}
-                <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: p.heranca ? 0 : 14, flex: 1 }}>
-                  {p.itens.map((item, i) => (
-                    <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                      <span style={{ fontSize: 16, flexShrink: 0 }}>{item.emoji}</span>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: "#E8E2D9" }}>{item.titulo}</div>
-                        <div style={{ fontSize: 12, color: "#A79A8A", marginTop: 1 }}>{item.desc}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <AuraTriggerButton
-                  plano={p.nome}
-                  className="plan-detail-cta"
-                  style={{
-                    marginTop: 20,
-                    textAlign: "center",
-                    background: plano.metalBtn,
-                    color: plano.corTexto,
-                    fontWeight: 700,
-                    borderRadius: 999,
-                    padding: "12px 0",
-                    fontSize: 13,
-                    textDecoration: "none",
-                    border: `1px solid ${plano.corBorda}`,
-                    textShadow: "0 1px 2px rgba(0,0,0,0.35)",
-                    boxShadow: [
-                      "inset 0 1px 0 rgba(255,255,255,0.6)",
-                      "inset 0 -2px 3px rgba(0,0,0,0.3)",
-                      `0 6px 16px ${p.cor}55`,
-                    ].join(", "),
-                  }}
-                >
-                  Solicitar plano {p.nome}
-                </AuraTriggerButton>
+                <div style={{ fontSize: 15.5, fontWeight: 700, color: "#E8E2D9", marginBottom: 8, lineHeight: 1.4 }}>{item.titulo}</div>
+                <div style={{ fontSize: 13.5, color: "#A79A8A", lineHeight: 1.6 }}>{item.desc}</div>
               </div>
-            );
-          })}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
 
-      <section style={{ maxWidth: 680, margin: "0 auto", padding: "0 24px 96px" }}>
-        <h2
-          style={{
-            textAlign: "center",
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 28,
-            fontWeight: 700,
-            color: "#C9A84C",
-            letterSpacing: ".03em",
-            marginBottom: 36,
-          }}
-        >
-          Perguntas frequentes
-        </h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-          {[
-            {
-              p: "Preciso saber mexer em site pra ter meu portfólio online?",
-              r: "Não. O site já vem pronto — você só troca fotos, textos e cores pelo próprio painel, sem precisar de designer ou programador.",
-            },
-            {
-              p: "Dá pra usar pelo celular?",
-              r: "Sim. O sistema roda direto no navegador, tanto no computador quanto no celular, sem precisar instalar nada.",
-            },
-            {
-              p: "Meus dados ficam misturados com os de outro estúdio?",
-              r: "Não. Cada estúdio só enxerga os próprios dados dentro do sistema.",
-            },
-            {
-              p: "Quantos artistas posso cadastrar?",
-              r: "Depende do plano: até 2 no Bronze, até 4 no Prata e até 6 no Ouro.",
-            },
-            {
-              p: "Posso testar antes de contratar?",
-              r: "Sim. Depois de responder às perguntas da Aura, você poderá conhecer a demonstração do sistema antes de decidir seguir com a implantação.",
-            },
-            {
-              p: "Como funciona a implantação?",
-              r: "Depois que você decide seguir, analisamos os dados do seu estúdio, enviamos o contrato para assinatura e liberamos o seu ambiente no Ink System.",
-            },
-            {
-              p: "Preciso instalar alguma coisa?",
-              r: "Não. O Ink System funciona diretamente no navegador, tanto no computador quanto no celular.",
-            },
-            {
-              p: "Preciso entender de tecnologia para usar?",
-              r: "Não. O sistema foi pensado para a rotina de quem trabalha com tatuagem, com uma navegação simples e acompanhamento na implantação.",
-            },
-            {
-              p: "Os meus dados ficam seguros?",
-              r: "Sim. Cada estúdio possui seu próprio ambiente e só tem acesso às próprias informações. Seus dados não são compartilhados com outros estúdios.",
-            },
-          ].map((item, i) => (
-            <div key={i} style={{ borderBottom: "1px solid rgba(201,168,76,0.15)", paddingBottom: 20 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#E8E2D9", marginBottom: 8 }}>{item.p}</div>
-              <div style={{ fontSize: 14, color: "#A79A8A", lineHeight: 1.6 }}>{item.r}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+        {/* 06 — Origem e legitimidade */}
+        <section style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", padding: "96px 24px 0" }}>
+          <h2 style={{ ...sectionHeading, fontSize: "clamp(22px, 3vw, 27px)" }}>Criado por quem vive a tatuagem</h2>
+          <p style={{ ...bodyText, maxWidth: 540, margin: "0 auto" }}>
+            O Ink System nasceu dentro de um estúdio de verdade — a Casa dos Carvalho —, que sentiu na pele
+            exatamente as dores que você está sentindo agora. Não foi feito por uma empresa de tecnologia
+            tentando entender o universo da tatuagem de fora.
+          </p>
+          <p style={{ ...bodyText, maxWidth: 540, margin: "16px auto 0" }}>
+            Antes de virar um sistema pra outros estúdios, ele precisou dar certo no estúdio de quem o criou.
+          </p>
+        </section>
 
-      <section style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", padding: "0 24px 56px" }}>
-        <AuraTriggerButton className="hero-btn-secondary" style={{ textAlign: "center" }}>
-          Ainda tem alguma dúvida?
-        </AuraTriggerButton>
-        <p style={{ color: "#6B5E54", fontSize: 12, marginTop: 16, maxWidth: 440, marginInline: "auto" }}>
-          Pra te responder, a gente vai precisar entrar em contato — por isso vamos pedir alguns dados antes.
-        </p>
-      </section>
+        {/* 07 — O que é o Ink System */}
+        <section style={{ maxWidth: 620, margin: "0 auto", textAlign: "center", padding: "112px 24px 0" }}>
+          <h2
+            style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontWeight: 700,
+              fontSize: "clamp(26px, 3.6vw, 33px)",
+              color: "#C9A84C",
+              letterSpacing: ".05em",
+              margin: "0 0 20px",
+            }}
+          >
+            Ink System 1.0
+          </h2>
+          <p style={{ color: "#E8E2D9", fontSize: 16.5, lineHeight: 1.75, maxWidth: 520, margin: "0 auto" }}>
+            Não é mais um aplicativo pra aprender, nem mais uma tela pra abrir. É o sistema operacional do seu
+            estúdio: organiza a rotina inteira, pra que você não precise mais dar conta de tudo sozinho e volte
+            a dedicar seu tempo à arte.
+          </p>
+        </section>
 
-      <section style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", padding: "0 24px 96px" }}>
-        <h2
-          style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 26,
-            fontWeight: 700,
-            color: "#E8E2D9",
-            margin: "0 0 14px",
-          }}
-        >
-          Feito por quem tatua, para quem tatua
-        </h2>
-        <p style={{ color: "#A79A8A", fontSize: 15, lineHeight: 1.6, maxWidth: 520, margin: "0 auto 18px" }}>
-          O Ink System não nasceu em uma empresa de software. Nasceu dentro de um estúdio que precisava de uma
-          forma melhor de trabalhar.
-        </p>
-        <p style={{ color: "#A79A8A", fontSize: 15, lineHeight: 1.6, maxWidth: 520, margin: "0 auto 32px" }}>
-          Conheça o Ink System e descubra como ele pode transformar a rotina do seu estúdio.
-        </p>
-        <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <AuraTriggerButton className="hero-btn-primary" style={{ textAlign: "center", padding: "20px 54px", fontSize: 15 }}>
-            Quero conhecer o Ink System
-          </AuraTriggerButton>
-        </div>
-      </section>
+        {/* 08 — Chamada dedicada para a Aura */}
+        <section style={{ maxWidth: 620, margin: "0 auto", textAlign: "center", padding: "80px 24px 0" }}>
+          <h2 style={{ ...sectionHeading, fontSize: "clamp(22px, 3vw, 27px)" }}>Seu primeiro contato com o Ink System começa aqui</h2>
+          <p style={{ ...bodyText, maxWidth: 520, margin: "0 auto 32px" }}>
+            A Aura é quem recebe você do outro lado — não pra preencher um cadastro, mas pra entender de verdade
+            como é o seu estúdio. É assim que a experiência Ink System começa: por uma conversa, com alguém que
+            já esteve exatamente onde você está agora.
+          </p>
+          <AuraTriggerButton className="hero-btn-primary">Conversar com a Aura</AuraTriggerButton>
+        </section>
+
+        {/* 09 — Perguntas frequentes */}
+        <section style={{ maxWidth: 680, margin: "0 auto", padding: "112px 24px 0" }}>
+          <h2 style={{ ...sectionHeading, fontSize: "clamp(22px, 3vw, 27px)", marginBottom: 40 }}>Perguntas frequentes</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+            {FAQ.map((item, i) => (
+              <div key={i} className="faq-item" style={{ borderBottom: "1px solid rgba(201,168,76,0.15)", paddingBottom: 20 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#E8E2D9", marginBottom: 8 }}>{item.p}</div>
+                <div style={{ fontSize: 14, color: "#A79A8A", lineHeight: 1.65 }}>{item.r}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 10 — CTA final */}
+        <section style={{ maxWidth: 620, margin: "0 auto", textAlign: "center", padding: "96px 24px 120px" }}>
+          <h2
+            style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "clamp(24px, 3.2vw, 29px)",
+              fontWeight: 700,
+              color: "#E8E2D9",
+              margin: "0 0 18px",
+              lineHeight: 1.3,
+            }}
+          >
+            Agora é a nossa vez de conhecer o seu estúdio
+          </h2>
+          <p style={{ ...bodyText, maxWidth: 500, margin: "0 auto 32px" }}>
+            Você já reconheceu sua rotina em cada parte dessa leitura. Agora é a nossa vez de te ouvir — e
+            entender, com calma, como o Ink System pode caber no seu estúdio.
+          </p>
+          <AuraTriggerButton className="hero-btn-primary">Começar minha conversa com a Aura</AuraTriggerButton>
+        </section>
       </AuraFlowRoot>
     </main>
   );
