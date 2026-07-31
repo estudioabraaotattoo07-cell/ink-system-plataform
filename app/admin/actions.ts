@@ -253,6 +253,37 @@ export async function buscarImplantacao(email: string) {
   };
 }
 
+// Bloco 2.6A, Etapa 3.1 -- persiste o auth_user_id da conta criada
+// manualmente no Supabase Auth, colado pelo admin na ficha, antes da
+// aprovação (Etapa 3.3 ainda vai consumir esse valor, não implementada
+// aqui). Vínculo por e-mail, igual toda outra operação entre ink_leads e
+// ink_implantacao_dados (auditado na Etapa 3.0 -- não há relação por ID
+// entre essas duas tabelas, só por e-mail). Só valida formato UUID; não
+// cria, edita ou exclui nenhuma conta no Supabase Auth.
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function salvarAuthUserId(email: string, authUserId: string) {
+  const valor = authUserId.trim();
+  if (!UUID_REGEX.test(valor)) {
+    return { ok: false, error: "UUID inválido -- confira o valor copiado do Supabase Auth." };
+  }
+  const sb = getAdminClient();
+  // .select().maybeSingle() depois do update -- sem isso, um UPDATE que não
+  // encontra nenhuma linha com esse e-mail retorna sucesso (error: null) sem
+  // ter gravado nada, o mesmo tipo de falso-positivo silencioso que já
+  // causou o incidente original que motivou o Bloco 2 inteiro.
+  const { data, error } = await sb
+    .from("ink_implantacao_dados")
+    .update({ auth_user_id: valor })
+    .eq("email", email)
+    .select("id")
+    .maybeSingle();
+  if (error) return { ok: false, error: error.message };
+  if (!data) return { ok: false, error: "Nenhuma ficha de implantação encontrada para este e-mail -- nada foi salvo." };
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 export async function revelarCPF(email: string) {
   const sb = getAdminClient();
   const { data, error } = await sb.from("ink_implantacao_dados").select("cpf").eq("email", email).maybeSingle();

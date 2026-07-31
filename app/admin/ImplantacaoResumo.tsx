@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { buscarImplantacao, revelarCPF, gerarUrlArquivo, atualizarStatusItem } from "./actions";
+import { buscarImplantacao, revelarCPF, gerarUrlArquivo, atualizarStatusItem, salvarAuthUserId } from "./actions";
 import { tipoDeItem, STATUS_LABEL, type StatusItem } from "@/lib/implantacaoItens";
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type Dados = Record<string, any>;
 type ItemImplantacao = { id: string; tipo: string; status: StatusItem; observacao_admin: string | null; arquivo: { nome_arquivo: string; caminho: string; enviado_em: string } | null };
@@ -25,6 +27,10 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
   const [cpfRevelado, setCpfRevelado] = useState<string | null>(null);
   const [pedindoMotivo, setPedindoMotivo] = useState<string | null>(null);
   const [motivo, setMotivo] = useState("");
+  const [authUserIdEditando, setAuthUserIdEditando] = useState(false);
+  const [authUserIdInput, setAuthUserIdInput] = useState("");
+  const [authUserIdSalvando, setAuthUserIdSalvando] = useState(false);
+  const [authUserIdErro, setAuthUserIdErro] = useState<string | null>(null);
 
   useEffect(() => {
     let ativo = true;
@@ -34,6 +40,7 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
         setDados(r.dados);
         setItens(r.itens);
         setHistorico(r.historico);
+        setAuthUserIdInput(r.dados.auth_user_id || "");
       }
       setCarregado(true);
     });
@@ -71,6 +78,44 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
 
   const todosItensRecebidos = itens.length > 0 && itens.every((i) => i.status !== "pendente");
 
+  // Bloco 2.6A, Etapa 3.1 -- só persiste o UUID colado pelo admin em
+  // ink_implantacao_dados.auth_user_id. Não cria/edita/exclui nenhuma conta
+  // no Supabase Auth -- a conta continua sendo criada manualmente antes
+  // deste passo. A validação/uso real desse valor para provisionar
+  // acontece só na Etapa 3.3, ainda não implementada.
+  const salvarAuthUserIdHandler = async () => {
+    const valor = authUserIdInput.trim();
+    if (!UUID_REGEX.test(valor)) {
+      setAuthUserIdErro("UUID inválido -- confira o valor copiado do Supabase Auth.");
+      return;
+    }
+    setAuthUserIdErro(null);
+    setAuthUserIdSalvando(true);
+    const r = await salvarAuthUserId(email, valor);
+    if (!r.ok) {
+      setAuthUserIdSalvando(false);
+      setAuthUserIdErro(r.error || "Não foi possível salvar.");
+      return;
+    }
+    // Recarrega do banco -- a UI só deve refletir o que buscarImplantacao()
+    // confirma ter persistido, nunca o valor otimista digitado no input.
+    const recarregado = await buscarImplantacao(email);
+    setAuthUserIdSalvando(false);
+    if (recarregado) {
+      setDados(recarregado.dados);
+      setItens(recarregado.itens);
+      setHistorico(recarregado.historico);
+      setAuthUserIdInput(recarregado.dados.auth_user_id || "");
+    }
+    setAuthUserIdEditando(false);
+  };
+
+  const cancelarEdicaoAuthUserId = () => {
+    setAuthUserIdInput(dados?.auth_user_id || "");
+    setAuthUserIdErro(null);
+    setAuthUserIdEditando(false);
+  };
+
   const etapas = [
     { label: "Dados do responsável", ok: dados.etapa_atual >= 2 },
     { label: "Dados do estúdio", ok: dados.etapa_atual >= 3 },
@@ -98,6 +143,54 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
             <span style={{ color: e.ok ? "#27AE60" : "#A09585", fontWeight: 600 }}>{e.ok ? "Concluído" : "Pendente"}</span>
           </div>
         ))}
+      </div>
+
+      <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#6B5E54", marginBottom: 8 }}>
+        Provisionamento
+      </div>
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#6B5E54", marginBottom: 2 }}>
+          Auth User ID (Supabase Auth)
+        </div>
+        {authUserIdEditando ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <input
+              value={authUserIdInput}
+              onChange={(e) => setAuthUserIdInput(e.target.value)}
+              placeholder="Cole aqui o UUID da conta criada no Supabase Auth"
+              style={{ background: "#0A0A0A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 6, color: "#E8E2D9", fontSize: 12, padding: 8, fontFamily: "monospace" }}
+            />
+            {authUserIdErro && <div style={{ fontSize: 11, color: "#E74C3C" }}>{authUserIdErro}</div>}
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={cancelarEdicaoAuthUserId}
+                disabled={authUserIdSalvando}
+                style={{ background: "none", border: "1px solid rgba(255,255,255,0.2)", color: "#A09585", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: authUserIdSalvando ? "not-allowed" : "pointer" }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={salvarAuthUserIdHandler}
+                disabled={authUserIdSalvando}
+                style={{ background: "#C9A84C", border: "none", color: "#17140A", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 700, cursor: authUserIdSalvando ? "not-allowed" : "pointer" }}
+              >
+                {authUserIdSalvando ? "Salvando..." : "Salvar"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12, color: dados.auth_user_id ? "#E8E2D9" : "#A09585", fontFamily: dados.auth_user_id ? "monospace" : "inherit" }}>
+              {dados.auth_user_id || "Não definido"}
+            </span>
+            <button
+              onClick={() => setAuthUserIdEditando(true)}
+              style={{ background: "none", border: "none", color: "#C9A84C", fontSize: 11, cursor: "pointer" }}
+            >
+              {dados.auth_user_id ? "Editar" : "Definir"}
+            </button>
+          </div>
+        )}
       </div>
 
       <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#6B5E54", marginBottom: 8 }}>
