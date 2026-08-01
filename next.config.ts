@@ -20,8 +20,10 @@ const nextConfig: NextConfig = {
       { source: "/login", destination: "https://inq-saas.vercel.app/" },
       { source: "/assets/:path*", destination: "https://inq-saas.vercel.app/assets/:path*" },
       // Site público de cada estúdio (inksystem.com.br/slug) — motor real fica
-      // no inq-saas (api/lead.js?acao=site), preservando o domínio na barra.
-      { source: "/:slug", destination: "https://inq-saas.vercel.app/api/lead?acao=site&slug=:slug" },
+      // no ink-system-implementacoes (Bloco 4.9), preservando o domínio na
+      // barra. Migrado de inq-saas/api/lead.js?acao=site (Bloco 4.1/4.8/4.9) —
+      // validado byte a byte contra dado real de produção antes do corte.
+      { source: "/:slug", destination: "https://ink-system-implementacoes.vercel.app/api/meu-site?slug=:slug" },
     ];
   },
 };
