@@ -1194,6 +1194,13 @@ export default function CrmClient({
   // Só existia como state pra reagir ao login assíncrono do supabase-js; aqui a
   // sessão já é garantida antes do componente renderizar, então é sempre true.
   const logado = true;
+  // Versão comercial 1.0 (e "Bronze", aceito como equivalente técnico -- mesma
+  // normalização usada em CRM.tsx/resolverVersaoComercial): conta comercial tem
+  // exatamente 1 registro de profissional. Sem OWNER_EMAIL e sem VERSOES_PERMISSOES
+  // -- esta rota só atende conta comercial, cliente.plano já chega pronto do
+  // servidor (page.tsx -> ink_clientes.plano), nada é redescoberto aqui.
+  const planoNormalizado = (cliente.plano || "").trim().toLowerCase();
+  const temMultiplosProfissionais = planoNormalizado !== "1.0" && planoNormalizado !== "bronze";
   // ── PERFIL DE ACESSO ──
   const [userRole, setUserRole] = useState<"admin"|"profissional">("admin");
   const [userArtistId, setUserArtistId] = useState<string>("");
@@ -2879,36 +2886,54 @@ export default function CrmClient({
     addLog(`Cliente "${nc.nome}" cadastrado`);
   };
 
+  const salvandoArtistaRef = useRef(false);
+  const [salvandoArtista, setSalvandoArtista] = useState(false);
+
   const saveArtist = async () => {
     if (!artForm.nome.trim()) return;
-    const row = {
-      nome: artForm.nome,
-      role: artForm.role,
-      com: artForm.com,
-      cor: artForm.cor,
-      insta: artForm.insta || "",
-      email: artForm.email || "",
-      tel: artForm.tel || "",
-      funcao: artForm.funcao || "",
-      atende_cliente: artForm.atendeCliente,
-      nascimento: artForm.nascimento || null,
-      piercing_comissao_tipo: artForm.piercingComissaoTipo || null,
-      piercing_comissao_valor: artForm.piercingComissaoValor ? Number(artForm.piercingComissaoValor) : null,
-      remuneracao_tipo: artForm.remuneracaoTipo || null,
-      remuneracao_valor: artForm.remuneracaoValor ? Number(artForm.remuneracaoValor) : null,
-      forma_recebimento: artForm.formaRecebimento || null,
-      user_id: userId
-    };
-    const { data: artData, error: artError } = await sb.from("artistas").insert(row).select().single();
-    if (artError) {
-      setShowAviso(`Erro ao salvar artista: ${artError.message}`);
+    if (salvandoArtistaRef.current) return;
+    // Versão comercial 1.0 (e compatíveis): exatamente 1 registro de profissional
+    // por conta, contando mesmo os inativos -- editar reaproveita o registro
+    // existente, não presume que a interface já escondeu o botão de criar.
+    if (!temMultiplosProfissionais && artists.length > 0) {
+      setShowAviso("Sua conta já possui um profissional cadastrado. Edite o profissional existente em vez de criar outro.");
       return;
     }
-    setArtists(p => [...p, { ...row, id: artData.id }]);
-    setShowArtForm(false);
-    setArtForm({ nome: "", role: "guest", com: 50, cor: "#C9A84C", insta: "@", email: "", tel: "", funcao: "", atendeCliente: true, nascimento: "", piercingComissaoTipo: "", piercingComissaoValor: "", remuneracaoTipo: "", remuneracaoValor: "", formaRecebimento: "" });
-    addLog(`Profissional "${artForm.nome}" cadastrado`);
-    if (!onboardingDone) { setOnbStep(s => s + 1); }
+    salvandoArtistaRef.current = true;
+    setSalvandoArtista(true);
+    try {
+      const row = {
+        nome: artForm.nome,
+        role: artForm.role,
+        com: artForm.com,
+        cor: artForm.cor,
+        insta: artForm.insta || "",
+        email: artForm.email || "",
+        tel: artForm.tel || "",
+        funcao: artForm.funcao || "",
+        atende_cliente: artForm.atendeCliente,
+        nascimento: artForm.nascimento || null,
+        piercing_comissao_tipo: artForm.piercingComissaoTipo || null,
+        piercing_comissao_valor: artForm.piercingComissaoValor ? Number(artForm.piercingComissaoValor) : null,
+        remuneracao_tipo: artForm.remuneracaoTipo || null,
+        remuneracao_valor: artForm.remuneracaoValor ? Number(artForm.remuneracaoValor) : null,
+        forma_recebimento: artForm.formaRecebimento || null,
+        user_id: userId
+      };
+      const { data: artData, error: artError } = await sb.from("artistas").insert(row).select().single();
+      if (artError) {
+        setShowAviso(`Erro ao salvar artista: ${artError.message}`);
+        return;
+      }
+      setArtists(p => [...p, { ...row, id: artData.id }]);
+      setShowArtForm(false);
+      setArtForm({ nome: "", role: "guest", com: 50, cor: "#C9A84C", insta: "@", email: "", tel: "", funcao: "", atendeCliente: true, nascimento: "", piercingComissaoTipo: "", piercingComissaoValor: "", remuneracaoTipo: "", remuneracaoValor: "", formaRecebimento: "" });
+      addLog(`Profissional "${artForm.nome}" cadastrado`);
+      if (!onboardingDone) { setOnbStep(s => s + 1); }
+    } finally {
+      salvandoArtistaRef.current = false;
+      setSalvandoArtista(false);
+    }
   };
 
   // E-mail do dia 0 da régua de pós-venda de piercing — disparado na hora em que a solicitação é concluída.
@@ -4702,10 +4727,15 @@ export default function CrmClient({
                     <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 16, fontWeight: 600, color: a.cor }}>{a.nome}</div>
                     <div style={{ fontSize: 11, color: "#8A8070", marginTop: 2 }}>{a.role === "residente" ? "Residente" : "Temporário"} · {a.com}% comissao</div>
                   </div>
-                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#27AE60" }} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <button className="btn-sm gold" onClick={() => setEditingArtist({ ...a })}>✏️ Editar</button>
+                    <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#27AE60" }} />
+                  </div>
                 </div>
               ))}
-              <button className="btn-new" style={{ marginTop: 4, alignSelf: "flex-start" }} onClick={() => setShowArtForm(true)}>+ Adicionar Profissional</button>
+              {(temMultiplosProfissionais || artists.length === 0) && (
+                <button className="btn-new" style={{ marginTop: 4, alignSelf: "flex-start" }} onClick={() => setShowArtForm(true)}>+ Adicionar Profissional</button>
+              )}
             </div>
           )}
           {onbStep === 3 && (
@@ -4732,6 +4762,10 @@ export default function CrmClient({
                 </button>
               )}
               {onbStep === 3 && <button className="btn-s" onClick={async () => {
+                if (!temMultiplosProfissionais && artists.length === 0) {
+                  setShowAviso("Cadastre o profissional da conta antes de concluir a configuração.");
+                  return;
+                }
                 setOnboardingDone(true); setShowSplash(false); localStorage.setItem("inq_onb", "1");
                 try {
                   const cfg: any = {
@@ -4790,7 +4824,7 @@ export default function CrmClient({
                 <div className="ff"><DateScroller label="Aniversário" anos="passado" value={artForm.nascimento} onChange={v => setArtForm({ ...artForm, nascimento: v })} /></div>
                 <div className="ff"><label className="fl">Cor de identificação (aparece na agenda e no pipeline)</label><ColorPicker value={artForm.cor} onChange={cor => setArtForm({ ...artForm, cor })} /></div>
               </div>
-              <div className="fmf"><button className="btn-c" onClick={() => setShowArtForm(false)}>Cancelar</button><button className="btn-s" onClick={saveArtist} disabled={!artForm.nome}>Salvar</button></div>
+              <div className="fmf"><button className="btn-c" onClick={() => setShowArtForm(false)}>Cancelar</button><button className="btn-s" onClick={saveArtist} disabled={!artForm.nome || salvandoArtista}>{salvandoArtista ? "Salvando..." : "Salvar"}</button></div>
             </div>
           </div>
         )}
@@ -11404,7 +11438,7 @@ export default function CrmClient({
               </div>
               <div className="fmf">
                 <button className="btn-c" onClick={() => setShowArtForm(false)}>Cancelar</button>
-                <button className="btn-s" onClick={saveArtist} disabled={!artForm.nome}>Salvar</button>
+                <button className="btn-s" onClick={saveArtist} disabled={!artForm.nome || salvandoArtista}>{salvandoArtista ? "Salvando..." : "Salvar"}</button>
               </div>
             </div>
           </div>
@@ -13564,7 +13598,13 @@ export default function CrmClient({
                   <div>
                     <div className="stit">Profissionais do Estúdio</div>
                     <div style={{ marginBottom: 12 }}>
-                      <button className="btn-s" onClick={() => setShowArtForm(true)}>+ Adicionar Profissional</button>
+                      <button className="btn-s" onClick={() => {
+                        if (!temMultiplosProfissionais && artists.length > 0) {
+                          setShowAviso("Sua conta já possui um profissional cadastrado. Edite o profissional existente em vez de criar outro.");
+                          return;
+                        }
+                        setShowArtForm(true);
+                      }}>+ Adicionar Profissional</button>
                     </div>
                     {artists.map(a => (
                       <div className="acard" key={a.id} style={{ opacity: a.ativo ? 1 : .55, marginBottom: 10 }}>
