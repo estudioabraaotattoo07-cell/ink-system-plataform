@@ -1239,7 +1239,6 @@ export default function CrmClient({
   const [donoWhats, setDonoWhats] = useState("");
   const [donoEmail, setDonoEmail] = useState("");
   const [auraName, setAuraName] = useState("Aura");
-  const [auraInstrucoes, setAuraInstrucoes] = useState("");
   const [metaSessoes, setMetaSessoes] = useState(0);
   const [metaLeads, setMetaLeads] = useState(0);
   const [metaNPS, setMetaNPS] = useState(0);
@@ -1755,7 +1754,6 @@ export default function CrmClient({
           if (cfg.zenvia_api_key) setZenviaApiKey(cfg.zenvia_api_key);
           if (cfg.zenvia_numero) setZenviaNumero(cfg.zenvia_numero);
           if (cfg.aura_api_key) setAuraApiKey(cfg.aura_api_key);
-          if (cfg.aura_instrucoes) setAuraInstrucoes(cfg.aura_instrucoes);
           if (cfg.vercel_token) setVercelToken(cfg.vercel_token);
           if (cfg.github_token) setGithubToken(cfg.github_token);
           if (cfg.github_repo) setGithubRepo(cfg.github_repo);
@@ -3524,17 +3522,6 @@ export default function CrmClient({
       }
     },
     {
-      name: "salvar_memoria",
-      description: "Salva uma informação nova e permanente sobre o estúdio nas instruções da IA. Usar quando o usuário revelar algo importante sobre como o estúdio funciona, suas regras, preferências ou política — e que deve ser lembrado em todas as conversas futuras. SEMPRE pedir confirmação antes de salvar.",
-      input_schema: {
-        type: "object",
-        properties: {
-          instrucao: { type: "string", description: "A instrução exata a ser adicionada às memórias permanentes. Deve ser uma frase clara e objetiva." }
-        },
-        required: ["instrucao"]
-      }
-    },
-    {
       name: "migrar_origens",
       description: "Escaneia todos os clientes e mapeia valores antigos de origem (campo 'orig') para as origens cadastradas no sistema (por nome ou slug). Gera um relatório do que será alterado e SEMPRE pede confirmação explícita do usuário antes de aplicar qualquer mudança.",
       input_schema: {
@@ -3806,22 +3793,6 @@ export default function CrmClient({
           return "✅ PDF encaminhado para **" + params.destinatario_nome + "** (" + params.destinatario_email + ").";
         } catch { return "❌ Erro ao encaminhar PDF. Verifique as configurações de e-mail."; }
       }
-      if (tool === "salvar_memoria") {
-        try {
-          const novaInstrucao = params.instrucao;
-          const novasInstrucoes = (auraInstrucoes ? auraInstrucoes + "\n" : "") + novaInstrucao;
-          setAuraInstrucoes(novasInstrucoes);
-          const { error: erroMemoria } = await sb
-            .from("configuracoes")
-            .upsert({ user_id: userId, aura_instrucoes: novasInstrucoes }, { onConflict: "user_id" });
-          if (erroMemoria) {
-            return "❌ Não consegui salvar a memória agora. Tente novamente em instantes.";
-          }
-          return "✅ Memória salva! Agora sei que: **" + novaInstrucao + "**\n\nEssa informação ficará comigo em todas as conversas futuras.";
-        } catch {
-          return "❌ Erro ao salvar memória. Tente novamente.";
-        }
-      }
       if (tool === "migrar_origens") {
         try {
           const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
@@ -3984,8 +3955,6 @@ export default function CrmClient({
     const nomeIA = auraName || "Assistente";
     const tipoNegocio = studioName || "estúdio";
 
-    const blocoInstrucoes = auraInstrucoes ? "\nINSTRUÇÕES ESPECÍFICAS DO ESTÚDIO:\n" + auraInstrucoes : "";
-
     const hoje2 = new Date().toLocaleDateString("pt-BR");
 
     const contexto = "Você é " + nomeIA + ", assistente inteligente do INK SYSTEM CRM.\n" +
@@ -3999,7 +3968,6 @@ export default function CrmClient({
       "- Agendamentos hoje: " + agEvents.filter((e: any) => e.date === hoje).length + "\n" +
       "- Profissionais: " + artists.map((a: any) => a.nome).join(", ") + "\n\n" +
       "CLIENTES (até 80 mais recentes):\n" + clientesContexto + "\n\n" +
-      blocoInstrucoes + "\n\n" +
       "REGRAS IMPORTANTES:\n" +
       "1. Antes de executar qualquer ação, SEMPRE peça confirmação descrevendo exatamente o que vai fazer.\n" +
       "2. Quando o usuário confirmar com sim/pode/confirmo/ok ou similar, use a ferramenta correspondente.\n" +
@@ -4008,9 +3976,7 @@ export default function CrmClient({
       "5. Use **negrito** para destacar nomes e valores importantes.\n" +
       "6. Você conhece o histórico desta conversa — use-o para dar continuidade.\n" +
       "7. Quando não souber algo sobre um cliente específico, diga que precisa verificar e peça o nome.\n" +
-      "8. Quando o usuário revelar algo importante sobre como o estúdio funciona (regras, preferências, política, horários), sugira salvar isso nas suas memórias permanentes usando a ferramenta salvar_memoria.\n" +
-      "9. Nunca invente informações sobre o estúdio — se não souber, pergunte.\n" +
-      "10. Se as instruções do estúdio já existirem, use-as como base principal do seu comportamento.";
+      "8. Nunca invente informações sobre o estúdio — se não souber, pergunte.";
     try {
       const apiMessages = newHistory.map((m: any) => {
         if (typeof m.content === "string" && m.content.startsWith("📷")) return null;
@@ -4060,9 +4026,6 @@ export default function CrmClient({
           }
           else if (toolUseBlock.name === "encaminhar_pdf") {
             descricao = "Encaminhar PDF para **" + p2.destinatario_nome + "** (" + p2.destinatario_email + ")\nAssunto: " + p2.assunto;
-          }
-          else if (toolUseBlock.name === "salvar_memoria") {
-            descricao = "Salvar permanentemente nas minhas memórias: **" + toolUseBlock.input.instrucao + "**";
           }
           const msgAura = (textBlock?.text ? textBlock.text + "\n\n" : "") + "⚡ **Ação identificada:** " + descricao + "\n\n✅ Posso executar isso agora. Confirma?";
           setAuraChatMessages(prev => [...prev, { role: "assistant", content: msgAura }]);
@@ -14200,7 +14163,6 @@ export default function CrmClient({
                     zenvia_api_key: zenviaApiKey,
                     zenvia_numero: zenviaNumero,
                     aura_api_key: auraApiKey,
-                    aura_instrucoes: auraInstrucoes,
                     vercel_token: vercelToken,
                     github_token: githubToken,
                     github_repo: githubRepo,
