@@ -3,13 +3,59 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* ── Tokens visuais da marca (Bloco 1) ──────────────────────────────
+     Extraídos dos valores hexadecimais já repetidos em app/page.tsx,
+     app/AuraFlow.tsx e app/login/page.tsx antes desta rodada -- não são
+     cores novas, são as mesmas cores, só centralizadas. Escala reduzida
+     de propósito (só o que já se repetia em mais de um lugar). */
+
+  /* Fundos -- do mais profundo ao mais claro */
+  --bg-void: #05040a;
+  --bg-base: #0a0a0a;
+  --bg-surface: #0b0b0f;
+  --bg-surface-2: #050505;
+
+  /* Lavanda -- só usada em glows/gradientes de fundo, sempre com opacidade */
+  --lavender: 139 92 222;
+
+  /* Dourado -- gradiente de botão e realces de texto */
+  --gold-light: #e8c97a;
+  --gold: #c9a84c;
+  --gold-deep: #8a6a24;
+  --gold-reflect: #ffe0a0;
+
+  /* Texto */
+  --text-primary: #e8e2d9;
+  --text-secondary: #a79a8a;
+  --text-tertiary: #6b5e54;
+
+  /* Bordas -- variações de opacidade do dourado sobre fundo escuro */
+  --border-gold-soft: rgba(201, 168, 76, 0.15);
+  --border-gold: rgba(201, 168, 76, 0.25);
+  --border-gold-strong: rgba(201, 168, 76, 0.4);
+
+  /* Sombra e foco */
+  --shadow-gold: 0 6px 24px rgba(201, 168, 76, 0.35);
+  --shadow-gold-hover: 0 10px 30px rgba(201, 168, 76, 0.45);
+  --focus-ring: 0 0 0 3px rgba(232, 201, 122, 0.55);
+
+  /* Raio e transição -- reutilizados por botão, cartão e accordion */
+  --radius-pill: 9999px;
+  --radius-card: 14px;
+  --transition-fast: 180ms ease;
+  --transition-base: 250ms ease;
+
+  /* Tipografia -- ver app/layout.tsx (next/font). Fallback explícito
+     mantém o mesmo empilhamento que a página já usava. */
+  --font-heading: var(--font-cormorant), 'Cormorant Garamond', serif;
+  --font-body: var(--font-dm-sans), 'DM Sans', sans-serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,4 +69,237 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Rolagem suave pras âncoras da landing (menu, CTAs) -- desligada quando
+   o visitante pede redução de movimento no sistema operacional. */
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ── Botão de CTA (Bloco 1) ──────────────────────────────────────────
+   Um único componente (app/components/landing/CtaButton.tsx) cobre
+   primário e secundário, com todos os estados: normal, hover, pressionado,
+   foco pelo teclado, carregando e desabilitado. */
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  border-radius: var(--radius-pill);
+  padding: 16px 32px;
+  min-height: 54px;
+  cursor: pointer;
+  border: 1px solid rgba(255, 224, 160, 0.6);
+  background: linear-gradient(135deg, var(--gold-light), var(--gold) 45%, var(--gold-deep));
+  color: #17140a;
+  box-shadow: var(--shadow-gold), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: transform var(--transition-base), box-shadow var(--transition-base), filter var(--transition-base);
+  white-space: nowrap;
+}
+.cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-gold-hover), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  filter: brightness(1.05);
+}
+.cta-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 12px rgba(201, 168, 76, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+/* Seletor .landing-root a.cta-btn (em vez de só .cta-btn) -- precisa
+   bater ou superar a especificidade de ".landing-root a:focus-visible"
+   (mais abaixo neste arquivo); caso contrário aquela regra, mais
+   específica por incluir o seletor de tipo "a", vence e descarta a
+   sombra de repouso aqui combinada com o anel. "transition: box-shadow 0s"
+   -- só no estado de foco -- garante que o anel apareça instantaneamente
+   (não é só estética: foco pelo teclado não deve depender de uma
+   transição para ficar visível). */
+.landing-root a.cta-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-gold), inset 0 1px 0 rgba(255, 255, 255, 0.4), var(--focus-ring);
+  transition: box-shadow 0s;
+}
+.cta-btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  filter: grayscale(0.3);
+}
+.cta-btn.cta-btn--loading {
+  cursor: progress;
+}
+
+.cta-btn--secondary {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid var(--border-gold-strong);
+  box-shadow: none;
+  font-weight: 600;
+}
+.cta-btn--secondary:hover {
+  transform: translateY(-2px);
+  background: rgba(201, 168, 76, 0.08);
+  box-shadow: 0 4px 14px rgba(201, 168, 76, 0.15);
+  filter: none;
+}
+.cta-btn--secondary:active {
+  transform: translateY(0);
+  background: rgba(201, 168, 76, 0.14);
+}
+.landing-root a.cta-btn--secondary:focus-visible {
+  box-shadow: var(--focus-ring);
+  transition: box-shadow 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-btn,
+  .cta-btn--secondary {
+    transition: none;
+  }
+  .cta-btn:hover,
+  .cta-btn--secondary:hover,
+  .cta-btn:active,
+  .cta-btn--secondary:active {
+    transform: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .cta-btn {
+    min-height: 52px;
+  }
+}
+
+.cta-btn--full-mobile {
+  width: auto;
+}
+@media (max-width: 640px) {
+  .cta-btn--full-mobile {
+    width: 100%;
+  }
+}
+
+/* ── Cabeçalho responsivo ── */
+.header-nav-desktop {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.header-menu-btn {
+  display: none;
+}
+@media (max-width: 860px) {
+  .header-nav-desktop,
+  .header-cta-desktop {
+    display: none;
+  }
+  .header-menu-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+}
+@media (min-width: 861px) {
+  .header-menu-mobile {
+    display: none;
+  }
+}
+
+/* ── Antes/Depois: 2 colunas no computador, empilhado no celular ── */
+.antes-depois-grid {
+  grid-template-columns: 1fr;
+}
+@media (min-width: 720px) {
+  .antes-depois-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ── Oferta: os dois caminhos comerciais, mesma regra de empilhamento ── */
+.oferta-caminhos {
+  grid-template-columns: 1fr;
+}
+@media (min-width: 720px) {
+  .oferta-caminhos {
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+  }
+}
+
+/* ── Cartões de funcionalidade ── */
+.funcionalidade-card:hover {
+  border-color: var(--border-gold-strong);
+  transform: translateY(-3px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .funcionalidade-card {
+    transition: none;
+  }
+  .funcionalidade-card:hover {
+    transform: none;
+  }
+}
+
+/* ── Entrada suave de seções ── */
+.secao-entra {
+  animation: secaoFadeIn 0.6s ease both;
+}
+@keyframes secaoFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .secao-entra {
+    animation: none;
+  }
+}
+
+/* Nunca permitir rolagem horizontal na landing */
+.landing-root {
+  overflow-x: hidden;
+}
+
+/* Compensa a altura do cabeçalho fixo (sticky) ao pular para uma âncora
+   (menu ou CTA), pra o título da seção de destino não ficar escondido
+   atrás dele. Aplicado a todo id-alvo de navegação interna da landing. */
+.landing-root #inicio,
+.landing-root #funcionalidades,
+.landing-root #como-comeca,
+.landing-root #comecar,
+.landing-root #teste-gratis,
+.landing-root #assinar,
+.landing-root #duvidas {
+  scroll-margin-top: 88px;
+}
+
+/* Foco pelo teclado nos links de navegação e na pergunta do accordion --
+   mesma linguagem visual do foco do CtaButton (dourado), em vez do
+   contorno genérico do navegador. */
+.landing-root a:focus-visible,
+.faq-question-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 8px;
+}
+
+/* Botão de menu do celular -- antes só tinha o contorno padrão do
+   navegador; alinhando ao mesmo anel dourado usado no resto da página. */
+.header-menu-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
