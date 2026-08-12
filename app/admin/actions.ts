@@ -126,21 +126,95 @@ export async function solicitarComplementacao(email: string, nome: string | null
   return { ok: true };
 }
 
+// Bloco 2.6A, Etapa 3.3 -- liga a aprovação ao motor de provisionamento via
+// /api/provisionar. Não reimplementa nenhuma validação já feita lá (conta
+// existe no Auth, e-mail coincide, conflito de tenant) -- só confirma que a
+// ficha local tem os dados mínimos para tentar a chamada. Ordem obrigatória:
+// provisionamento -> estágio -> histórico -> e-mail. O histórico é
+// registrado antes da tentativa de envio -- não depende do sucesso do
+// e-mail.
+async function registrarHistoricoImplantacao(sb: ReturnType<typeof getAdminClient>, implantacaoId: string, evento: string) {
+  await sb.from("ink_implantacao_historico").insert({ implantacao_id: implantacaoId, evento });
+}
+
 export async function aprovarSolicitacao(email: string, nome: string | null) {
   const sb = getAdminClient();
+
+  const { data: implantacao, error: erroBusca } = await sb
+    .from("ink_implantacao_dados")
+    .select("id, auth_user_id, nome_fantasia")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (erroBusca) return { ok: false, error: "Falha ao buscar dados da implantação: " + erroBusca.message };
+  if (!implantacao) return { ok: false, error: "Ficha de implantação não encontrada para este e-mail." };
+  if (!implantacao.auth_user_id) return { ok: false, error: "Cole o Auth User ID na ficha antes de aprovar." };
+  if (!implantacao.nome_fantasia) return { ok: false, error: "Falta o nome fantasia do estúdio na ficha antes de aprovar." };
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  let resp: Response;
+  try {
+    resp = await fetch("https://inq-saas.vercel.app/api/provisionar", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Provisioning-Service-Key": process.env.PROVISIONING_SERVICE_SECRET || "",
+      },
+      body: JSON.stringify({
+        authUserId: implantacao.auth_user_id,
+        email,
+        nomeEstudio: implantacao.nome_fantasia,
+        nomeResponsavel: nome,
+      }),
+      signal: controller.signal,
+    });
+  } catch (e: any) {
+    clearTimeout(timeoutId);
+    const motivo = e?.name === "AbortError" ? "Tempo esgotado ao tentar provisionar." : "Não foi possível conectar ao provisionamento agora.";
+    await registrarHistoricoImplantacao(sb, implantacao.id, "Falha ao chamar o provisionamento: " + motivo);
+    return { ok: false, error: motivo + " Tente novamente." };
+  }
+  clearTimeout(timeoutId);
+
+  const relatorio = await resp.json().catch(() => null);
+
+  if (!resp.ok) {
+    const motivo = relatorio?.error || `Erro ${resp.status} ao provisionar.`;
+    await registrarHistoricoImplantacao(sb, implantacao.id, "Provisionamento recusado: " + motivo);
+    return { ok: false, error: motivo };
+  }
+
+  if (!relatorio?.sucesso) {
+    const etapaFalha = relatorio?.etapas?.find((e: any) => e.status === "erro");
+    const motivo = etapaFalha ? `${etapaFalha.etapa}: ${etapaFalha.erro}` : "Provisionamento incompleto.";
+    await registrarHistoricoImplantacao(sb, implantacao.id, "Provisionamento parcial: " + motivo);
+    return { ok: false, error: motivo };
+  }
+
+  // Provisionamento confirmado -- ordem obrigatória a partir daqui: estágio,
+  // depois histórico, depois e-mail.
+  const { error: erroEstagio } = await sb.from("ink_leads").update({ estagio: "aprovado" }).eq("email", email);
+  if (erroEstagio) return { ok: false, error: erroEstagio.message };
+
+  await registrarHistoricoImplantacao(sb, implantacao.id, "Provisionamento concluído e estágio atualizado para aprovado");
+
   const primeiroNome = nome?.split(" ")[0] || "";
   const html = paragrafos([
     `Olá, ${primeiroNome}.`,
     "Sua documentação foi analisada e aprovada.",
-    "A partir de agora, nossa equipe vai iniciar a implantação do Ink System para o seu estúdio.",
-    "Você receberá um novo e-mail assim que o seu ambiente estiver pronto, com os dados de acesso e as orientações para começar a utilizar o sistema.",
+    "Seu ambiente no Ink System já está disponível e pronto para acesso.",
+    "Você pode entrar utilizando o e-mail cadastrado e a senha definida durante a criação da sua conta.",
+    "Se surgir qualquer dúvida durante os primeiros acessos, basta responder este e-mail. Nossa equipe estará à disposição para ajudar.",
+    "Seja bem-vindo ao Ink System.",
   ]) + RODAPE;
 
-  const envio = await enviarEmail(email, "Sua implantação foi aprovada", html);
-  if (!envio.ok) return envio;
+  const envio = await enviarEmail(email, "Seu acesso ao Ink System está liberado", html);
+  if (!envio.ok) {
+    await registrarHistoricoImplantacao(sb, implantacao.id, "Falha ao enviar e-mail de confirmação");
+    return { ok: false, error: "Provisionado e aprovado, mas não foi possível enviar o e-mail de confirmação agora. " + (envio.error || "") };
+  }
 
-  const { error } = await sb.from("ink_leads").update({ estagio: "aprovado" }).eq("email", email);
-  if (error) return { ok: false, error: error.message };
   revalidatePath("/admin");
   return { ok: true };
 }

@@ -1,5 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  avaliarAcesso,
+  classificarRota,
+  decidirRedirecionamento,
+  type ClienteSupabaseMinimo,
+} from "@/lib/acesso/avaliarAcesso";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -28,8 +34,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isRotaProtegida = path.startsWith("/app/");
-  const isRotaSuspenso = path === "/suspenso";
+  const { protegida: isRotaProtegida, suspensa: isRotaSuspenso } = classificarRota(path);
 
   if (isRotaProtegida && !user) {
     const url = request.nextUrl.clone();
@@ -38,23 +43,24 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && (isRotaProtegida || isRotaSuspenso)) {
-    const { data: cliente } = await supabase
-      .from("ink_clientes")
-      .select("status, slug")
-      .eq("auth_user_id", user.id)
-      .single();
+    // Falha técnica na verificação bloqueia com segurança -- avaliarAcesso()
+    // já devolve permitido:false tanto pra bloqueio comercial real quanto
+    // pra erro de consulta, então nenhum tratamento extra é necessário
+    // aqui pra "falhar fechado".
+    // O SupabaseClient real satisfaz ClienteSupabaseMinimo estruturalmente
+    // em runtime (tem esses métodos, e mais), mas checar isso via tipos
+    // dispara "Type instantiation is excessively deep" -- limitação
+    // conhecida do TypeScript ao comparar os generics profundamente
+    // condicionais do SupabaseClient (schema de Database=any, sem tipo
+    // gerado neste projeto) contra qualquer interface própria. A
+    // assinatura interna de avaliarAcesso() continua 100% tipada (zero
+    // "any"); só este ponto de fronteira precisa da conversão.
+    const resultado = await avaliarAcesso(supabase as unknown as ClienteSupabaseMinimo, user.id);
+    const decisao = decidirRedirecionamento(resultado, isRotaProtegida, isRotaSuspenso);
 
-    const statusBloqueado = cliente && ["suspenso", "inadimplente", "cancelado"].includes(cliente.status);
-
-    if (isRotaProtegida && statusBloqueado) {
+    if (decisao.destino) {
       const url = request.nextUrl.clone();
-      url.pathname = "/suspenso";
-      return NextResponse.redirect(url);
-    }
-
-    if (isRotaSuspenso && !statusBloqueado) {
-      const url = request.nextUrl.clone();
-      url.pathname = cliente ? "/app/" + cliente.slug : "/login";
+      url.pathname = decisao.destino;
       return NextResponse.redirect(url);
     }
   }

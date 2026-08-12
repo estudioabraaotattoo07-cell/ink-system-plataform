@@ -11,6 +11,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { avaliarAcesso, decidirRespostaAcesso, type ClienteSupabaseMinimo } from "@/lib/acesso/avaliarAcesso";
+import { rewriteUserIdParam, forceUserIdOnBody } from "@/lib/acesso/isolamentoTenant";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY!;
@@ -24,37 +26,18 @@ async function getTenantUserId(): Promise<{ userId: string } | { error: string; 
   );
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Nao autenticado", status: 401 };
+  if (!user) return decidirRespostaAcesso(null, null);
 
-  const { data: cliente } = await supabase
-    .from("ink_clientes")
-    .select("status")
-    .eq("auth_user_id", user.id)
-    .single();
-
-  if (!cliente) return { error: "Tenant nao encontrado", status: 403 };
-  if (["suspenso", "inadimplente", "cancelado"].includes(cliente.status)) {
-    return { error: "Acesso suspenso", status: 403 };
-  }
-
-  return { userId: user.id };
-}
-
-function rewriteUserIdParam(searchParams: URLSearchParams, userId: string) {
-  searchParams.delete("user_id");
-  searchParams.set("user_id", "eq." + userId);
-}
-
-function forceUserIdOnBody(body: unknown, userId: string, mode: "insert" | "update"): unknown {
-  const apply = (obj: Record<string, unknown>) => {
-    const copy = { ...obj };
-    if (mode === "insert") copy.user_id = userId;
-    else delete copy.user_id; // update nunca pode trocar o dono da linha
-    return copy;
-  };
-  if (Array.isArray(body)) return body.map(item => apply(item as Record<string, unknown>));
-  if (body && typeof body === "object") return apply(body as Record<string, unknown>);
-  return body;
+  // O SupabaseClient real satisfaz ClienteSupabaseMinimo estruturalmente em
+  // runtime, mas checar isso via tipos dispara "Type instantiation is
+  // excessively deep" -- limitação conhecida do TypeScript ao comparar os
+  // generics profundamente condicionais do SupabaseClient (schema de
+  // Database=any, sem tipo gerado neste projeto) contra qualquer
+  // interface própria. A assinatura interna de avaliarAcesso() continua
+  // 100% tipada (zero "any"); só este ponto de fronteira precisa da
+  // conversão.
+  const resultado = await avaliarAcesso(supabase as unknown as ClienteSupabaseMinimo, user.id);
+  return decidirRespostaAcesso({ id: user.id }, resultado);
 }
 
 async function proxy(req: NextRequest, method: string, pathSegs: string[]) {

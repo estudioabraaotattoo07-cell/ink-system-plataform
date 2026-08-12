@@ -9,19 +9,17 @@ export default async function SuspensoPage() {
 
   if (!user) redirect("/login");
 
+  // Mensagem única e genérica, verdadeira pra qualquer motivo de bloqueio
+  // (cadastro indisponível, licença ausente ou não ativa, ou falha técnica
+  // temporária na verificação) -- nunca expõe qual tabela, coluna ou
+  // status técnico causou o bloqueio.
   const { data: cliente } = await supabase
     .from("ink_clientes")
-    .select("nome_estudio, status, data_vencimento")
+    .select("nome_estudio")
     .eq("auth_user_id", user.id)
-    .single();
+    .maybeSingle();
 
-  const mensagens: Record<string, string> = {
-    inadimplente: "Identificamos um pagamento em aberto na sua conta.",
-    suspenso: "Seu acesso está temporariamente suspenso por falta de pagamento.",
-    cancelado: "Sua assinatura foi cancelada.",
-  };
-
-  const texto = cliente ? mensagens[cliente.status] || "Seu acesso não está ativo." : "Seu acesso não está ativo.";
+  const texto = "Seu acesso não está disponível no momento.";
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-neutral-950 px-4">
