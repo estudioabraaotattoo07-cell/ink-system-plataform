@@ -11,9 +11,15 @@ export default async function AppClientePage({ params }: { params: Promise<{ slu
 
   if (!user) redirect("/login");
 
+  // Seleção explícita, não "*" -- só as colunas realmente consumidas neste
+  // arquivo (cliente.slug, linha abaixo) e em CrmClient.tsx (cliente.plano,
+  // única propriedade lida lá). Ver auditoria de hardening de ink_clientes:
+  // qualquer coluna a mais aqui teria que ser espelhada no GRANT SELECT por
+  // coluna da migration de permissões, então este select é o contrato real
+  // do que este caminho precisa do banco.
   const { data: cliente } = await supabase
     .from("ink_clientes")
-    .select("*")
+    .select("slug, plano")
     .eq("auth_user_id", user.id)
     .single();
 

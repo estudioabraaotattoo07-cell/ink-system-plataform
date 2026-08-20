@@ -1165,7 +1165,11 @@ export default function CrmClient({
   demoMode,
   demoSeed,
 }: {
-  cliente: ClienteInk;
+  // Só slug (redirecionamento em page.tsx) e plano (linha abaixo) são
+  // realmente lidos deste prop -- ClienteInk continua declarando
+  // nome_estudio/status porque a página real busca só o necessário
+  // (select("slug, plano")); ver auditoria de hardening de ink_clientes.
+  cliente: Pick<ClienteInk, "slug" | "plano">;
   userId: string;
   userEmail: string;
   demoMode?: boolean;

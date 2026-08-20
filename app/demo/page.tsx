@@ -10,7 +10,7 @@ export default function DemoPage() {
       <CrmClient
         demoMode
         demoSeed={seed}
-        cliente={{ nome_estudio: "Seu Estúdio", plano: "completo", status: "ativo", slug: "demo" }}
+        cliente={{ plano: "completo", slug: "demo" }}
         userId={DEMO_USER_ID}
         userEmail="demo@inksystem.com.br"
       />
