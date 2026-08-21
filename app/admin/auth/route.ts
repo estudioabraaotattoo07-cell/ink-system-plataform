@@ -1,20 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminToken } from "@/lib/admin/token";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
-  const { senha } = await req.json().catch(() => ({ senha: "" }));
+  const { email, senha } = await req.json().catch(() => ({ email: "", senha: "" }));
+  const emailNormalizado = typeof email === "string" ? email.trim().toLowerCase() : "";
 
-  if (!process.env.ADMIN_PASSWORD || senha !== process.env.ADMIN_PASSWORD) {
-    return NextResponse.json({ error: "Senha incorreta" }, { status: 401 });
+  if (!emailNormalizado || !emailNormalizado.includes("@") || typeof senha !== "string" || senha.length < 8) {
+    return NextResponse.json({ error: "Credenciais inválidas." }, { status: 401 });
   }
 
-  const res = NextResponse.json({ ok: true });
-  res.cookies.set("ink_admin", await adminToken(process.env.ADMIN_PASSWORD), {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+  const supabase = await createClient();
+  const { data: sessao, error: erroLogin } = await supabase.auth.signInWithPassword({
+    email: emailNormalizado,
+    password: senha,
   });
-  return res;
+  if (erroLogin || !sessao.user) {
+    return NextResponse.json({ error: "Credenciais inválidas." }, { status: 401 });
+  }
+
+  const { data: admin, error: erroAdmin } = await supabase
+    .from("ink_admin_usuarios")
+    .select("id")
+    .eq("auth_user_id", sessao.user.id)
+    .eq("ativo", true)
+    .maybeSingle();
+
+  if (erroAdmin || !admin) {
+    await supabase.auth.signOut();
+    return NextResponse.json({ error: "Esta conta não possui acesso administrativo." }, { status: 403 });
+  }
+
+  return NextResponse.json({ ok: true });
 }

@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import ComplementarWizard from "./ComplementarWizard";
+import { hashTokenImplantacao } from "@/lib/implantacao/token";
 
 function getAdminClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
@@ -8,7 +9,12 @@ function getAdminClient() {
 export default async function ComplementarTokenPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const sb = getAdminClient();
-  const { data: registro } = await sb.from("ink_implantacao_dados").select("*").eq("token", token).maybeSingle();
+  const { data: registro } = await sb
+    .from("ink_implantacao_dados")
+    .select("*")
+    .eq("token", hashTokenImplantacao(token))
+    .gt("token_expira_em", new Date().toISOString())
+    .maybeSingle();
   let itens: any[] = [];
   if (registro) {
     const { data: itensData } = await sb.from("ink_implantacao_itens").select("*").eq("implantacao_id", registro.id).order("criado_em");

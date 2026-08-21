@@ -2,8 +2,9 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
-import { randomUUID } from "node:crypto";
 import { tipoDeItem } from "@/lib/implantacaoItens";
+import { exigirAdmin, registrarAuditoriaAdmin } from "@/lib/admin/autorizacao";
+import { gerarTokenImplantacao, hashTokenImplantacao, tokenImplantacaoExpiraEm } from "@/lib/implantacao/token";
 
 function getAdminClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
@@ -43,6 +44,7 @@ const RODAPE = `<p style="margin:20px 0 0;color:#555;">Equipe Ink System</p>`;
 // Resend já está configurada) -- chama o endpoint que já existe em vez de
 // duplicar credencial num segundo projeto Vercel.
 export async function responderLead(leadId: string, resposta: string) {
+  const admin = await exigirAdmin();
   const sb = getAdminClient();
   const { data: lead, error: errLead } = await sb.from("ink_leads").select("*").eq("id", leadId).single();
   if (errLead || !lead) return { ok: false, error: "Solicitação não encontrada." };
@@ -70,6 +72,8 @@ export async function responderLead(leadId: string, resposta: string) {
     ...(lead.estagio === "lead" ? { estagio: "em_analise" } : {}),
   }).eq("id", leadId);
 
+  await registrarAuditoriaAdmin({ admin, acao: "responder_lead", recurso: "ink_leads", recursoId: leadId });
+
   revalidatePath("/admin");
   return { ok: true };
 }
@@ -79,11 +83,13 @@ export async function responderLead(leadId: string, resposta: string) {
 // drag-and-drop. Atualiza todas as linhas daquele e-mail pra manter a etapa
 // consistente mesmo se a pessoa mandar uma solicitação nova depois.
 export async function moverFichaEstagio(email: string, estagio: string) {
+  const admin = await exigirAdmin();
   const ESTAGIOS_VALIDOS = ["lead", "em_analise", "complementacao_solicitada", "documentacao_recebida", "aprovado", "encerrado"];
   if (!ESTAGIOS_VALIDOS.includes(estagio)) return { ok: false, error: "Etapa inválida." };
   const sb = getAdminClient();
   const { error } = await sb.from("ink_leads").update({ estagio }).eq("email", email);
   if (error) return { ok: false, error: error.message };
+  await registrarAuditoriaAdmin({ admin, acao: "mover_etapa", recurso: "ink_leads", detalhes: { estagio } });
   revalidatePath("/admin");
   return { ok: true };
 }
@@ -95,18 +101,21 @@ export async function moverFichaEstagio(email: string, estagio: string) {
 // Fase 2, combinada separadamente antes de codar.
 
 export async function solicitarComplementacao(email: string, nome: string | null) {
+  const admin = await exigirAdmin();
   const sb = getAdminClient();
   const primeiroNome = nome?.split(" ")[0] || "";
 
-  // Reaproveita o token se o admin já tiver clicado antes pra essa ficha --
-  // não gera link novo (e não invalida um formulário já em andamento).
-  const { data: existente } = await sb.from("ink_implantacao_dados").select("token").eq("email", email).maybeSingle();
-  let token = existente?.token;
-  if (!token) {
-    token = randomUUID();
-    const { error: errInsert } = await sb.from("ink_implantacao_dados").insert({ email, token, nome_completo: nome });
-    if (errInsert) return { ok: false, error: errInsert.message };
-  }
+  // Cada solicitação gera um link novo. No banco fica somente o hash; quem
+  // obtiver leitura indevida da tabela não consegue reconstruir a URL.
+  const token = gerarTokenImplantacao();
+  const tokenHash = hashTokenImplantacao(token);
+  const tokenExpiraEm = tokenImplantacaoExpiraEm();
+  const { data: existente } = await sb.from("ink_implantacao_dados").select("id").eq("email", email).maybeSingle();
+  const operacao = existente
+    ? sb.from("ink_implantacao_dados").update({ token: tokenHash, token_expira_em: tokenExpiraEm }).eq("id", existente.id)
+    : sb.from("ink_implantacao_dados").insert({ email, token: tokenHash, token_expira_em: tokenExpiraEm, nome_completo: nome });
+  const { error: erroToken } = await operacao;
+  if (erroToken) return { ok: false, error: erroToken.message };
 
   const html = paragrafos([
     `Olá, ${primeiroNome}.`,
@@ -122,6 +131,7 @@ export async function solicitarComplementacao(email: string, nome: string | null
 
   const { error } = await sb.from("ink_leads").update({ estagio: "complementacao_solicitada" }).eq("email", email);
   if (error) return { ok: false, error: error.message };
+  await registrarAuditoriaAdmin({ admin, acao: "solicitar_complementacao", recurso: "ink_implantacao_dados" });
   revalidatePath("/admin");
   return { ok: true };
 }
@@ -138,6 +148,7 @@ async function registrarHistoricoImplantacao(sb: ReturnType<typeof getAdminClien
 }
 
 export async function aprovarSolicitacao(email: string, nome: string | null) {
+  const admin = await exigirAdmin();
   const sb = getAdminClient();
 
   const { data: implantacao, error: erroBusca } = await sb
@@ -215,11 +226,14 @@ export async function aprovarSolicitacao(email: string, nome: string | null) {
     return { ok: false, error: "Provisionado e aprovado, mas não foi possível enviar o e-mail de confirmação agora. " + (envio.error || "") };
   }
 
+  await registrarAuditoriaAdmin({ admin, acao: "aprovar_solicitacao", recurso: "ink_implantacao_dados", recursoId: implantacao.id });
+
   revalidatePath("/admin");
   return { ok: true };
 }
 
 export async function encerrarSolicitacao(email: string, nome: string | null) {
+  const admin = await exigirAdmin();
   const sb = getAdminClient();
   const primeiroNome = nome?.split(" ")[0] || "";
   const html = paragrafos([
@@ -236,6 +250,7 @@ export async function encerrarSolicitacao(email: string, nome: string | null) {
 
   const { error } = await sb.from("ink_leads").update({ estagio: "encerrado" }).eq("email", email);
   if (error) return { ok: false, error: error.message };
+  await registrarAuditoriaAdmin({ admin, acao: "encerrar_solicitacao", recurso: "ink_leads" });
   revalidatePath("/admin");
   return { ok: true };
 }
@@ -246,6 +261,7 @@ export async function encerrarSolicitacao(email: string, nome: string | null) {
 // de teste (ambiente único, não existe banco de dev separado do de
 // produção). A confirmação de verdade acontece na UI antes de chamar isso.
 export async function excluirFicha(email: string) {
+  const admin = await exigirAdmin();
   const sb = getAdminClient();
 
   const { data: documentos } = await sb.from("ink_implantacao_documentos").select("url").eq("email", email);
@@ -259,6 +275,7 @@ export async function excluirFicha(email: string) {
 
   const { error } = await sb.from("ink_leads").delete().eq("email", email);
   if (error) return { ok: false, error: error.message };
+  await registrarAuditoriaAdmin({ admin, acao: "excluir_ficha", recurso: "ficha_comercial" });
   revalidatePath("/admin");
   return { ok: true };
 }
@@ -267,6 +284,7 @@ export async function excluirFicha(email: string) {
 // CRM de cada estúdio), pra você conseguir diagnosticar se a falha é de um
 // cliente específico sem depender de nenhum botão dentro do CRM dele.
 export async function testarEnvioTenant(clienteId: string) {
+  const admin = await exigirAdmin();
   const sb = getAdminClient();
   const { data: cliente, error: errCliente } = await sb
     .from("ink_clientes")
@@ -292,6 +310,7 @@ export async function testarEnvioTenant(clienteId: string) {
   if (!resp) return { ok: false, error: "Erro de conexão ao tentar enviar." };
   const data = await resp.json().catch(() => ({}));
   if (!resp.ok) return { ok: false, error: data?.message || data?.error || `Erro ${resp.status}` };
+  await registrarAuditoriaAdmin({ admin, acao: "testar_envio", recurso: "ink_clientes", recursoId: clienteId });
   return { ok: true, destino: cliente.email };
 }
 
@@ -307,6 +326,7 @@ function maskCPF(cpf: string | null) {
 }
 
 export async function buscarImplantacao(email: string) {
+  await exigirAdmin();
   const sb = getAdminClient();
   const { data: dados } = await sb.from("ink_implantacao_dados").select("*").eq("email", email).maybeSingle();
   if (!dados) return null;
@@ -337,6 +357,7 @@ export async function buscarImplantacao(email: string) {
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function salvarAuthUserId(email: string, authUserId: string) {
+  const admin = await exigirAdmin();
   const valor = authUserId.trim();
   if (!UUID_REGEX.test(valor)) {
     return { ok: false, error: "UUID inválido -- confira o valor copiado do Supabase Auth." };
@@ -354,21 +375,26 @@ export async function salvarAuthUserId(email: string, authUserId: string) {
     .maybeSingle();
   if (error) return { ok: false, error: error.message };
   if (!data) return { ok: false, error: "Nenhuma ficha de implantação encontrada para este e-mail -- nada foi salvo." };
+  await registrarAuditoriaAdmin({ admin, acao: "vincular_auth_user", recurso: "ink_implantacao_dados", recursoId: data.id });
   revalidatePath("/admin");
   return { ok: true };
 }
 
 export async function revelarCPF(email: string) {
+  const admin = await exigirAdmin();
   const sb = getAdminClient();
   const { data, error } = await sb.from("ink_implantacao_dados").select("cpf").eq("email", email).maybeSingle();
   if (error || !data) return { ok: false, error: "Não encontrado." };
+  await registrarAuditoriaAdmin({ admin, acao: "revelar_cpf", recurso: "ink_implantacao_dados" });
   return { ok: true, cpf: data.cpf || "" };
 }
 
 export async function gerarUrlArquivo(caminho: string) {
+  const admin = await exigirAdmin();
   const sb = getAdminClient();
   const { data, error } = await sb.storage.from("implantacao-docs").createSignedUrl(caminho, 300);
   if (error || !data) return { ok: false, error: error?.message || "Não foi possível gerar o link." };
+  await registrarAuditoriaAdmin({ admin, acao: "gerar_link_documento", recurso: "implantacao_docs" });
   return { ok: true, url: data.signedUrl };
 }
 
@@ -380,6 +406,7 @@ export async function atualizarStatusItem(
   status: "pendente" | "recebido" | "aprovado" | "solicitar_novo" | "rejeitado",
   observacao?: string
 ) {
+  const admin = await exigirAdmin();
   const sb = getAdminClient();
   const { data: item, error: errItem } = await sb.from("ink_implantacao_itens").select("*").eq("id", itemId).maybeSingle();
   if (errItem || !item) return { ok: false, error: "Item não encontrado." };
@@ -411,6 +438,8 @@ export async function atualizarStatusItem(
     implantacao_id: item.implantacao_id,
     evento: `Item "${status === "solicitar_novo" ? "reenvio solicitado" : status}": ${item.tipo}`,
   });
+
+  await registrarAuditoriaAdmin({ admin, acao: "atualizar_documento", recurso: "ink_implantacao_itens", recursoId: itemId, detalhes: { status } });
 
   revalidatePath("/admin");
   return { ok: true };

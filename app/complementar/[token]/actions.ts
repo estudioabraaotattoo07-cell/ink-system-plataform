@@ -3,6 +3,9 @@
 import { createClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
 import { itensParaTipoPessoa } from "@/lib/implantacaoItens";
+import { randomUUID } from "node:crypto";
+import { hashTokenImplantacao } from "@/lib/implantacao/token";
+import { extensaoSeguraDocumento, validarDocumentoUpload } from "@/lib/implantacao/arquivo";
 
 // Versão dos documentos aceitos no aceite eletrônico -- se o texto mudar no
 // futuro, sobe esse número; o aceite antigo já registrado não muda. Não pode
@@ -23,8 +26,14 @@ async function obterIP() {
 }
 
 async function buscarPorToken(token: string) {
+  if (!token || token.length > 200) return null;
   const sb = getAdminClient();
-  const { data, error } = await sb.from("ink_implantacao_dados").select("*").eq("token", token).maybeSingle();
+  const { data, error } = await sb
+    .from("ink_implantacao_dados")
+    .select("*")
+    .eq("token", hashTokenImplantacao(token))
+    .gt("token_expira_em", new Date().toISOString())
+    .maybeSingle();
   if (error || !data) return null;
   return data;
 }
@@ -97,21 +106,35 @@ export async function listarItensImplantacao(token: string) {
   return itens.map((item) => ({ ...item, arquivo: arquivos?.find((a) => a.item_id === item.id) ?? null }));
 }
 
-export async function uploadArquivoItem(itemId: string, formData: FormData) {
+export async function uploadArquivoItem(token: string, itemId: string, formData: FormData) {
+  const registro = await buscarPorToken(token);
+  if (!registro) return { ok: false, error: "Link inválido ou expirado." };
   const sb = getAdminClient();
-  const { data: item, error: errItem } = await sb.from("ink_implantacao_itens").select("*, ink_implantacao_dados!inner(id)").eq("id", itemId).maybeSingle();
+  const { data: item, error: errItem } = await sb
+    .from("ink_implantacao_itens")
+    .select("id, implantacao_id")
+    .eq("id", itemId)
+    .eq("implantacao_id", registro.id)
+    .maybeSingle();
   if (errItem || !item) return { ok: false, error: "Item não encontrado." };
   const file = formData.get("arquivo") as File | null;
   if (!file || file.size === 0) return { ok: false, error: "Selecione um arquivo." };
+  const bytes = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+  const erroValidacao = validarDocumentoUpload({ tamanho: file.size, tipo: file.type, primeirosBytes: bytes });
+  if (erroValidacao) return { ok: false, error: erroValidacao };
 
-  const caminho = `${item.implantacao_id}/${itemId}/${Date.now()}-${file.name}`;
-  const { error: errUpload } = await sb.storage.from("implantacao-docs").upload(caminho, file, { contentType: file.type });
+  const extensao = extensaoSeguraDocumento(file.type);
+  const caminho = `${item.implantacao_id}/${itemId}/${randomUUID()}.${extensao}`;
+  const { error: errUpload } = await sb.storage.from("implantacao-docs").upload(caminho, file, {
+    contentType: file.type,
+    upsert: false,
+  });
   if (errUpload) return { ok: false, error: errUpload.message };
 
   // Marca qualquer arquivo anterior desse item como substituído -- mantém o
   // histórico de tentativas em vez de apagar.
   await sb.from("ink_implantacao_arquivos").update({ substituido: true }).eq("item_id", itemId).eq("substituido", false);
-  await sb.from("ink_implantacao_arquivos").insert({ item_id: itemId, nome_arquivo: file.name, caminho, tipo_mime: file.type });
+  await sb.from("ink_implantacao_arquivos").insert({ item_id: itemId, nome_arquivo: `documento.${extensao}`, caminho, tipo_mime: file.type });
   await sb.from("ink_implantacao_itens").update({ status: "recebido", atualizado_em: new Date().toISOString() }).eq("id", itemId);
 
   return { ok: true };

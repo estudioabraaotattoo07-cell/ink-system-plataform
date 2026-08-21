@@ -144,7 +144,7 @@ export default function ComplementarWizard({
     setErro("");
     const fd = new FormData();
     fd.set("arquivo", file);
-    const r = await uploadArquivoItem(itemId, fd);
+    const r = await uploadArquivoItem(token, itemId, fd);
     setEnviandoItem(null);
     if (!r.ok) { setErro(r.error || "Não deu pra enviar o arquivo."); return; }
     setItens((prev) => prev.map((i) => (i.id === itemId ? { ...i, status: "recebido", arquivo: { nome_arquivo: file.name } } : i)));

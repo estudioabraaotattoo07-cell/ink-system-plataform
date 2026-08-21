@@ -2,6 +2,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import { exigirAdmin, registrarAuditoriaAdmin } from "@/lib/admin/autorizacao";
 
 function getAdminClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
@@ -17,6 +18,7 @@ export async function marcarCicloComoPago(params: {
   qtdArtistasExtra: number;
   valorArtistasExtra: number;
 }) {
+  const admin = await exigirAdmin();
   const sb = getAdminClient();
   const valorTotal = params.valorPlano + params.valorArtistasExtra;
   const { error } = await sb.from("financeiro_ciclos").upsert(
@@ -33,12 +35,14 @@ export async function marcarCicloComoPago(params: {
     { onConflict: "ink_cliente_id,ciclo" }
   );
   if (error) return { ok: false, error: error.message };
+  await registrarAuditoriaAdmin({ admin, acao: "marcar_ciclo_pago", recurso: "financeiro_ciclos", recursoId: params.inkClienteId, detalhes: { ciclo: params.ciclo } });
   revalidatePath("/admin/financeiro");
   return { ok: true };
 }
 
 // Desfaz uma marcação de pago (engano) -- volta o ciclo pra "previsto".
 export async function reverterPagamento(inkClienteId: string, ciclo: string) {
+  const admin = await exigirAdmin();
   const sb = getAdminClient();
   const { error } = await sb
     .from("financeiro_ciclos")
@@ -46,23 +50,28 @@ export async function reverterPagamento(inkClienteId: string, ciclo: string) {
     .eq("ink_cliente_id", inkClienteId)
     .eq("ciclo", ciclo);
   if (error) return { ok: false, error: error.message };
+  await registrarAuditoriaAdmin({ admin, acao: "reverter_pagamento", recurso: "financeiro_ciclos", recursoId: inkClienteId, detalhes: { ciclo } });
   revalidatePath("/admin/financeiro");
   return { ok: true };
 }
 
 export async function salvarCustoFixo(nome: string, valorMensal: number) {
+  const admin = await exigirAdmin();
   if (!nome.trim() || valorMensal <= 0) return { ok: false, error: "Preencha nome e valor." };
   const sb = getAdminClient();
   const { error } = await sb.from("financeiro_custos_fixos").insert({ nome: nome.trim(), valor_mensal: valorMensal, ativo: true });
   if (error) return { ok: false, error: error.message };
+  await registrarAuditoriaAdmin({ admin, acao: "criar_custo_fixo", recurso: "financeiro_custos_fixos" });
   revalidatePath("/admin/financeiro");
   return { ok: true };
 }
 
 export async function removerCustoFixo(id: string) {
+  const admin = await exigirAdmin();
   const sb = getAdminClient();
   const { error } = await sb.from("financeiro_custos_fixos").update({ ativo: false }).eq("id", id);
   if (error) return { ok: false, error: error.message };
+  await registrarAuditoriaAdmin({ admin, acao: "remover_custo_fixo", recurso: "financeiro_custos_fixos", recursoId: id });
   revalidatePath("/admin/financeiro");
   return { ok: true };
 }

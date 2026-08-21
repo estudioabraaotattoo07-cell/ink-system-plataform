@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import AdminTabs from "../AdminTabs";
 import MarcarPagoButton from "./MarcarPagoButton";
 import CustosForm from "./CustosForm";
+import { exigirAdmin } from "@/lib/admin/autorizacao";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ function cicloAtual() {
 }
 
 export default async function FinanceiroPage() {
+  await exigirAdmin();
   const sb = getAdminClient();
   const ciclo = cicloAtual();
 

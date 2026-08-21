@@ -35,6 +35,28 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const { protegida: isRotaProtegida, suspensa: isRotaSuspenso } = classificarRota(path);
+  const isAdminPublica = path === "/admin/login" || path === "/admin/auth";
+  const isAdminProtegida = path.startsWith("/admin") && !isAdminPublica;
+
+  if (isAdminProtegida) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/login";
+      return NextResponse.redirect(url);
+    }
+    const { data: admin, error: erroAdmin } = await supabase
+      .from("ink_admin_usuarios")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .eq("ativo", true)
+      .maybeSingle();
+    if (erroAdmin || !admin) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/login";
+      url.searchParams.set("erro", "sem_permissao");
+      return NextResponse.redirect(url);
+    }
+  }
 
   if (isRotaProtegida && !user) {
     const url = request.nextUrl.clone();

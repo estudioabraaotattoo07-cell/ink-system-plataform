@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import ChavesForm from "./ChavesForm";
 import LicencaRow from "./LicencaRow";
 import AdminTabs from "../AdminTabs";
+import { exigirAdmin } from "@/lib/admin/autorizacao";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ function getAdminClient() {
 const STUDIO_USER_ID = process.env.STUDIO_USER_ID || "2d366d35-1cae-40d5-ba92-06fe2ab8a763";
 
 export default async function LicencasPage() {
+  await exigirAdmin();
   const sb = getAdminClient();
 
   const { data: cfg } = await sb

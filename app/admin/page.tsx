@@ -3,6 +3,7 @@ import PipelineBoard from "./PipelineBoard";
 import AdminTabs from "./AdminTabs";
 import ClientesTable from "./ClientesTable";
 import { type LinhaCliente } from "./ClienteFichaModal";
+import { exigirAdmin } from "@/lib/admin/autorizacao";
 
 // Sempre busca dado fresco — nunca cachear/pré-renderizar a lista de clientes.
 export const dynamic = "force-dynamic";
@@ -18,6 +19,7 @@ function getAdminClient() {
 }
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  await exigirAdmin();
   const { tab: tabParam } = await searchParams;
   const abaAtiva = tabParam === "clientes" ? "clientes" : "pipeline";
   const sbAdmin = getAdminClient();

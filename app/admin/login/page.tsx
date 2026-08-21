@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
@@ -16,10 +17,11 @@ export default function AdminLoginPage() {
     const res = await fetch("/admin/auth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ senha }),
+      body: JSON.stringify({ email, senha }),
     });
     if (!res.ok) {
-      setErro("Senha incorreta.");
+      const dados = await res.json().catch(() => null);
+      setErro(dados?.error || "Não foi possível entrar.");
       setCarregando(false);
       return;
     }
@@ -79,12 +81,37 @@ export default function AdminLoginPage() {
 
           <div className="flex flex-col gap-1.5">
             <label style={{ fontSize: 10, letterSpacing: ".08em", textTransform: "uppercase", color: "#6A6050" }}>
+              E-mail administrativo
+            </label>
+            <input
+              type="email"
+              required
+              autoFocus
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={{
+                fontSize: 14,
+                background: "#0F0F0F",
+                border: "1px solid rgba(201,168,76,0.15)",
+                borderRadius: 8,
+                padding: "12px 14px",
+                color: "#E8E2D9",
+                boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5)",
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label style={{ fontSize: 10, letterSpacing: ".08em", textTransform: "uppercase", color: "#6A6050" }}>
               Senha
             </label>
             <input
               type="password"
               required
-              autoFocus
+              autoComplete="current-password"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               style={{
