@@ -1,0 +1,94 @@
+"use client";
+
+import { diasRestantesTeste, ETAPAS_VISUAIS, percentualEmailTeste } from "@/lib/comercial/painelComprador";
+import type { CompradorView } from "./JornadaCompradoresBoard";
+
+function dataHora(valor: string | null) {
+  return valor ? new Date(valor).toLocaleString("pt-BR") : "Ainda não aconteceu";
+}
+
+function Campo({ titulo, valor }: { titulo: string; valor: React.ReactNode }) {
+  return (
+    <div style={{ borderBottom: "1px solid rgba(255,255,255,.07)", padding: "10px 0" }}>
+      <div style={{ color: "#716A61", fontSize: 10, letterSpacing: ".07em", textTransform: "uppercase" }}>{titulo}</div>
+      <div style={{ color: "#E8E2D9", fontSize: 13, marginTop: 3, overflowWrap: "anywhere" }}>{valor || "—"}</div>
+    </div>
+  );
+}
+
+export default function CompradorFichaModal({ comprador, onClose }: { comprador: CompradorView; onClose: () => void }) {
+  const etapa = ETAPAS_VISUAIS.find((item) => item.id === comprador.etapa);
+  const dias = diasRestantesTeste(comprador.jornada?.teste_termina_em ?? null);
+  const usados = comprador.jornada?.emails_teste_usados ?? 0;
+  const limite = comprador.jornada?.limite_email_teste ?? 30;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Ficha comercial de ${comprador.nome || comprador.email}`}
+      onMouseDown={(evento) => { if (evento.target === evento.currentTarget) onClose(); }}
+      style={{ position: "fixed", inset: 0, zIndex: 80, background: "rgba(0,0,0,.82)", display: "grid", placeItems: "center", padding: 16 }}
+    >
+      <section style={{ width: "min(760px, 100%)", maxHeight: "92vh", overflowY: "auto", background: "#111", border: "1px solid rgba(201,168,76,.38)", boxShadow: "0 24px 90px rgba(0,0,0,.75)" }}>
+        <header style={{ position: "sticky", top: 0, zIndex: 2, background: "#111", borderBottom: "1px solid rgba(201,168,76,.22)", padding: "18px 20px", display: "flex", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            <div style={{ color: "#C9A84C", fontSize: 11, textTransform: "uppercase", letterSpacing: ".1em" }}>Ficha do comprador</div>
+            <h2 style={{ fontSize: 21, marginTop: 4 }}>{comprador.nome || "Cadastro sem nome"}</h2>
+            <div style={{ color: "#8C8378", fontSize: 12 }}>{comprador.email}</div>
+          </div>
+          <button onClick={onClose} aria-label="Fechar ficha" style={{ alignSelf: "flex-start", background: "#090909", border: "1px solid rgba(255,255,255,.12)", color: "#C9A84C", width: 36, height: 36, cursor: "pointer" }}>×</button>
+        </header>
+
+        <div style={{ padding: 20 }}>
+          <div style={{ border: "1px solid rgba(201,168,76,.24)", padding: 14, display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <div>
+              <strong style={{ color: "#C9A84C" }}>{etapa?.emoji} {etapa?.label ?? comprador.etapa}</strong>
+              <div style={{ color: "#8C8378", fontSize: 12, marginTop: 3 }}>{etapa?.resumo}</div>
+            </div>
+            <div style={{ color: "#8C8378", fontSize: 12 }}>Atualizado em {dataHora(comprador.atualizado_em)}</div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", columnGap: 24, marginTop: 16 }}>
+            <div>
+              <Campo titulo="WhatsApp" valor={comprador.whatsapp} />
+              <Campo titulo="Origem" valor={comprador.origem} />
+              <Campo titulo="Código permanente da conta" valor={comprador.id} />
+              <Campo titulo="Conta de acesso" valor={comprador.auth_user_id ? "Confirmada" : "Ainda não criada"} />
+            </div>
+            <div>
+              <Campo titulo="Confirmação do e-mail" valor={dataHora(comprador.jornada?.email_confirmado_em ?? null)} />
+              <Campo titulo="Primeiro acesso" valor={dataHora(comprador.jornada?.primeiro_acesso_em ?? null)} />
+              <Campo titulo="Onboarding concluído" valor={dataHora(comprador.jornada?.onboarding_concluido_em ?? null)} />
+              <Campo titulo="Documento" valor={comprador.documento ? `${comprador.documento.tipo.toUpperCase()} final ${comprador.documento.ultimos_quatro} · ${comprador.documento.comparacao_status}` : "Ainda não informado"} />
+            </div>
+          </div>
+
+          <section style={{ marginTop: 22 }}>
+            <h3 style={{ color: "#C9A84C", fontSize: 12, letterSpacing: ".08em", textTransform: "uppercase" }}>Teste gratuito</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginTop: 10 }}>
+              <div style={{ background: "#090909", border: "1px solid rgba(255,255,255,.08)", padding: 12 }}><div style={{ color: "#716A61", fontSize: 10 }}>DIAS RESTANTES</div><strong>{dias ?? "Não iniciado"}</strong></div>
+              <div style={{ background: "#090909", border: "1px solid rgba(255,255,255,.08)", padding: 12 }}><div style={{ color: "#716A61", fontSize: 10 }}>E-MAILS UTILIZADOS</div><strong>{usados} de {limite}</strong></div>
+              <div style={{ background: "#090909", border: "1px solid rgba(255,255,255,.08)", padding: 12 }}><div style={{ color: "#716A61", fontSize: 10 }}>CONSUMO</div><strong>{percentualEmailTeste(usados, limite)}%</strong></div>
+              <div style={{ background: "#090909", border: "1px solid rgba(255,255,255,.08)", padding: 12 }}><div style={{ color: "#716A61", fontSize: 10 }}>NOTA DA EXPERIÊNCIA</div><strong>{comprador.jornada?.nota_experiencia ?? "Não respondeu"}</strong></div>
+            </div>
+            {comprador.jornada?.comentario_experiencia && <p style={{ marginTop: 10, color: "#B8AFA4", fontSize: 13 }}>“{comprador.jornada.comentario_experiencia}”</p>}
+          </section>
+
+          <section style={{ marginTop: 22 }}>
+            <h3 style={{ color: "#C9A84C", fontSize: 12, letterSpacing: ".08em", textTransform: "uppercase" }}>Histórico da jornada</h3>
+            {comprador.eventos.length === 0 ? (
+              <div style={{ color: "#716A61", fontSize: 12, marginTop: 10 }}>Nenhum evento registrado ainda.</div>
+            ) : comprador.eventos.map((evento) => (
+              <div key={evento.id} style={{ borderLeft: "1px solid rgba(201,168,76,.35)", padding: "8px 0 8px 14px" }}>
+                <div style={{ color: "#E8E2D9", fontSize: 12 }}>{evento.tipo.replaceAll("_", " ")}</div>
+                <div style={{ color: "#716A61", fontSize: 10 }}>{dataHora(evento.criado_em)} · {evento.ator_tipo}</div>
+              </div>
+            ))}
+          </section>
+        </div>
+      </section>
+    </div>
+  );
+}
+

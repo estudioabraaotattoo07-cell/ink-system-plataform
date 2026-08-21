@@ -4,6 +4,8 @@ import AdminTabs from "./AdminTabs";
 import ClientesTable from "./ClientesTable";
 import { type LinhaCliente } from "./ClienteFichaModal";
 import { exigirAdmin } from "@/lib/admin/autorizacao";
+import JornadaCompradoresBoard, { type CompradorView } from "./JornadaCompradoresBoard";
+import { etapaJornadaValida } from "@/lib/comercial/cicloComprador";
 
 // Sempre busca dado fresco — nunca cachear/pré-renderizar a lista de clientes.
 export const dynamic = "force-dynamic";
@@ -21,7 +23,7 @@ function getAdminClient() {
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   await exigirAdmin();
   const { tab: tabParam } = await searchParams;
-  const abaAtiva = tabParam === "clientes" ? "clientes" : "pipeline";
+  const abaAtiva = tabParam === "clientes" || tabParam === "solicitacoes" ? tabParam : "pipeline";
   const sbAdmin = getAdminClient();
   const { data: clientes, error: erroClientes } = await sbAdmin
     .from("ink_clientes")
@@ -43,6 +45,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     .select("*")
     .order("created_at", { ascending: false });
   const leadsNovos = (leads ?? []).filter((l) => l.status === "novo");
+
+  const [contasResult, jornadasResult, documentosResult, eventosResult] = await Promise.all([
+    sbAdmin.from("ink_contas_comerciais").select("*").order("atualizado_em", { ascending: false }),
+    sbAdmin.from("ink_jornada_comercial").select("*"),
+    sbAdmin.from("ink_identidades_documentais").select("conta_id, tipo, ultimos_quatro, comparacao_status"),
+    sbAdmin.from("ink_eventos_comerciais").select("id, conta_id, tipo, ator_tipo, criado_em").order("criado_em", { ascending: false }),
+  ]);
 
   const anoMesAtual = new Date().toISOString().slice(0, 7);
   const { data: usoMensagem, error: erroUso } = await sbAdmin
@@ -92,7 +101,35 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const smsHoje = (usoHoje ?? []).reduce((s, u) => s + (u.sms_enviados || 0), 0);
 
   const linhas = clientes ?? [];
-  const erro = erroClientes || erroChamados || erroStats || erroLeads || erroUso || erroFalhas || erroUsoHoje;
+  const erro = erroClientes || erroChamados || erroStats || erroLeads || erroUso || erroFalhas || erroUsoHoje
+    || contasResult.error || jornadasResult.error || documentosResult.error || eventosResult.error;
+
+  const jornadasPorConta = new Map((jornadasResult.data ?? []).map((jornada) => [jornada.conta_id, jornada]));
+  const documentosPorConta = new Map((documentosResult.data ?? []).map((documento) => [documento.conta_id, documento]));
+  const eventosPorConta = new Map<string, NonNullable<CompradorView["eventos"]>>();
+  for (const evento of eventosResult.data ?? []) {
+    const atuais = eventosPorConta.get(evento.conta_id) ?? [];
+    if (atuais.length < 40) atuais.push({ id: evento.id, tipo: evento.tipo, ator_tipo: evento.ator_tipo, criado_em: evento.criado_em });
+    eventosPorConta.set(evento.conta_id, atuais);
+  }
+  const compradores: CompradorView[] = (contasResult.data ?? []).flatMap((conta) => {
+    if (!etapaJornadaValida(conta.etapa)) return [];
+    const documento = documentosPorConta.get(conta.id);
+    return [{
+      id: conta.id,
+      auth_user_id: conta.auth_user_id,
+      nome: conta.nome,
+      email: conta.email,
+      whatsapp: conta.whatsapp,
+      etapa: conta.etapa,
+      origem: conta.origem,
+      criado_em: conta.criado_em,
+      atualizado_em: conta.atualizado_em,
+      jornada: jornadasPorConta.get(conta.id) ?? null,
+      documento: documento ? { tipo: documento.tipo, ultimos_quatro: documento.ultimos_quatro, comparacao_status: documento.comparacao_status } : null,
+      eventos: eventosPorConta.get(conta.id) ?? [],
+    }];
+  });
 
   const ranking = linhas
     .map((c) => ({ cliente: c, ...( statsPorUser.get(c.auth_user_id) ?? { visitas: 0, cliques: 0 } ) }))
@@ -150,6 +187,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       <AdminTabs active={abaAtiva} pipelineBadge={leadsNovos.length} />
 
       {abaAtiva === "pipeline" && (
+        <div className="mb-8">
+          <JornadaCompradoresBoard compradores={compradores} />
+        </div>
+      )}
+
+      {abaAtiva === "solicitacoes" && (
         <div className="mb-8">
           <PipelineBoard leads={leads ?? []} />
         </div>
