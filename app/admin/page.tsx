@@ -6,6 +6,7 @@ import { type LinhaCliente } from "./ClienteFichaModal";
 import { exigirAdmin } from "@/lib/admin/autorizacao";
 import JornadaCompradoresBoard, { type CompradorView } from "./JornadaCompradoresBoard";
 import { etapaJornadaValida } from "@/lib/comercial/cicloComprador";
+import { LABORATORIO_AUTH_USER_ID } from "@/lib/admin/laboratorio";
 
 // Sempre busca dado fresco — nunca cachear/pré-renderizar a lista de clientes.
 export const dynamic = "force-dynamic";
@@ -28,6 +29,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const { data: clientes, error: erroClientes } = await sbAdmin
     .from("ink_clientes")
     .select("*")
+    .neq("auth_user_id", LABORATORIO_AUTH_USER_ID)
     .order("criado_em", { ascending: false });
 
   const { data: chamados, error: erroChamados } = await sbAdmin
@@ -40,13 +42,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const { data: stats, error: erroStats } = await sbAdmin
     .from("site_stats")
     .select("user_id, visitas, cliques")
+    .neq("user_id", LABORATORIO_AUTH_USER_ID)
     .gte("dia", trintaDiasAtras);
 
   const { data: leads, error: erroLeads } = await sbAdmin
     .from("ink_leads")
     .select("*")
     .order("created_at", { ascending: false });
-  const leadsNovos = (leads ?? []).filter((l) => l.status === "novo");
 
   const [contasResult, jornadasResult, documentosResult, eventosResult, mensagensResult, avaliacoesResult] = await Promise.all([
     sbAdmin.from("ink_contas_comerciais").select("*").order("atualizado_em", { ascending: false }),
@@ -61,6 +63,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const { data: usoMensagem, error: erroUso } = await sbAdmin
     .from("mensageria_uso")
     .select("user_id, emails_enviados, sms_enviados, emails_comprados, sms_comprados")
+    .neq("user_id", LABORATORIO_AUTH_USER_ID)
     .eq("ano_mes", anoMesAtual);
   const usoPorUser = new Map<string, { emailsComprados: number; smsComprados: number }>();
   for (const u of usoMensagem ?? []) {
@@ -70,6 +73,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const { data: falhas, error: erroFalhas } = await sbAdmin
     .from("mensageria_falhas")
     .select("user_id, canal, motivo, criado_em")
+    .neq("user_id", LABORATORIO_AUTH_USER_ID)
     .gte("criado_em", trintaDiasAtras)
     .order("criado_em", { ascending: false });
   const falhasPorUser = new Map<string, { total: number; ultimoMotivo: string; ultimoCanal: string }>();
@@ -100,6 +104,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const { data: usoHoje, error: erroUsoHoje } = await sbAdmin
     .from("mensageria_diario")
     .select("emails_enviados, sms_enviados")
+    .neq("user_id", LABORATORIO_AUTH_USER_ID)
     .eq("dia", hojeStr);
   const emailsHoje = (usoHoje ?? []).reduce((s, u) => s + (u.emails_enviados || 0), 0);
   const smsHoje = (usoHoje ?? []).reduce((s, u) => s + (u.sms_enviados || 0), 0);
@@ -144,7 +149,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     });
     avaliacoesPorConta.set(avaliacao.conta_id, atuais);
   }
+  const contaLaboratorio = (contasResult.data ?? []).find((conta) => conta.auth_user_id === LABORATORIO_AUTH_USER_ID);
+  const leadsVisiveis = (leads ?? []).filter((lead) => !contaLaboratorio?.id || lead.conta_id !== contaLaboratorio.id);
+  const leadsNovosVisiveis = leadsVisiveis.filter((lead) => lead.status === "novo");
   const compradores: CompradorView[] = (contasResult.data ?? []).flatMap((conta) => {
+    if (conta.auth_user_id === LABORATORIO_AUTH_USER_ID) return [];
     if (!etapaJornadaValida(conta.etapa)) return [];
     const documento = documentosPorConta.get(conta.id);
     return [{
@@ -218,7 +227,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           Erro ao buscar dados do Supabase: {erro.message}
         </div>
       )}
-      <AdminTabs active={abaAtiva} pipelineBadge={leadsNovos.length} />
+      <AdminTabs active={abaAtiva} pipelineBadge={leadsNovosVisiveis.length} />
 
       {abaAtiva === "pipeline" && (
         <div className="mb-8">
@@ -228,7 +237,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
       {abaAtiva === "solicitacoes" && (
         <div className="mb-8">
-          <PipelineBoard leads={leads ?? []} />
+          <PipelineBoard leads={leadsVisiveis} />
         </div>
       )}
 

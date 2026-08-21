@@ -3,6 +3,7 @@ import AdminTabs from "../AdminTabs";
 import MarcarPagoButton from "./MarcarPagoButton";
 import CustosForm from "./CustosForm";
 import { exigirAdmin } from "@/lib/admin/autorizacao";
+import { LABORATORIO_AUTH_USER_ID } from "@/lib/admin/laboratorio";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,7 @@ export default async function FinanceiroPage() {
     .from("ink_clientes")
     .select("id, nome_estudio, slug, plano, auth_user_id, status")
     .eq("status", "ativo")
+    .neq("auth_user_id", LABORATORIO_AUTH_USER_ID)
     .order("nome_estudio");
 
   const userIds = (clientes ?? []).map((c) => c.auth_user_id).filter(Boolean);

@@ -3,6 +3,7 @@ import ChavesForm from "./ChavesForm";
 import LicencaRow from "./LicencaRow";
 import AdminTabs from "../AdminTabs";
 import { exigirAdmin } from "@/lib/admin/autorizacao";
+import { LABORATORIO_AUTH_USER_ID } from "@/lib/admin/laboratorio";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export default async function LicencasPage() {
   const { data: licencas, error: erroLicencas } = await sb
     .from("licencas")
     .select("*")
+    .neq("user_id", LABORATORIO_AUTH_USER_ID)
     .order("created_at", { ascending: false });
 
   return (

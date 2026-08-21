@@ -2,13 +2,14 @@ const TABS = [
   { id: "pipeline", label: "Jornada", href: "/admin" },
   { id: "solicitacoes", label: "Solicitações", href: "/admin?tab=solicitacoes" },
   { id: "clientes", label: "Clientes", href: "/admin?tab=clientes" },
+  { id: "relacionamento", label: "Relacionamento", href: "/admin/relacionamento" },
   { id: "financeiro", label: "Financeiro", href: "/admin/financeiro" },
   { id: "licencas", label: "Chaves de Acesso", href: "/admin/licencas" },
 ] as const;
 
-export default function AdminTabs({ active, pipelineBadge }: { active: "pipeline" | "solicitacoes" | "clientes" | "financeiro" | "licencas"; pipelineBadge?: number }) {
+export default function AdminTabs({ active, pipelineBadge }: { active: "pipeline" | "solicitacoes" | "clientes" | "relacionamento" | "financeiro" | "licencas"; pipelineBadge?: number }) {
   return (
-    <div className="mb-8 flex items-center gap-2" style={{ borderBottom: "1px solid rgba(201,168,76,0.18)" }}>
+    <div className="mb-8 flex items-center gap-2" style={{ borderBottom: "1px solid rgba(201,168,76,0.18)", overflowX: "auto" }}>
       {TABS.map((t) => (
         <a
           key={t.id}
@@ -23,6 +24,7 @@ export default function AdminTabs({ active, pipelineBadge }: { active: "pipeline
             borderBottom: active === t.id ? "2px solid #C9A84C" : "2px solid transparent",
             marginBottom: -1,
             textDecoration: "none",
+            whiteSpace: "nowrap",
           }}
         >
           {t.label}
