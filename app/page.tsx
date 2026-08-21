@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { Header } from "./components/landing/Header";
 import { Footer } from "./components/landing/Footer";
 import { CtaButton } from "./components/landing/CtaButton";
+import CadastroTesteForm from "./components/landing/CadastroTesteForm";
 import { FaqAccordion, type FaqItem } from "./components/landing/FaqAccordion";
 import { SecaoAntesDepois } from "./components/landing/SecaoAntesDepois";
 import { SecaoFuncionalidades, type Funcionalidade } from "./components/landing/SecaoFuncionalidades";
@@ -580,11 +581,7 @@ export default function LandingPage() {
               Os sete dias começam no primeiro acesso ao sistema, após a criação e preparação da conta. Você pode assinar durante ou depois do
               teste.
             </p>
-            <div style={{ marginTop: 22 }}>
-              <CtaButton origem="cta_oferta_trial" tipo="trial" fullWidthMobile>
-                Testar grátis por 7 dias
-              </CtaButton>
-            </div>
+            <CadastroTesteForm />
           </div>
 
           <div
