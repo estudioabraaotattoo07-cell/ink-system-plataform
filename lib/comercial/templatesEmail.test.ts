@@ -21,3 +21,12 @@ test("conteúdo variável passa pelo escape antes de entrar no HTML", () => {
   assert.match(fonte, /escapar\(acaoUrl\)/);
   assert.match(fonte, /escapar\(nome/);
 });
+
+test("TESTE_01 informa início, onboarding e canais disponíveis sem expor a franquia interna", () => {
+  assert.match(fonte, /Seu teste de 7 dias no Ink System começou/);
+  assert.match(fonte, /ambiente individual/);
+  assert.match(fonte, /disparos de e-mail são limitados/);
+  assert.match(fonte, /SMS e WhatsApp não fazem parte/);
+  assert.doesNotMatch(fonte, /Durante o teste[^`]*30 e-mails/);
+  assert.match(fonte, /botao\("Assinar agora", assinaturaUrl, true\)/);
+});

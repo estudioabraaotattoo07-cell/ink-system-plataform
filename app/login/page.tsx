@@ -39,7 +39,7 @@ export default function LoginPage() {
       setCarregando(false);
       return;
     }
-    router.push("/app");
+    router.push("/primeiro-acesso");
   }
 
   return (

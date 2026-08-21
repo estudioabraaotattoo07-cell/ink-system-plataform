@@ -40,6 +40,10 @@ export function montarEmailComercial({ codigo, mensagemId, nome, appUrl, acaoUrl
       assunto: "Bem-vindo ao Ink System — crie sua senha de acesso",
       corpo: `<p>${ola}</p><p>Seu período de experiência no Ink System está pronto para ser preparado.</p><p>Antes de acessar, crie sua senha pessoal usando o botão abaixo. Este endereço é individual, funciona apenas uma vez e ficará disponível por três dias.</p><p>O período de sete dias começará somente quando você entrar no Ink System pela primeira vez.</p><p>Durante a experiência, você poderá conhecer a organização do CRM e utilizar uma quantidade limitada de disparos de e-mail.</p>${botao("Criar minha senha", acaoUrl || loginUrl, true)}${acaoUrl ? `<p style="font-size:12px;color:#8C8376;line-height:1.6">Se o botão não funcionar, copie e cole este endereço no navegador:<br><span style="overflow-wrap:anywhere;color:#BEB5A8">${escapar(acaoUrl)}</span></p>` : ""}<p style="font-size:12px;line-height:1.7;color:#9C9488">Se você não solicitou este acesso, ignore esta mensagem. Nenhuma senha foi criada.</p>`,
     },
+    TESTE_01: {
+      assunto: "Seu teste de 7 dias no Ink System começou",
+      corpo: `<p>${ola}</p><p>Seu acesso ao Ink System está ativo e os seus sete dias de experiência começaram agora.</p><p>Ao entrar, conclua a configuração inicial do estúdio. Esse preenchimento prepara um ambiente individual, separado das demais contas.</p><p>Durante o teste, os disparos de e-mail são limitados. SMS e WhatsApp não fazem parte desta experiência gratuita.</p>${botao("Assinar agora", assinaturaUrl, true)}${botao("Acessar minha conta", loginUrl)}`,
+    },
     TESTE_02: {
       assunto: "Como está sendo sua experiência no Ink System?",
       corpo: `<p>${ola}</p><p>Seu período de teste continua ativo e queremos ouvir você. Conte o que já ajudou, o que gerou dúvida e que nota daria à experiência até aqui.</p>${botao("Avaliar minha experiência", pesquisaUrl)}${botao("Assinar agora", assinaturaUrl, true)}`,

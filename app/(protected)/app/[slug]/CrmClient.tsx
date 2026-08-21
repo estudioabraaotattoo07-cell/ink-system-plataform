@@ -4795,6 +4795,11 @@ export default function CrmClient({
                   };
                   const { data: cfgEx } = await sb.from("configuracoes").select("id").eq("user_id", userId).limit(1).single();
                   if (cfgEx?.id) { await sb.from("configuracoes").update(cfg).eq("id", cfgEx.id); } else { await sb.from("configuracoes").insert(cfg); }
+                  const { error: errJornada } = await sb.rpc("ink_registrar_onboarding_concluido");
+                  if (errJornada) {
+                    setShowAviso("Os dados foram salvos, mas não foi possível registrar a conclusão. Tente novamente.");
+                    return;
+                  }
                 } catch(e) { console.warn("onboarding save", e); }
                 if (!localStorage.getItem("inq_tour")) { setTimeout(() => { setTourStep(0); setTourAtivo(true); }, 800); }
               }}>Entrar no Sistema →</button>}

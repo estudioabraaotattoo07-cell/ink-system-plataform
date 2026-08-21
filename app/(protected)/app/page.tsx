@@ -14,6 +14,10 @@ export default async function AppRootPage() {
 
   if (!user) redirect("/login");
 
+  // Também cobre quem voltou por um favorito em /app: a função é
+  // idempotente e nunca reinicia um teste já iniciado.
+  await supabase.rpc("ink_ativar_primeiro_acesso");
+
   const { data: cliente } = await supabase
     .from("ink_clientes")
     .select("slug")
