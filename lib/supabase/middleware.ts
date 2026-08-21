@@ -6,6 +6,7 @@ import {
   decidirRedirecionamento,
   type ClienteSupabaseMinimo,
 } from "@/lib/acesso/avaliarAcesso";
+import { cookieAdminLegadoValido } from "@/lib/admin/token";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -39,22 +40,27 @@ export async function updateSession(request: NextRequest) {
   const isAdminProtegida = path.startsWith("/admin") && !isAdminPublica;
 
   if (isAdminProtegida) {
-    if (!user) {
+    const acessoAdministrativoAnterior = await cookieAdminLegadoValido(
+      request.cookies.get("ink_admin")?.value
+    );
+    if (!user && !acessoAdministrativoAnterior) {
       const url = request.nextUrl.clone();
       url.pathname = "/admin/login";
       return NextResponse.redirect(url);
     }
-    const { data: admin, error: erroAdmin } = await supabase
-      .from("ink_admin_usuarios")
-      .select("id")
-      .eq("auth_user_id", user.id)
-      .eq("ativo", true)
-      .maybeSingle();
-    if (erroAdmin || !admin) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/admin/login";
-      url.searchParams.set("erro", "sem_permissao");
-      return NextResponse.redirect(url);
+    if (user && !acessoAdministrativoAnterior) {
+      const { data: admin, error: erroAdmin } = await supabase
+        .from("ink_admin_usuarios")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .eq("ativo", true)
+        .maybeSingle();
+      if (erroAdmin || !admin) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/admin/login";
+        url.searchParams.set("erro", "sem_permissao");
+        return NextResponse.redirect(url);
+      }
     }
   }
 

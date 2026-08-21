@@ -1,7 +1,9 @@
 import "server-only";
 
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { cookieAdminLegadoValido } from "@/lib/admin/token";
 
 export type AdminAtual = {
   id: string;
@@ -12,12 +14,32 @@ export type AdminAtual = {
 export async function obterAdminAtual(): Promise<AdminAtual | null> {
   const supabase = await createClient();
   const { data: auth, error: erroAuth } = await supabase.auth.getUser();
-  if (erroAuth || !auth.user) return null;
+  if (!erroAuth && auth.user) {
+    const { data: admin, error: erroAdmin } = await supabase
+      .from("ink_admin_usuarios")
+      .select("id, auth_user_id, papel")
+      .eq("auth_user_id", auth.user.id)
+      .eq("ativo", true)
+      .maybeSingle();
 
-  const { data: admin, error: erroAdmin } = await supabase
+    if (!erroAdmin && admin && ['proprietario', 'administrador', 'suporte'].includes(admin.papel)) {
+      return {
+        id: admin.id,
+        authUserId: admin.auth_user_id,
+        papel: admin.papel as AdminAtual["papel"],
+      };
+    }
+  }
+
+  const cookieStore = await cookies();
+  if (!await cookieAdminLegadoValido(cookieStore.get("ink_admin")?.value)) return null;
+
+  const administrativo = criarClienteAdministrativo();
+  const usuarioPreferencial = process.env.STUDIO_USER_ID || "2d366d35-1cae-40d5-ba92-06fe2ab8a763";
+  const { data: admin, error: erroAdmin } = await administrativo
     .from("ink_admin_usuarios")
     .select("id, auth_user_id, papel")
-    .eq("auth_user_id", auth.user.id)
+    .eq("auth_user_id", usuarioPreferencial)
     .eq("ativo", true)
     .maybeSingle();
 
@@ -65,4 +87,3 @@ export async function registrarAuditoriaAdmin(params: {
   });
   if (error) throw new Error("Nao foi possivel registrar a auditoria administrativa.");
 }
-

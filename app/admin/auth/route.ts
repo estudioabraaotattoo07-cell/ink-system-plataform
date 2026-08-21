@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { adminToken } from "@/lib/admin/token";
 
 export async function POST(req: NextRequest) {
   const { email, senha } = await req.json().catch(() => ({ email: "", senha: "" }));
@@ -15,7 +16,21 @@ export async function POST(req: NextRequest) {
     password: senha,
   });
   if (erroLogin || !sessao.user) {
-    return NextResponse.json({ error: "Credenciais inválidas." }, { status: 401 });
+    // Compatibilidade temporária com a senha administrativa anterior. Isso
+    // evita bloquear o proprietário durante a migração para contas Supabase.
+    if (!process.env.ADMIN_PASSWORD || senha !== process.env.ADMIN_PASSWORD) {
+      return NextResponse.json({ error: "Credenciais inválidas." }, { status: 401 });
+    }
+
+    const resposta = NextResponse.json({ ok: true, modo: "administrativo" });
+    resposta.cookies.set("ink_admin", await adminToken(process.env.ADMIN_PASSWORD), {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+    return resposta;
   }
 
   const { data: admin, error: erroAdmin } = await supabase
