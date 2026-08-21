@@ -26,7 +26,7 @@ export default function CadastroTesteForm() {
     const resposta = await fetch("/api/cadastro-teste", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome, email, whatsapp, consentimento, empresa: dados.get("empresa") }),
+      body: JSON.stringify({ nome, email, whatsapp, consentimento, website_confirmacao: dados.get("website_confirmacao") }),
     }).catch(() => null);
     const retorno = await resposta?.json().catch(() => null);
     setEnviando(false);
@@ -54,7 +54,10 @@ export default function CadastroTesteForm() {
       <label style={labelStyle}>Nome e sobrenome<input autoComplete="name" value={nome} onChange={(e) => setNome(e.target.value)} maxLength={100} required style={inputStyle} /></label>
       <label style={{ ...labelStyle, marginTop: 13 }}>E-mail<input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={254} required style={inputStyle} /></label>
       <label style={{ ...labelStyle, marginTop: 13 }}>WhatsApp com DDD<input type="tel" inputMode="tel" autoComplete="tel" value={whatsapp} onChange={(e) => setWhatsapp(mascararWhatsApp(e.target.value))} maxLength={15} required placeholder="(27) 99999-0000" style={inputStyle} /></label>
-      <label aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>Empresa<input name="empresa" tabIndex={-1} autoComplete="off" /></label>
+      <label aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
+        Não preencher
+        <input name="website_confirmacao" tabIndex={-1} autoComplete="off" data-lpignore="true" data-1p-ignore="true" />
+      </label>
       <label style={{ display: "flex", alignItems: "flex-start", gap: 9, color: "var(--text-tertiary)", fontSize: 11.5, lineHeight: 1.5, marginTop: 16 }}>
         <input type="checkbox" checked={consentimento} onChange={(e) => setConsentimento(e.target.checked)} required style={{ marginTop: 2 }} />
         Autorizo o Ink System a usar estes dados para preparar meu teste gratuito, entrar em contato sobre o acesso e proteger minha conta.

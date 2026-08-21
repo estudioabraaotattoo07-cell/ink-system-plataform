@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { MENSAGENS_POR_CODIGO, type CodigoMensagemComercial } from "./mensagensComerciais";
 import { montarReguaComercial } from "./reguaComercial";
 import { montarEmailComercial } from "./templatesEmail";
+import { enviarPeloMotorCentral, type NomeRemetenteCorporativo } from "./emailCentral";
 
 type ContaComercialComJornada = {
   id: string;
@@ -22,20 +23,6 @@ function clienteAdmin() {
   const chave = process.env.SUPABASE_SERVICE_KEY;
   if (!url || !chave) throw new Error("Banco central não configurado para a régua comercial.");
   return createClient(url, chave, { auth: { persistSession: false, autoRefreshToken: false } });
-}
-
-async function enviarPeloMotorCentral(destinatario: string, assunto: string, html: string) {
-  const endpoint = process.env.CENTRAL_EMAIL_ENDPOINT || "https://inq-saas.vercel.app/api/resend";
-  const segredo = process.env.INTERNAL_SERVICE_SECRET || "";
-  if (!segredo) throw new Error("Segredo do motor central de e-mail não configurado.");
-  const resposta = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Internal-Service-Key": segredo },
-    body: JSON.stringify({ to: destinatario, subject: assunto, html }),
-  });
-  const dados = await resposta.json().catch(() => ({}));
-  if (!resposta.ok) throw new Error(dados?.message || dados?.error || `Motor de e-mail respondeu ${resposta.status}.`);
-  return dados?.id || dados?.data?.id || null;
 }
 
 export async function processarFilaComercial(agora = new Date()) {
@@ -91,7 +78,7 @@ export async function processarFilaComercial(agora = new Date()) {
 
   const { data: pendentes, error: erroFila } = await sb
     .from("ink_mensagens_comerciais")
-    .select("id, codigo, destinatario, tentativas, dados")
+    .select("id, codigo, grupo, destinatario, tentativas, dados")
     .eq("status", "programado")
     .lte("agendado_em", agora.toISOString())
     .order("agendado_em", { ascending: true })
@@ -115,7 +102,13 @@ export async function processarFilaComercial(agora = new Date()) {
 
     try {
       const email = montarEmailComercial({ codigo: item.codigo as CodigoMensagemComercial, mensagemId: item.id, nome: item.dados?.nome, appUrl });
-      const provedorId = await enviarPeloMotorCentral(item.destinatario, email.assunto, email.html);
+      const nomesPorGrupo: Record<string, NomeRemetenteCorporativo> = {
+        acesso: "Ink System | Acesso e Segurança",
+        teste: "Ink System | Relacionamento",
+        assinatura: "Ink System | Assinaturas",
+        suporte: "Ink System | Suporte",
+      };
+      const provedorId = await enviarPeloMotorCentral(item.destinatario, email.assunto, email.html, nomesPorGrupo[item.grupo]);
       await sb.from("ink_mensagens_comerciais").update({
         status: "enviado", enviado_em: new Date().toISOString(), provedor: "resend", provedor_id: provedorId, ultimo_erro: null,
       }).eq("id", item.id);

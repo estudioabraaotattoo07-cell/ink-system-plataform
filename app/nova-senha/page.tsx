@@ -34,6 +34,7 @@ export default function NovaSenhaPage() {
       setSalvando(false);
       return;
     }
+    await supabase.rpc("ink_registrar_senha_definida");
     await supabase.auth.signOut({ scope: "global" });
     router.replace("/login?senha=alterada");
   }
@@ -56,4 +57,3 @@ export default function NovaSenhaPage() {
     </main>
   );
 }
-

@@ -68,7 +68,7 @@ export default function CompradorFichaModal({ comprador, onClose }: { comprador:
               <Campo titulo="WhatsApp" valor={comprador.whatsapp} />
               <Campo titulo="Origem" valor={comprador.origem} />
               <Campo titulo="Código permanente da conta" valor={comprador.id} />
-              <Campo titulo="Conta de acesso" valor={comprador.auth_user_id ? "Confirmada" : "Ainda não criada"} />
+              <Campo titulo="Conta de acesso" valor={comprador.auth_user_id ? "Criada e protegida" : "Ainda não criada"} />
             </div>
             <div>
               <Campo titulo="Confirmação do e-mail" valor={dataHora(comprador.jornada?.email_confirmado_em ?? null)} />

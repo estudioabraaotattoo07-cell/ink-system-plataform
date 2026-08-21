@@ -13,9 +13,11 @@ export async function GET(request: Request) {
   if (codigo) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(codigo);
-    if (!error) return NextResponse.redirect(new URL(destino, url.origin));
+    if (!error) {
+      await supabase.rpc("ink_confirmar_email_comprador");
+      return NextResponse.redirect(new URL(destino, url.origin));
+    }
   }
 
   return NextResponse.redirect(new URL("/login?erro=link_invalido", url.origin));
 }
-

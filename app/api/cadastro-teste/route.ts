@@ -1,7 +1,11 @@
 import { createHmac } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { expiracaoAcessoInicial, gerarTokenAcessoInicial, hashTokenAcessoInicial, montarUrlAcessoInicial } from "@/lib/comercial/acessoInicial";
 import { validarCadastroTeste } from "@/lib/comercial/cadastroTeste";
+import { enviarPeloMotorCentral } from "@/lib/comercial/emailCentral";
+import { MENSAGENS_COMERCIAIS } from "@/lib/comercial/mensagensComerciais";
+import { montarEmailComercial } from "@/lib/comercial/templatesEmail";
 
 function banco() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -45,9 +49,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Confira os dados informados." }, { status: 400 });
   }
 
-  // Campo invisível: pessoas não o veem; robôs que preenchem tudo são descartados.
-  if (typeof corpo.empresa === "string" && corpo.empresa.trim()) {
-    return NextResponse.json({ ok: true });
+  // Campo invisível: não confirma falsamente um cadastro caso o navegador o
+  // preencha por engano. A mensagem continua neutra e não ensina o filtro.
+  if (typeof corpo.website_confirmacao === "string" && corpo.website_confirmacao.trim()) {
+    return NextResponse.json({ error: "Não foi possível concluir o cadastro. Atualize a página e tente novamente." }, { status: 400 });
   }
 
   const validacao = validarCadastroTeste(corpo);
@@ -67,7 +72,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Muitas tentativas em pouco tempo. Aguarde e tente novamente." }, { status: 429 });
     }
 
-    const { error } = await banco().rpc("ink_registrar_interesse_teste", {
+    const sb = banco();
+    const { data: contaId, error } = await sb.rpc("ink_registrar_interesse_teste", {
       p_nome: validacao.dados.nome,
       p_email: validacao.dados.email,
       p_whatsapp: validacao.dados.whatsapp,
@@ -75,6 +81,118 @@ export async function POST(req: NextRequest) {
       p_identificador_origem_hash: ipHash,
     });
     if (error) throw error;
+
+    const { data: conta, error: erroConta } = await sb
+      .from("ink_contas_comerciais")
+      .select("id, auth_user_id, etapa")
+      .eq("id", contaId)
+      .single();
+    if (erroConta || !conta) throw erroConta || new Error("Conta comercial não localizada.");
+
+    const etapasQuePermitemConvite = new Set([
+      "cadastro_iniciado",
+      "aguardando_confirmacao_email",
+      "teste_aguardando_primeiro_acesso",
+    ]);
+    if (etapasQuePermitemConvite.has(conta.etapa)) {
+      const appUrl = (process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin).replace(/\/$/, "");
+      const retornoIdentidade = await sb.auth.admin.generateLink({
+        type: "magiclink",
+        email: validacao.dados.email,
+        options: {
+          data: { nome: validacao.dados.nome, conta_id: conta.id, origem: "site_vendas" },
+          redirectTo: `${appUrl}/auth/callback?next=/nova-senha`,
+        },
+      });
+      if (retornoIdentidade.error || !retornoIdentidade.data.user) {
+        throw retornoIdentidade.error || new Error("Não foi possível criar a identidade de acesso.");
+      }
+
+      if (conta.auth_user_id && conta.auth_user_id !== retornoIdentidade.data.user.id) {
+        throw new Error("A conta comercial já possui outra identidade de acesso.");
+      }
+      const { error: erroVinculo } = await sb
+        .from("ink_contas_comerciais")
+        .update({
+          auth_user_id: retornoIdentidade.data.user.id,
+          etapa: conta.etapa === "cadastro_iniciado" ? "aguardando_confirmacao_email" : conta.etapa,
+        })
+        .eq("id", conta.id);
+      if (erroVinculo) throw erroVinculo;
+
+      await sb.from("ink_convites_acesso").update({ status: "cancelado" }).eq("conta_id", conta.id).eq("status", "ativo");
+      const token = gerarTokenAcessoInicial();
+      const expiraEm = expiracaoAcessoInicial();
+      const { data: convite, error: erroConvite } = await sb
+        .from("ink_convites_acesso")
+        .insert({ conta_id: conta.id, token_hash: hashTokenAcessoInicial(token), expira_em: expiraEm.toISOString() })
+        .select("id")
+        .single();
+      if (erroConvite || !convite) throw erroConvite || new Error("Não foi possível preparar o endereço de acesso.");
+
+      const definicao = MENSAGENS_COMERCIAIS.boasVindasCriacaoSenha;
+      const { data: mensagem, error: erroMensagem } = await sb
+        .from("ink_mensagens_comerciais")
+        .insert({
+          conta_id: conta.id,
+          codigo: definicao.codigo,
+          nome: definicao.nome,
+          grupo: definicao.grupo,
+          canal: "email",
+          destinatario: validacao.dados.email,
+          status: "processando",
+          agendado_em: new Date().toISOString(),
+          processado_em: new Date().toISOString(),
+          tentativas: 1,
+          idempotency_key: `acesso-inicial:${convite.id}`,
+          dados: { nome: validacao.dados.nome, validade_horas: 72 },
+        })
+        .select("id")
+        .single();
+      if (erroMensagem || !mensagem) throw erroMensagem || new Error("Não foi possível registrar o e-mail de acesso.");
+
+      const emailAcesso = montarEmailComercial({
+        codigo: definicao.codigo,
+        mensagemId: mensagem.id,
+        nome: validacao.dados.nome,
+        appUrl,
+        acaoUrl: montarUrlAcessoInicial(appUrl, token),
+      });
+
+      try {
+        const provedorId = await enviarPeloMotorCentral(
+          validacao.dados.email,
+          emailAcesso.assunto,
+          emailAcesso.html,
+          "Ink System | Acesso e Segurança",
+        );
+        await Promise.all([
+          sb.from("ink_mensagens_comerciais").update({
+            status: "enviado",
+            enviado_em: new Date().toISOString(),
+            provedor: "resend",
+            provedor_id: provedorId,
+            ultimo_erro: null,
+          }).eq("id", mensagem.id),
+          sb.from("ink_eventos_comerciais").insert({
+            conta_id: conta.id,
+            tipo: "email_acesso_enviado",
+            etapa_anterior: conta.etapa,
+            etapa_nova: conta.etapa === "cadastro_iniciado" ? "aguardando_confirmacao_email" : conta.etapa,
+            idempotency_key: `email_acesso_enviado:${convite.id}`,
+            ator_tipo: "sistema",
+            dados: { mensagem_id: mensagem.id, expira_em: expiraEm.toISOString() },
+          }),
+        ]);
+      } catch (erroEnvio) {
+        await sb.from("ink_mensagens_comerciais").update({
+          status: "falhou",
+          falhou_em: new Date().toISOString(),
+          ultimo_erro: String(erroEnvio instanceof Error ? erroEnvio.message : erroEnvio).slice(0, 500),
+        }).eq("id", mensagem.id);
+        throw erroEnvio;
+      }
+    }
 
     return NextResponse.json({
       ok: true,
