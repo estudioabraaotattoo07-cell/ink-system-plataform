@@ -42,6 +42,15 @@ export type CompradorView = {
     agendado_em: string | null;
     criado_em: string;
   }[];
+  avaliacoes: {
+    id: string;
+    nota: number;
+    pontos_positivos: string | null;
+    dificuldades: string | null;
+    sugestoes: string | null;
+    solicita_suporte: boolean;
+    criado_em: string;
+  }[];
 };
 
 function CartaoComprador({ comprador, abrir }: { comprador: CompradorView; abrir: () => void }) {

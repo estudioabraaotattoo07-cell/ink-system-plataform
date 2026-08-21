@@ -48,12 +48,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     .order("created_at", { ascending: false });
   const leadsNovos = (leads ?? []).filter((l) => l.status === "novo");
 
-  const [contasResult, jornadasResult, documentosResult, eventosResult, mensagensResult] = await Promise.all([
+  const [contasResult, jornadasResult, documentosResult, eventosResult, mensagensResult, avaliacoesResult] = await Promise.all([
     sbAdmin.from("ink_contas_comerciais").select("*").order("atualizado_em", { ascending: false }),
     sbAdmin.from("ink_jornada_comercial").select("*"),
     sbAdmin.from("ink_identidades_documentais").select("conta_id, tipo, ultimos_quatro, comparacao_status"),
     sbAdmin.from("ink_eventos_comerciais").select("id, conta_id, tipo, ator_tipo, criado_em").order("criado_em", { ascending: false }),
     sbAdmin.from("ink_mensagens_comerciais").select("id, conta_id, codigo, nome, canal, status, agendado_em, criado_em").order("criado_em", { ascending: false }),
+    sbAdmin.from("ink_avaliacoes_comerciais").select("id, conta_id, nota, pontos_positivos, dificuldades, sugestoes, solicita_suporte, criado_em").order("criado_em", { ascending: false }),
   ]);
 
   const anoMesAtual = new Date().toISOString().slice(0, 7);
@@ -105,7 +106,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
   const linhas = clientes ?? [];
   const erro = erroClientes || erroChamados || erroStats || erroLeads || erroUso || erroFalhas || erroUsoHoje
-    || contasResult.error || jornadasResult.error || documentosResult.error || eventosResult.error || mensagensResult.error;
+    || contasResult.error || jornadasResult.error || documentosResult.error || eventosResult.error || mensagensResult.error || avaliacoesResult.error;
 
   const jornadasPorConta = new Map((jornadasResult.data ?? []).map((jornada) => [jornada.conta_id, jornada]));
   const documentosPorConta = new Map((documentosResult.data ?? []).map((documento) => [documento.conta_id, documento]));
@@ -129,6 +130,20 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     });
     mensagensPorConta.set(mensagem.conta_id, atuais);
   }
+  const avaliacoesPorConta = new Map<string, CompradorView["avaliacoes"]>();
+  for (const avaliacao of avaliacoesResult.data ?? []) {
+    const atuais = avaliacoesPorConta.get(avaliacao.conta_id) ?? [];
+    atuais.push({
+      id: avaliacao.id,
+      nota: avaliacao.nota,
+      pontos_positivos: avaliacao.pontos_positivos,
+      dificuldades: avaliacao.dificuldades,
+      sugestoes: avaliacao.sugestoes,
+      solicita_suporte: avaliacao.solicita_suporte,
+      criado_em: avaliacao.criado_em,
+    });
+    avaliacoesPorConta.set(avaliacao.conta_id, atuais);
+  }
   const compradores: CompradorView[] = (contasResult.data ?? []).flatMap((conta) => {
     if (!etapaJornadaValida(conta.etapa)) return [];
     const documento = documentosPorConta.get(conta.id);
@@ -146,6 +161,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       documento: documento ? { tipo: documento.tipo, ultimos_quatro: documento.ultimos_quatro, comparacao_status: documento.comparacao_status } : null,
       eventos: eventosPorConta.get(conta.id) ?? [],
       mensagens: mensagensPorConta.get(conta.id) ?? [],
+      avaliacoes: avaliacoesPorConta.get(conta.id) ?? [],
     }];
   });
 
