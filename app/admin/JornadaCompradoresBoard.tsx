@@ -33,6 +33,15 @@ export type CompradorView = {
   jornada: JornadaView | null;
   documento: { tipo: "cpf" | "cnpj"; ultimos_quatro: string; comparacao_status: string } | null;
   eventos: { id: string; tipo: string; ator_tipo: string; criado_em: string }[];
+  mensagens: {
+    id: string;
+    codigo: string;
+    nome: string;
+    canal: "email" | "sms" | "whatsapp";
+    status: "programado" | "processando" | "enviado" | "entregue" | "clicado" | "falhou" | "cancelado";
+    agendado_em: string | null;
+    criado_em: string;
+  }[];
 };
 
 function CartaoComprador({ comprador, abrir }: { comprador: CompradorView; abrir: () => void }) {
@@ -91,4 +100,3 @@ export default function JornadaCompradoresBoard({ compradores }: { compradores: 
     </>
   );
 }
-

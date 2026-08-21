@@ -88,6 +88,7 @@ export function Header() {
         </nav>
 
         <div className="header-cta-desktop">
+          <a href="/login" style={{ color: "var(--text-secondary)", fontSize: 13, textDecoration: "none", marginRight: 14 }}>Login</a>
           {/* Cabeçalho não é um dos 3 pontos mínimos que exigem os dois
               caminhos (hero, oferta, CTA final) -- fica só com o teste,
               texto compacto ("Testar grátis", sem "por 7 dias") por
@@ -153,6 +154,7 @@ export function Header() {
               {l.label}
             </a>
           ))}
+          <a href="/login" onClick={() => setMenuAberto(false)} style={{ color: "var(--text-primary)", fontSize: 14, textDecoration: "none", padding: "10px 4px" }}>Já sou cliente — Login</a>
           <div style={{ marginTop: 8 }}>
             <CtaButton origem="cta_header_trial" tipo="trial">Testar grátis</CtaButton>
           </div>

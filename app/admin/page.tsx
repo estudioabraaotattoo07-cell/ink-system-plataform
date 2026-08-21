@@ -34,7 +34,9 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     .from("ink_chamados")
     .select("ink_cliente_id, status");
 
-  const trintaDiasAtras = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  const dataTrintaDiasAtras = new Date();
+  dataTrintaDiasAtras.setUTCDate(dataTrintaDiasAtras.getUTCDate() - 30);
+  const trintaDiasAtras = dataTrintaDiasAtras.toISOString().slice(0, 10);
   const { data: stats, error: erroStats } = await sbAdmin
     .from("site_stats")
     .select("user_id, visitas, cliques")
@@ -46,11 +48,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     .order("created_at", { ascending: false });
   const leadsNovos = (leads ?? []).filter((l) => l.status === "novo");
 
-  const [contasResult, jornadasResult, documentosResult, eventosResult] = await Promise.all([
+  const [contasResult, jornadasResult, documentosResult, eventosResult, mensagensResult] = await Promise.all([
     sbAdmin.from("ink_contas_comerciais").select("*").order("atualizado_em", { ascending: false }),
     sbAdmin.from("ink_jornada_comercial").select("*"),
     sbAdmin.from("ink_identidades_documentais").select("conta_id, tipo, ultimos_quatro, comparacao_status"),
     sbAdmin.from("ink_eventos_comerciais").select("id, conta_id, tipo, ator_tipo, criado_em").order("criado_em", { ascending: false }),
+    sbAdmin.from("ink_mensagens_comerciais").select("id, conta_id, codigo, nome, canal, status, agendado_em, criado_em").order("criado_em", { ascending: false }),
   ]);
 
   const anoMesAtual = new Date().toISOString().slice(0, 7);
@@ -102,7 +105,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
   const linhas = clientes ?? [];
   const erro = erroClientes || erroChamados || erroStats || erroLeads || erroUso || erroFalhas || erroUsoHoje
-    || contasResult.error || jornadasResult.error || documentosResult.error || eventosResult.error;
+    || contasResult.error || jornadasResult.error || documentosResult.error || eventosResult.error || mensagensResult.error;
 
   const jornadasPorConta = new Map((jornadasResult.data ?? []).map((jornada) => [jornada.conta_id, jornada]));
   const documentosPorConta = new Map((documentosResult.data ?? []).map((documento) => [documento.conta_id, documento]));
@@ -111,6 +114,20 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     const atuais = eventosPorConta.get(evento.conta_id) ?? [];
     if (atuais.length < 40) atuais.push({ id: evento.id, tipo: evento.tipo, ator_tipo: evento.ator_tipo, criado_em: evento.criado_em });
     eventosPorConta.set(evento.conta_id, atuais);
+  }
+  const mensagensPorConta = new Map<string, CompradorView["mensagens"]>();
+  for (const mensagem of mensagensResult.data ?? []) {
+    const atuais = mensagensPorConta.get(mensagem.conta_id) ?? [];
+    if (atuais.length < 80) atuais.push({
+      id: mensagem.id,
+      codigo: mensagem.codigo,
+      nome: mensagem.nome,
+      canal: mensagem.canal,
+      status: mensagem.status,
+      agendado_em: mensagem.agendado_em,
+      criado_em: mensagem.criado_em,
+    });
+    mensagensPorConta.set(mensagem.conta_id, atuais);
   }
   const compradores: CompradorView[] = (contasResult.data ?? []).flatMap((conta) => {
     if (!etapaJornadaValida(conta.etapa)) return [];
@@ -128,6 +145,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       jornada: jornadasPorConta.get(conta.id) ?? null,
       documento: documento ? { tipo: documento.tipo, ultimos_quatro: documento.ultimos_quatro, comparacao_status: documento.comparacao_status } : null,
       eventos: eventosPorConta.get(conta.id) ?? [],
+      mensagens: mensagensPorConta.get(conta.id) ?? [],
     }];
   });
 

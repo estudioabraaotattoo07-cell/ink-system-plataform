@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { diasRestantesTeste, ETAPAS_VISUAIS, percentualEmailTeste } from "@/lib/comercial/painelComprador";
 import type { CompradorView } from "./JornadaCompradoresBoard";
 
@@ -17,6 +18,7 @@ function Campo({ titulo, valor }: { titulo: string; valor: React.ReactNode }) {
 }
 
 export default function CompradorFichaModal({ comprador, onClose }: { comprador: CompradorView; onClose: () => void }) {
+  const [aba, setAba] = useState<"resumo" | "historico" | "relacionamento">("resumo");
   const etapa = ETAPAS_VISUAIS.find((item) => item.id === comprador.etapa);
   const dias = diasRestantesTeste(comprador.jornada?.teste_termina_em ?? null);
   const usados = comprador.jornada?.emails_teste_usados ?? 0;
@@ -40,7 +42,18 @@ export default function CompradorFichaModal({ comprador, onClose }: { comprador:
           <button onClick={onClose} aria-label="Fechar ficha" style={{ alignSelf: "flex-start", background: "#090909", border: "1px solid rgba(255,255,255,.12)", color: "#C9A84C", width: 36, height: 36, cursor: "pointer" }}>×</button>
         </header>
 
+        <nav aria-label="Áreas da ficha" style={{ position: "sticky", top: 87, zIndex: 2, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", background: "#090909", borderBottom: "1px solid rgba(201,168,76,.22)" }}>
+          {([
+            ["resumo", "Resumo"],
+            ["historico", "Histórico"],
+            ["relacionamento", "Relacionamento"],
+          ] as const).map(([id, rotulo]) => (
+            <button key={id} onClick={() => setAba(id)} style={{ border: 0, borderRight: "1px solid rgba(255,255,255,.08)", borderBottom: aba === id ? "3px solid #C9A84C" : "3px solid transparent", background: aba === id ? "rgba(201,168,76,.08)" : "#090909", color: aba === id ? "#C9A84C" : "#716A61", padding: "12px 8px", fontSize: 11, textTransform: "uppercase", letterSpacing: ".06em", cursor: "pointer" }}>{rotulo}</button>
+          ))}
+        </nav>
+
         <div style={{ padding: 20 }}>
+          {aba === "resumo" && <>
           <div style={{ border: "1px solid rgba(201,168,76,.24)", padding: 14, display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <div>
               <strong style={{ color: "#C9A84C" }}>{etapa?.emoji} {etapa?.label ?? comprador.etapa}</strong>
@@ -75,7 +88,9 @@ export default function CompradorFichaModal({ comprador, onClose }: { comprador:
             {comprador.jornada?.comentario_experiencia && <p style={{ marginTop: 10, color: "#B8AFA4", fontSize: 13 }}>“{comprador.jornada.comentario_experiencia}”</p>}
           </section>
 
-          <section style={{ marginTop: 22 }}>
+          </>}
+
+          {aba === "historico" && <section>
             <h3 style={{ color: "#C9A84C", fontSize: 12, letterSpacing: ".08em", textTransform: "uppercase" }}>Histórico da jornada</h3>
             {comprador.eventos.length === 0 ? (
               <div style={{ color: "#716A61", fontSize: 12, marginTop: 10 }}>Nenhum evento registrado ainda.</div>
@@ -85,10 +100,25 @@ export default function CompradorFichaModal({ comprador, onClose }: { comprador:
                 <div style={{ color: "#716A61", fontSize: 10 }}>{dataHora(evento.criado_em)} · {evento.ator_tipo}</div>
               </div>
             ))}
-          </section>
+          </section>}
+
+          {aba === "relacionamento" && <section>
+            <h3 style={{ color: "#C9A84C", fontSize: 12, letterSpacing: ".08em", textTransform: "uppercase" }}>Mensagens da conta</h3>
+            <p style={{ color: "#716A61", fontSize: 11, marginTop: 5 }}>Registro de e-mails, SMS e WhatsApp programados ou processados pelo Ink System.</p>
+            {comprador.mensagens.length === 0 ? (
+              <div style={{ color: "#716A61", fontSize: 12, marginTop: 14 }}>Nenhuma mensagem registrada ainda.</div>
+            ) : comprador.mensagens.map((mensagem) => (
+              <article key={mensagem.id} style={{ marginTop: 10, border: "1px solid rgba(255,255,255,.08)", padding: 12, background: "#090909" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                  <strong style={{ color: "#E8E2D9", fontSize: 12 }}>{mensagem.nome}</strong>
+                  <span style={{ color: mensagem.status === "falhou" ? "#E15B4E" : mensagem.status === "entregue" || mensagem.status === "clicado" ? "#71C68B" : "#C9A84C", fontSize: 10, textTransform: "uppercase" }}>{mensagem.status}</span>
+                </div>
+                <div style={{ color: "#716A61", fontSize: 10, marginTop: 5 }}>{mensagem.canal.toUpperCase()} · {dataHora(mensagem.agendado_em || mensagem.criado_em)}</div>
+              </article>
+            ))}
+          </section>}
         </div>
       </section>
     </div>
   );
 }
-

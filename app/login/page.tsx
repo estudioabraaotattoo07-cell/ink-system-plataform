@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -14,6 +15,16 @@ export default function LoginPage() {
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
+
+  useEffect(() => {
+    const parametros = new URLSearchParams(window.location.search);
+    const timer = window.setTimeout(() => {
+      if (parametros.get("senha") === "alterada") setAviso("Sua senha foi alterada com sucesso. Entre novamente usando a nova senha.");
+      if (parametros.get("erro") === "link_invalido") setErro("O endereço de acesso expirou ou não é mais válido.");
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
@@ -138,6 +149,10 @@ export default function LoginPage() {
               {erro}
             </div>
           )}
+
+          {aviso && <div role="status" style={{ fontSize: 11, color: "#71C68B", background: "rgba(113,198,139,.08)", padding: "8px 12px", borderRadius: 6 }}>{aviso}</div>}
+
+          <Link href="/recuperar-senha" style={{ color: "#A09585", fontSize: 12, textAlign: "right", textDecoration: "none" }}>Esqueci minha senha</Link>
 
           <button
             type="submit"
