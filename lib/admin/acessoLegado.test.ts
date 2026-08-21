@@ -4,7 +4,11 @@ import { readFileSync } from "node:fs";
 
 test("a senha administrativa anterior continua aceita durante a migração", () => {
   const rota = readFileSync(new URL("../../app/admin/auth/route.ts", import.meta.url), "utf8");
+  const login = readFileSync(new URL("../../app/admin/login/page.tsx", import.meta.url), "utf8");
   assert.match(rota, /process\.env\.ADMIN_PASSWORD/);
+  assert.doesNotMatch(rota, /signInWithPassword/);
+  assert.doesNotMatch(login, /E-mail administrativo/);
+  assert.match(login, /JSON\.stringify\(\{ senha \}\)/);
   assert.match(rota, /httpOnly: true/);
   assert.match(rota, /secure: true/);
 });
