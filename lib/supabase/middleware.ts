@@ -7,6 +7,7 @@ import {
   type ClienteSupabaseMinimo,
 } from "@/lib/acesso/avaliarAcesso";
 import { cookieAdminLegadoValido } from "@/lib/admin/token";
+import { cookie2FAValido } from "@/lib/admin/cookie2fa";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -36,7 +37,14 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const { protegida: isRotaProtegida, suspensa: isRotaSuspenso } = classificarRota(path);
-  const isAdminPublica = path === "/admin/login" || path === "/admin/auth";
+  // "/admin/login/entrar" precisa ser pública -- é o próprio pedido que
+  // estabelece a sessão (não existe usuário ainda no momento da chamada).
+  const isAdminPublica = path === "/admin/login" || path === "/admin/auth" || path === "/admin/login/entrar";
+  // "/admin/verificar*" exige sessão real + admin ativo (checado abaixo,
+  // igual a qualquer rota protegida), mas NÃO exige o segundo fator já
+  // confirmado -- é justamente para onde o usuário vai confirmar.
+  const isAdminVerificacao =
+    path === "/admin/verificar" || path === "/admin/verificar/confirmar" || path === "/admin/verificar/reenviar";
   const isAdminProtegida = path.startsWith("/admin") && !isAdminPublica;
 
   if (isAdminProtegida) {
@@ -60,6 +68,19 @@ export async function updateSession(request: NextRequest) {
         url.pathname = "/admin/login";
         url.searchParams.set("erro", "sem_permissao");
         return NextResponse.redirect(url);
+      }
+
+      // Segundo fator: exigido para qualquer rota do Admin fora da própria
+      // verificação -- quem entrou pela via legada (cookie antigo) fica de
+      // fora desta exigência até o Bloco H remover essa via por completo.
+      if (!isAdminVerificacao) {
+        const cookie2fa = request.cookies.get("ink_admin_2fa")?.value;
+        const segundoFatorOk = await cookie2FAValido(user.id, cookie2fa);
+        if (!segundoFatorOk) {
+          const url = request.nextUrl.clone();
+          url.pathname = "/admin/verificar";
+          return NextResponse.redirect(url);
+        }
       }
     }
   }

@@ -3,29 +3,44 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function AdminLoginPage() {
+export default function VerificarCodigoPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
+  const [codigo, setCodigo] = useState("");
   const [erro, setErro] = useState<string | null>(null);
+  const [mensagem, setMensagem] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
+  const [reenviando, setReenviando] = useState(false);
 
-  async function entrar(e: React.FormEvent) {
+  async function confirmar(e: React.FormEvent) {
     e.preventDefault();
     setErro(null);
     setCarregando(true);
-    const res = await fetch("/admin/login/entrar", {
+    const res = await fetch("/admin/verificar/confirmar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, senha }),
+      body: JSON.stringify({ codigo }),
     });
     if (!res.ok) {
       const dados = await res.json().catch(() => null);
-      setErro(dados?.error || "Não foi possível entrar.");
+      setErro(dados?.error || "Código incorreto.");
       setCarregando(false);
       return;
     }
-    router.push("/admin/verificar");
+    router.push("/admin");
+  }
+
+  async function reenviar() {
+    setReenviando(true);
+    setErro(null);
+    setMensagem(null);
+    const res = await fetch("/admin/verificar/reenviar", { method: "POST" });
+    setReenviando(false);
+    if (!res.ok) {
+      setErro("Não foi possível reenviar o código.");
+      return;
+    }
+    setCodigo("");
+    setMensagem("Novo código enviado por e-mail.");
   }
 
   return (
@@ -53,7 +68,7 @@ export default function AdminLoginPage() {
           />
         </div>
         <form
-          onSubmit={entrar}
+          onSubmit={confirmar}
           className="w-full flex flex-col gap-4"
           style={{
             background:
@@ -76,46 +91,27 @@ export default function AdminLoginPage() {
               marginBottom: 4,
             }}
           >
-            Painel do Administrador
+            Código enviado por e-mail
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label style={{ fontSize: 10, letterSpacing: ".08em", textTransform: "uppercase", color: "#6A6050" }}>
-              E-mail
+              Código de 6 dígitos
             </label>
             <input
-              type="email"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
               required
               autoFocus
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="one-time-code"
+              value={codigo}
+              onChange={(e) => setCodigo(e.target.value.replace(/\D/g, "").slice(0, 6))}
               style={{
-                fontSize: 14,
-                background: "#0F0F0F",
-                border: "1px solid rgba(201,168,76,0.15)",
-                borderRadius: 8,
-                padding: "12px 14px",
-                color: "#E8E2D9",
-                boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5)",
-                outline: "none",
-                fontFamily: "inherit",
-              }}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label style={{ fontSize: 10, letterSpacing: ".08em", textTransform: "uppercase", color: "#6A6050" }}>
-              Senha
-            </label>
-            <input
-              type="password"
-              required
-              autoComplete="current-password"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              style={{
-                fontSize: 14,
+                fontSize: 22,
+                letterSpacing: "6px",
+                textAlign: "center",
                 background: "#0F0F0F",
                 border: "1px solid rgba(201,168,76,0.15)",
                 borderRadius: 8,
@@ -143,9 +139,24 @@ export default function AdminLoginPage() {
             </div>
           )}
 
+          {mensagem && (
+            <div
+              style={{
+                fontSize: 11,
+                color: "#4AA36A",
+                background: "rgba(74,163,106,0.08)",
+                padding: "8px 12px",
+                borderRadius: 6,
+                lineHeight: 1.5,
+              }}
+            >
+              {mensagem}
+            </div>
+          )}
+
           <button
             type="submit"
-            disabled={carregando}
+            disabled={carregando || codigo.length !== 6}
             style={{
               width: "100%",
               marginTop: 4,
@@ -159,12 +170,31 @@ export default function AdminLoginPage() {
               background: "linear-gradient(135deg,#E8C97A,#C9A84C 45%,#8a6a24)",
               color: "#17140A",
               boxShadow: "0 4px 16px rgba(201,168,76,0.3), inset 0 1px 0 rgba(255,255,255,0.35)",
-              cursor: carregando ? "not-allowed" : "pointer",
-              opacity: carregando ? 0.5 : 1,
+              cursor: carregando || codigo.length !== 6 ? "not-allowed" : "pointer",
+              opacity: carregando || codigo.length !== 6 ? 0.5 : 1,
               fontFamily: "inherit",
             }}
           >
-            {carregando ? "Entrando..." : "Entrar →"}
+            {carregando ? "Verificando..." : "Confirmar →"}
+          </button>
+
+          <button
+            type="button"
+            onClick={reenviar}
+            disabled={reenviando}
+            style={{
+              width: "100%",
+              background: "transparent",
+              border: "none",
+              color: "#8A7A60",
+              fontSize: 12,
+              padding: "6px",
+              cursor: reenviando ? "not-allowed" : "pointer",
+              textDecoration: "underline",
+              fontFamily: "inherit",
+            }}
+          >
+            {reenviando ? "Enviando..." : "Pedir novo código"}
           </button>
         </form>
       </div>
