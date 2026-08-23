@@ -21,11 +21,7 @@ export default function AdminLoginPage() {
     });
     if (!res.ok) {
       const dados = await res.json().catch(() => null);
-      // DIAGNÓSTICO TEMPORÁRIO -- mostra o código/mensagem real do Supabase
-      // na tela para investigar o "E-mail ou senha incorretos". Remover
-      // junto com o campo "diagnostico" da rota assim que resolvido.
-      const diag = dados?.diagnostico ? ` [${dados.diagnostico.codigo || "?"} / ${dados.diagnostico.status || "?"}] ${dados.diagnostico.mensagem || ""}` : "";
-      setErro((dados?.error || "Não foi possível entrar.") + diag);
+      setErro(dados?.error || "Não foi possível entrar.");
       setCarregando(false);
       return;
     }

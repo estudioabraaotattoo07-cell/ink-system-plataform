@@ -14,13 +14,8 @@ export async function POST() {
 
   try {
     await enviarCodigoAdmin(user.id, user.email);
-  } catch (e) {
-    // DIAGNÓSTICO TEMPORÁRIO -- expõe o motivo real da falha de envio.
-    // Reverter assim que a causa for confirmada.
-    return NextResponse.json(
-      { error: "Não foi possível reenviar o código.", diagnostico: e instanceof Error ? e.message : String(e) },
-      { status: 502 }
-    );
+  } catch {
+    return NextResponse.json({ error: "Não foi possível reenviar o código." }, { status: 502 });
   }
 
   return NextResponse.json({ ok: true });

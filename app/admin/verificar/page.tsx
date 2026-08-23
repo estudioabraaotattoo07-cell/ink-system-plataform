@@ -37,10 +37,7 @@ export default function VerificarCodigoPage() {
     setReenviando(false);
     if (!res.ok) {
       const dados = await res.json().catch(() => null);
-      // DIAGNÓSTICO TEMPORÁRIO -- remover junto com o campo "diagnostico"
-      // da rota assim que a causa da falha de envio for confirmada.
-      const diag = dados?.diagnostico ? ` [${dados.diagnostico}]` : "";
-      setErro((dados?.error || "Não foi possível reenviar o código.") + diag);
+      setErro(dados?.error || "Não foi possível reenviar o código.");
       return;
     }
     setCodigo("");

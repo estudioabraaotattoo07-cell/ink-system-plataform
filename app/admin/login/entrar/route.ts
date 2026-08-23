@@ -16,14 +16,7 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
   if (error || !data.user) {
-    // DIAGNÓSTICO TEMPORÁRIO (v3) -- expõe o motivo real do Supabase (código +
-    // mensagem, nunca a senha) para descobrir a causa do "E-mail ou senha
-    // incorretos" sem acesso a logs do servidor. Reverter para a mensagem
-    // genérica assim que a causa for confirmada.
-    return NextResponse.json(
-      { error: "E-mail ou senha incorretos.", diagnostico: { codigo: error?.code, mensagem: error?.message, status: error?.status } },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "E-mail ou senha incorretos." }, { status: 401 });
   }
 
   const administrativo = criarClienteAdministrativo();
@@ -41,14 +34,9 @@ export async function POST(req: NextRequest) {
 
   try {
     await enviarCodigoAdmin(data.user.id, email);
-  } catch (e) {
-    // DIAGNÓSTICO TEMPORÁRIO -- expõe o motivo real da falha de envio.
-    // Reverter assim que a causa for confirmada.
+  } catch {
     return NextResponse.json(
-      {
-        error: "Não foi possível enviar o código de verificação. Tente novamente.",
-        diagnostico: e instanceof Error ? e.message : String(e),
-      },
+      { error: "Não foi possível enviar o código de verificação. Tente novamente." },
       { status: 502 }
     );
   }
