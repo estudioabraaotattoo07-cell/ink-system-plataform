@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function VerificarCodigoPage() {
@@ -11,14 +11,13 @@ export default function VerificarCodigoPage() {
   const [carregando, setCarregando] = useState(false);
   const [reenviando, setReenviando] = useState(false);
 
-  async function confirmar(e: React.FormEvent) {
-    e.preventDefault();
+  async function confirmarCodigo(valor: string) {
     setErro(null);
     setCarregando(true);
     const res = await fetch("/admin/verificar/confirmar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ codigo }),
+      body: JSON.stringify({ codigo: valor }),
     });
     if (!res.ok) {
       const dados = await res.json().catch(() => null);
@@ -27,6 +26,20 @@ export default function VerificarCodigoPage() {
       return;
     }
     router.push("/admin");
+  }
+
+  // Confirma sozinho assim que os 6 dígitos forem digitados, sem precisar
+  // clicar em "Confirmar".
+  useEffect(() => {
+    if (codigo.length === 6 && !carregando) {
+      confirmarCodigo(codigo);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [codigo]);
+
+  async function confirmar(e: React.FormEvent) {
+    e.preventDefault();
+    await confirmarCodigo(codigo);
   }
 
   async function reenviar() {

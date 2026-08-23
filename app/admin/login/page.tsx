@@ -7,6 +7,7 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
 
@@ -108,24 +109,47 @@ export default function AdminLoginPage() {
             <label style={{ fontSize: 10, letterSpacing: ".08em", textTransform: "uppercase", color: "#6A6050" }}>
               Senha
             </label>
-            <input
-              type="password"
-              required
-              autoComplete="current-password"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              style={{
-                fontSize: 14,
-                background: "#0F0F0F",
-                border: "1px solid rgba(201,168,76,0.15)",
-                borderRadius: 8,
-                padding: "12px 14px",
-                color: "#E8E2D9",
-                boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5)",
-                outline: "none",
-                fontFamily: "inherit",
-              }}
-            />
+            <div style={{ position: "relative" }}>
+              <input
+                type={mostrarSenha ? "text" : "password"}
+                required
+                autoComplete="current-password"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                style={{
+                  width: "100%",
+                  fontSize: 14,
+                  background: "#0F0F0F",
+                  border: "1px solid rgba(201,168,76,0.15)",
+                  borderRadius: 8,
+                  padding: "12px 60px 12px 14px",
+                  color: "#E8E2D9",
+                  boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5)",
+                  outline: "none",
+                  fontFamily: "inherit",
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarSenha((v) => !v)}
+                style={{
+                  position: "absolute",
+                  right: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "transparent",
+                  border: "none",
+                  color: "#8A7A60",
+                  fontSize: 10,
+                  letterSpacing: ".05em",
+                  textTransform: "uppercase",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                {mostrarSenha ? "Ocultar" : "Mostrar"}
+              </button>
+            </div>
           </div>
 
           {erro && (
