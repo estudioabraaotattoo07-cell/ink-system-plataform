@@ -31,9 +31,19 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Falha técnica do Supabase Auth (chave inválida, indisponibilidade,
+  // timeout) não pode derrubar o site inteiro -- este middleware roda em
+  // quase todas as rotas, inclusive páginas públicas que nem dependem de
+  // saber quem está logado. Tratar como "sem usuário" reaproveita a mesma
+  // lógica que já existe pra visitante deslogado, em vez de propagar a
+  // exceção pro Edge Runtime.
+  let user: Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"] = null;
+  try {
+    const resultado = await supabase.auth.getUser();
+    user = resultado.data.user;
+  } catch {
+    user = null;
+  }
 
   const path = request.nextUrl.pathname;
   const { protegida: isRotaProtegida, suspensa: isRotaSuspenso } = classificarRota(path);
