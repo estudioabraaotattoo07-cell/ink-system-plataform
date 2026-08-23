@@ -15,27 +15,31 @@ async function hashTexto(texto: string): Promise<string> {
     .join("");
 }
 
-// Cookie sem estado no banco: assinatura via SHA-256, reaproveitando
-// SUPABASE_SERVICE_KEY como segredo do servidor (já existente, só-servidor,
-// sem variável de ambiente nova). O auth_user_id embutido na assinatura
-// nunca é confiado sozinho -- quem valida sempre compara contra o
-// auth_user_id da sessão real do Supabase no momento da checagem.
+// Cookie sem estado no banco: assinatura via SHA-256, com segredo próprio
+// (ADMIN_2FA_COOKIE_SECRET) -- deliberadamente separado de
+// SUPABASE_SERVICE_KEY, para poder rotacionar um sem afetar o outro (ver
+// Bloco E). O auth_user_id embutido na assinatura nunca é confiado sozinho
+// -- quem valida sempre compara contra o auth_user_id da sessão real do
+// Supabase no momento da checagem.
 export async function gerarCookie2FA(authUserId: string): Promise<{ valor: string; maxAgeSegundos: number }> {
+  const segredo = process.env.ADMIN_2FA_COOKIE_SECRET;
+  if (!segredo) throw new Error("ADMIN_2FA_COOKIE_SECRET ausente no ambiente.");
   const maxAgeSegundos = VALIDADE_SESSAO_2FA_HORAS * 3600;
   const expiraEmEpoch = Date.now() + maxAgeSegundos * 1000;
-  const assinatura = await hashTexto(
-    `ink-admin-2fa-sessao:${authUserId}:${expiraEmEpoch}:${process.env.SUPABASE_SERVICE_KEY}`
-  );
+  const assinatura = await hashTexto(`ink-admin-2fa-sessao:${authUserId}:${expiraEmEpoch}:${segredo}`);
   return { valor: `${expiraEmEpoch}.${assinatura}`, maxAgeSegundos };
 }
 
 export async function cookie2FAValido(authUserId: string, cookieValor?: string): Promise<boolean> {
   if (!cookieValor) return false;
+  // Sem lançar exceção aqui (roda no middleware, em Edge Runtime) -- falta
+  // de configuração deve invalidar o cookie silenciosamente, nunca derrubar
+  // a requisição (mesmo raciocínio do Bloco C).
+  const segredo = process.env.ADMIN_2FA_COOKIE_SECRET;
+  if (!segredo) return false;
   const [expiraEmEpochStr, assinatura] = cookieValor.split(".");
   const expiraEmEpoch = Number(expiraEmEpochStr);
   if (!expiraEmEpoch || !assinatura || Date.now() >= expiraEmEpoch) return false;
-  const esperada = await hashTexto(
-    `ink-admin-2fa-sessao:${authUserId}:${expiraEmEpoch}:${process.env.SUPABASE_SERVICE_KEY}`
-  );
+  const esperada = await hashTexto(`ink-admin-2fa-sessao:${authUserId}:${expiraEmEpoch}:${segredo}`);
   return assinatura === esperada;
 }
