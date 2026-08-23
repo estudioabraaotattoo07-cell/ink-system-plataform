@@ -1,8 +1,36 @@
 import "server-only";
 
 import { criarClienteAdministrativo } from "@/lib/admin/autorizacao";
-import { dispararEmail } from "@/lib/motor-disparos/canais/email.js";
 export { gerarCookie2FA, cookie2FAValido } from "@/lib/admin/cookie2fa";
+
+// Envia direto (em vez de usar dispararEmail(), que só devolve true/false)
+// para poder registrar o motivo real de uma falha -- só no log do servidor
+// (Vercel > Logs), nunca na resposta HTTP nem na tela. O chamador sempre
+// recebe só um erro genérico.
+async function enviarEmailComLogServidor(to: string, subject: string, html: string): Promise<boolean> {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.EMAIL_REMETENTE;
+  if (!apiKey || !from) {
+    console.error("[admin-2fa] envio de e-mail sem configuração: RESEND_API_KEY ou EMAIL_REMETENTE ausente.");
+    return false;
+  }
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to, subject, html }),
+    });
+    if (!res.ok) {
+      const corpo = await res.text().catch(() => "");
+      console.error(`[admin-2fa] Resend respondeu ${res.status}: ${corpo.slice(0, 300)}`);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error("[admin-2fa] falha de rede ao chamar o Resend:", e instanceof Error ? e.message : String(e));
+    return false;
+  }
+}
 
 // Segundo fator do Painel Admin -- código de 6 dígitos por e-mail, nunca
 // guardado em texto puro (só hash, mesmo padrão de lib/admin/token.ts).
@@ -43,11 +71,11 @@ export async function enviarCodigoAdmin(authUserId: string, email: string): Prom
   });
   if (error) throw new Error("Não foi possível gerar o código de verificação.");
 
-  const enviado = await dispararEmail({
-    to: email,
-    subject: "Seu código de acesso — Painel Admin",
-    html: `<p>Seu código de verificação é <strong style="font-size:20px;letter-spacing:4px;">${codigo}</strong>.</p><p>Válido por ${VALIDADE_CODIGO_MINUTOS} minutos. Se você não pediu este código, ignore este e-mail.</p>`,
-  });
+  const enviado = await enviarEmailComLogServidor(
+    email,
+    "Seu código de acesso — Painel Admin",
+    `<p>Seu código de verificação é <strong style="font-size:20px;letter-spacing:4px;">${codigo}</strong>.</p><p>Válido por ${VALIDADE_CODIGO_MINUTOS} minutos. Se você não pediu este código, ignore este e-mail.</p>`
+  );
   if (!enviado) throw new Error("Não foi possível enviar o código por e-mail.");
 }
 
