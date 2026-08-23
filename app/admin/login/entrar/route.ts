@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
   if (error || !data.user) {
-    // DIAGNÓSTICO TEMPORÁRIO (v2) -- expõe o motivo real do Supabase (código +
+    // DIAGNÓSTICO TEMPORÁRIO (v3) -- expõe o motivo real do Supabase (código +
     // mensagem, nunca a senha) para descobrir a causa do "E-mail ou senha
     // incorretos" sem acesso a logs do servidor. Reverter para a mensagem
     // genérica assim que a causa for confirmada.
