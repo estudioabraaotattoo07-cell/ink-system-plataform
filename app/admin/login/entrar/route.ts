@@ -41,9 +41,14 @@ export async function POST(req: NextRequest) {
 
   try {
     await enviarCodigoAdmin(data.user.id, email);
-  } catch {
+  } catch (e) {
+    // DIAGNÓSTICO TEMPORÁRIO -- expõe o motivo real da falha de envio.
+    // Reverter assim que a causa for confirmada.
     return NextResponse.json(
-      { error: "Não foi possível enviar o código de verificação. Tente novamente." },
+      {
+        error: "Não foi possível enviar o código de verificação. Tente novamente.",
+        diagnostico: e instanceof Error ? e.message : String(e),
+      },
       { status: 502 }
     );
   }

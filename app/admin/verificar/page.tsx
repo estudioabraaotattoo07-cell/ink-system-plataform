@@ -36,7 +36,11 @@ export default function VerificarCodigoPage() {
     const res = await fetch("/admin/verificar/reenviar", { method: "POST" });
     setReenviando(false);
     if (!res.ok) {
-      setErro("Não foi possível reenviar o código.");
+      const dados = await res.json().catch(() => null);
+      // DIAGNÓSTICO TEMPORÁRIO -- remover junto com o campo "diagnostico"
+      // da rota assim que a causa da falha de envio for confirmada.
+      const diag = dados?.diagnostico ? ` [${dados.diagnostico}]` : "";
+      setErro((dados?.error || "Não foi possível reenviar o código.") + diag);
       return;
     }
     setCodigo("");
