@@ -34,7 +34,10 @@ export async function POST(req: NextRequest) {
 
   try {
     await enviarCodigoAdmin(data.user.id, email);
-  } catch {
+  } catch (e) {
+    if (e instanceof Error && e.message === "AGUARDE_REENVIO") {
+      return NextResponse.json({ error: "Aguarde alguns segundos antes de pedir um novo código." }, { status: 429 });
+    }
     return NextResponse.json(
       { error: "Não foi possível enviar o código de verificação. Tente novamente." },
       { status: 502 }

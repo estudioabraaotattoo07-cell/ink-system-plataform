@@ -14,7 +14,10 @@ export async function POST() {
 
   try {
     await enviarCodigoAdmin(user.id, user.email);
-  } catch {
+  } catch (e) {
+    if (e instanceof Error && e.message === "AGUARDE_REENVIO") {
+      return NextResponse.json({ error: "Aguarde alguns segundos antes de pedir um novo código." }, { status: 429 });
+    }
     return NextResponse.json({ error: "Não foi possível reenviar o código." }, { status: 502 });
   }
 

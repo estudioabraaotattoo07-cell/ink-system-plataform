@@ -35,12 +35,14 @@ async function enviarEmailComLogServidor(to: string, subject: string, html: stri
 // Segundo fator do Painel Admin -- código de 6 dígitos por e-mail, nunca
 // guardado em texto puro (só hash, mesmo padrão de lib/admin/token.ts).
 // Sem limite de quantos códigos podem ser gerados (decisão do único
-// administrador) -- cada novo código simplesmente substitui o anterior
-// como "o código válido mais recente" (validarCodigoAdmin só olha o mais
-// recente ainda não usado).
+// administrador) -- só um intervalo mínimo entre pedidos, contra clique
+// duplo. Cada novo código invalida explicitamente qualquer anterior ainda
+// não usado.
 
 const VALIDADE_CODIGO_MINUTOS = 10;
 const MAX_TENTATIVAS_POR_CODIGO = 3;
+const INTERVALO_MINIMO_REENVIO_MS = 30_000;
+const MARCADOR_AGUARDE_REENVIO = "AGUARDE_REENVIO";
 
 async function hashTexto(texto: string): Promise<string> {
   const dados = new TextEncoder().encode(texto);
@@ -59,11 +61,32 @@ function gerarCodigoNumerico(): string {
 }
 
 export async function enviarCodigoAdmin(authUserId: string, email: string): Promise<void> {
+  const sb = criarClienteAdministrativo();
+
+  const { data: ultimo } = await sb
+    .from("ink_admin_2fa_codigos")
+    .select("criado_em")
+    .eq("auth_user_id", authUserId)
+    .order("criado_em", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (ultimo && Date.now() - new Date(ultimo.criado_em).getTime() < INTERVALO_MINIMO_REENVIO_MS) {
+    throw new Error(MARCADOR_AGUARDE_REENVIO);
+  }
+
   const codigo = gerarCodigoNumerico();
   const codigoHash = await hashTexto(`ink-admin-2fa-codigo:${codigo}`);
   const expiraEm = new Date(Date.now() + VALIDADE_CODIGO_MINUTOS * 60_000);
 
-  const sb = criarClienteAdministrativo();
+  // Invalida explicitamente qualquer código anterior ainda não usado --
+  // antes dependia só da ordenação (o mais recente "escondia" os
+  // anteriores), agora fica marcado sem ambiguidade.
+  await sb
+    .from("ink_admin_2fa_codigos")
+    .update({ usado_em: new Date().toISOString() })
+    .eq("auth_user_id", authUserId)
+    .is("usado_em", null);
+
   const { error } = await sb.from("ink_admin_2fa_codigos").insert({
     auth_user_id: authUserId,
     codigo_hash: codigoHash,
@@ -81,31 +104,16 @@ export async function enviarCodigoAdmin(authUserId: string, email: string): Prom
 
 export async function validarCodigoAdmin(authUserId: string, codigoDigitado: string): Promise<boolean> {
   const sb = criarClienteAdministrativo();
-  const { data: linha, error } = await sb
-    .from("ink_admin_2fa_codigos")
-    .select("id, codigo_hash, expira_em, usado_em, tentativas")
-    .eq("auth_user_id", authUserId)
-    .is("usado_em", null)
-    .order("criado_em", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error || !linha) return false;
-  if (new Date(linha.expira_em).getTime() <= Date.now()) return false;
-  if (linha.tentativas >= MAX_TENTATIVAS_POR_CODIGO) return false;
-
   const hashDigitado = await hashTexto(`ink-admin-2fa-codigo:${codigoDigitado}`);
-  if (hashDigitado !== linha.codigo_hash) {
-    await sb
-      .from("ink_admin_2fa_codigos")
-      .update({ tentativas: linha.tentativas + 1 })
-      .eq("id", linha.id);
-    return false;
-  }
-
-  await sb
-    .from("ink_admin_2fa_codigos")
-    .update({ usado_em: new Date().toISOString() })
-    .eq("id", linha.id);
-  return true;
+  // Checagem e marcação como usado acontecem numa única transação no banco
+  // (função ink_validar_codigo_admin_2fa, com "for update") -- duas
+  // validações do mesmo código quase ao mesmo tempo não podem mais passar
+  // as duas.
+  const { data, error } = await sb.rpc("ink_validar_codigo_admin_2fa", {
+    p_auth_user_id: authUserId,
+    p_codigo_hash: hashDigitado,
+    p_max_tentativas: MAX_TENTATIVAS_POR_CODIGO,
+  });
+  if (error) return false;
+  return data === true;
 }
