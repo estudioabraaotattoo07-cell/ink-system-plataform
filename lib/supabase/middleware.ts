@@ -6,7 +6,6 @@ import {
   decidirRedirecionamento,
   type ClienteSupabaseMinimo,
 } from "@/lib/acesso/avaliarAcesso";
-import { cookieAdminLegadoValido } from "@/lib/admin/token";
 import { cookie2FAValido } from "@/lib/admin/cookie2fa";
 
 export async function updateSession(request: NextRequest) {
@@ -49,7 +48,7 @@ export async function updateSession(request: NextRequest) {
   const { protegida: isRotaProtegida, suspensa: isRotaSuspenso } = classificarRota(path);
   // "/admin/login/entrar" precisa ser pública -- é o próprio pedido que
   // estabelece a sessão (não existe usuário ainda no momento da chamada).
-  const isAdminPublica = path === "/admin/login" || path === "/admin/auth" || path === "/admin/login/entrar";
+  const isAdminPublica = path === "/admin/login" || path === "/admin/login/entrar";
   // "/admin/verificar*" exige sessão real + admin ativo (checado abaixo,
   // igual a qualquer rota protegida), mas NÃO exige o segundo fator já
   // confirmado -- é justamente para onde o usuário vai confirmar.
@@ -58,39 +57,34 @@ export async function updateSession(request: NextRequest) {
   const isAdminProtegida = path.startsWith("/admin") && !isAdminPublica;
 
   if (isAdminProtegida) {
-    const acessoAdministrativoAnterior = await cookieAdminLegadoValido(
-      request.cookies.get("ink_admin")?.value
-    );
-    if (!user && !acessoAdministrativoAnterior) {
+    if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/admin/login";
       return NextResponse.redirect(url);
     }
-    if (user && !acessoAdministrativoAnterior) {
-      const { data: admin, error: erroAdmin } = await supabase
-        .from("ink_admin_usuarios")
-        .select("id")
-        .eq("auth_user_id", user.id)
-        .eq("ativo", true)
-        .maybeSingle();
-      if (erroAdmin || !admin) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/admin/login";
-        url.searchParams.set("erro", "sem_permissao");
-        return NextResponse.redirect(url);
-      }
 
-      // Segundo fator: exigido para qualquer rota do Admin fora da própria
-      // verificação -- quem entrou pela via legada (cookie antigo) fica de
-      // fora desta exigência até o Bloco H remover essa via por completo.
-      if (!isAdminVerificacao) {
-        const cookie2fa = request.cookies.get("ink_admin_2fa")?.value;
-        const segundoFatorOk = await cookie2FAValido(user.id, cookie2fa);
-        if (!segundoFatorOk) {
-          const url = request.nextUrl.clone();
-          url.pathname = "/admin/verificar";
-          return NextResponse.redirect(url);
-        }
+    const { data: admin, error: erroAdmin } = await supabase
+      .from("ink_admin_usuarios")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .eq("ativo", true)
+      .maybeSingle();
+    if (erroAdmin || !admin) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/login";
+      url.searchParams.set("erro", "sem_permissao");
+      return NextResponse.redirect(url);
+    }
+
+    // Segundo fator: exigido para qualquer rota do Admin fora da própria
+    // verificação.
+    if (!isAdminVerificacao) {
+      const cookie2fa = request.cookies.get("ink_admin_2fa")?.value;
+      const segundoFatorOk = await cookie2FAValido(user.id, cookie2fa);
+      if (!segundoFatorOk) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/admin/verificar";
+        return NextResponse.redirect(url);
       }
     }
   }

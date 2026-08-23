@@ -8,7 +8,6 @@ async function encerrarSessao(request: Request) {
   const supabase = await createClient();
   await supabase.auth.signOut();
   const resposta = NextResponse.redirect(new URL("/admin/login", request.url), 303);
-  resposta.cookies.set("ink_admin", "", { path: "/", maxAge: 0 });
   resposta.cookies.set("ink_admin_2fa", "", { path: "/", maxAge: 0 });
   return resposta;
 }

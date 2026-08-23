@@ -33,7 +33,7 @@ async function enviarEmailComLogServidor(to: string, subject: string, html: stri
 }
 
 // Segundo fator do Painel Admin -- código de 6 dígitos por e-mail, nunca
-// guardado em texto puro (só hash, mesmo padrão de lib/admin/token.ts).
+// guardado em texto puro (só hash).
 // Sem limite de quantos códigos podem ser gerados (decisão do único
 // administrador) -- só um intervalo mínimo entre pedidos, contra clique
 // duplo. Cada novo código invalida explicitamente qualquer anterior ainda
