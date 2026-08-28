@@ -227,8 +227,8 @@ export default function LandingPage() {
           .landing-hero-fade {
             position: absolute;
             inset: 0 0 auto;
-            height: 38%;
-            background: linear-gradient(to bottom, var(--bg-void) 0%, rgba(5, 4, 10, 0.94) 17%, rgba(5, 4, 10, 0.54) 54%, transparent 100%);
+            height: 32%;
+            background: linear-gradient(to bottom, var(--bg-void) 0%, rgba(5, 4, 10, 0.76) 13%, rgba(5, 4, 10, 0.28) 48%, transparent 100%);
             pointer-events: none;
           }
           .landing-hero-ctas {
@@ -262,6 +262,18 @@ export default function LandingPage() {
           }
           .landing-hero-desktop-break {
             display: none;
+          }
+          .landing-hero-brand-line {
+            font-family: var(--font-body);
+            font-size: 0.78em;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            white-space: nowrap;
+          }
+          .landing-hero-brand-system {
+            display: inline-block;
+            color: var(--gold);
+            text-shadow: 0 0 10px rgba(201, 168, 76, 0.38), 0 0 22px rgba(201, 168, 76, 0.16);
           }
           @media (min-width: 701px) {
             .landing-hero-desktop-break {
@@ -324,7 +336,9 @@ export default function LandingPage() {
             <span className="landing-hero-desktop-break">
               <br />
             </span>{" "}
-            <span className="landing-hero-desktop-ink">INK SYSTEM</span>.
+            <span className="landing-hero-desktop-ink landing-hero-brand-line">
+              INK <span className="landing-hero-brand-system">SYSTEM</span>
+            </span>.
           </h1>
           <p
             style={{
