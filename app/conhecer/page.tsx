@@ -260,28 +260,22 @@ export default function LandingPage() {
               width: min(100% - 40px, 360px);
             }
           }
-          .landing-hero-desktop-break {
-            display: none;
-          }
           .landing-hero-brand-line {
             font-family: var(--font-body);
-            font-size: 0.78em;
+            font-size: 1.05em;
             font-weight: 700;
-            letter-spacing: 0.12em;
+            letter-spacing: 0.08em;
             white-space: nowrap;
+          }
+          .landing-hero-brand-ink {
+            display: inline-block;
+            color: var(--text-primary);
+            text-shadow: 0 0 10px rgba(232, 226, 217, 0.42), 0 0 22px rgba(232, 226, 217, 0.16);
           }
           .landing-hero-brand-system {
             display: inline-block;
             color: var(--gold);
             text-shadow: 0 0 10px rgba(201, 168, 76, 0.38), 0 0 22px rgba(201, 168, 76, 0.16);
-          }
-          @media (min-width: 701px) {
-            .landing-hero-desktop-break {
-              display: inline;
-            }
-            .landing-hero-desktop-ink {
-              white-space: nowrap;
-            }
           }
         `}</style>
         <div style={{ maxWidth: 840, margin: "0 auto", textAlign: "center" }}>
@@ -333,11 +327,10 @@ export default function LandingPage() {
             É COM VOCÊ.
             <br />
             A OPERAÇÃO É COM O
-            <span className="landing-hero-desktop-break">
-              <br />
-            </span>{" "}
-            <span className="landing-hero-desktop-ink landing-hero-brand-line">
-              INK <span className="landing-hero-brand-system">SYSTEM</span>
+            <br />
+            <span className="landing-hero-brand-line">
+              <span className="landing-hero-brand-ink">INK</span>{" "}
+              <span className="landing-hero-brand-system">SYSTEM</span>
             </span>.
           </h1>
           <p
