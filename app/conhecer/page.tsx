@@ -215,8 +215,8 @@ export default function LandingPage() {
           .landing-hero-art {
             position: relative;
             width: min(1120px, calc(100% + 48px));
-            margin: clamp(42px, 7vw, 74px) -24px 0;
-            overflow: hidden;
+            margin: clamp(88px, 9vw, 116px) -24px 0;
+            overflow: visible;
           }
           .landing-hero-art picture,
           .landing-hero-art img {
@@ -234,7 +234,7 @@ export default function LandingPage() {
           .landing-hero-ctas {
             position: absolute;
             z-index: 1;
-            top: clamp(16px, 2vw, 26px);
+            top: -62px;
             left: 50%;
             transform: translateX(-50%);
             width: min(100% - 32px, 480px);
@@ -247,6 +247,7 @@ export default function LandingPage() {
             .landing-hero-art {
               width: calc(100% + 48px);
               margin-top: 36px;
+              overflow: hidden;
             }
             .landing-hero-fade {
               height: 31%;
@@ -257,6 +258,17 @@ export default function LandingPage() {
               flex-direction: column;
               align-items: stretch;
               width: min(100% - 40px, 360px);
+            }
+          }
+          .landing-hero-desktop-break {
+            display: none;
+          }
+          @media (min-width: 701px) {
+            .landing-hero-desktop-break {
+              display: inline;
+            }
+            .landing-hero-desktop-ink {
+              white-space: nowrap;
             }
           }
         `}</style>
@@ -308,7 +320,11 @@ export default function LandingPage() {
             </span>{" "}
             É COM VOCÊ.
             <br />
-            A OPERAÇÃO É COM O INK SYSTEM.
+            A OPERAÇÃO É COM O
+            <span className="landing-hero-desktop-break">
+              <br />
+            </span>{" "}
+            <span className="landing-hero-desktop-ink">INK SYSTEM</span>.
           </h1>
           <p
             style={{
