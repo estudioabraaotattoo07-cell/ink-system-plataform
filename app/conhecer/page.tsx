@@ -261,10 +261,12 @@ export default function LandingPage() {
             }
           }
           .landing-hero-brand-line {
+            display: inline-block;
             font-family: var(--font-body);
             font-size: 1.05em;
             font-weight: 700;
             letter-spacing: 0.08em;
+            margin-top: 0.14em;
             white-space: nowrap;
           }
           .landing-hero-brand-ink {
