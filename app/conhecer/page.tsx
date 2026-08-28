@@ -234,7 +234,7 @@ export default function LandingPage() {
           .landing-hero-ctas {
             position: absolute;
             z-index: 1;
-            top: clamp(20px, 5vw, 58px);
+            top: clamp(16px, 2vw, 26px);
             left: 50%;
             transform: translateX(-50%);
             width: min(100% - 32px, 480px);
@@ -295,7 +295,18 @@ export default function LandingPage() {
               textWrap: "balance",
             }}
           >
-            A TATTOO É COM VOCÊ.
+            A{" "}
+            <span
+              style={{
+                display: "inline-block",
+                color: "var(--gold)",
+                fontSize: "1.1em",
+                textShadow: "0 0 10px rgba(201, 168, 76, 0.38), 0 0 22px rgba(201, 168, 76, 0.16)",
+              }}
+            >
+              TATTOO
+            </span>{" "}
+            É COM VOCÊ.
             <br />
             A OPERAÇÃO É COM O INK SYSTEM.
           </h1>
