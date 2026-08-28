@@ -13,7 +13,7 @@ export default function HomePage() {
     >
       <div
         style={{
-          width: "min(1180px, 100%)",
+          width: "min(1240px, 100%)",
           minHeight: "100svh",
           margin: "0 auto",
           padding: "clamp(24px, 4vw, 54px)",
@@ -23,15 +23,7 @@ export default function HomePage() {
           boxSizing: "border-box",
         }}
       >
-        <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
-          <Image
-            src="/logo-ink-system.png"
-            alt="Ink System"
-            width={1200}
-            height={355}
-            priority
-            style={{ width: "clamp(150px, 18vw, 218px)", height: "auto", display: "block" }}
-          />
+        <header style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 20 }}>
           <a
             href="/login"
             data-cta="home_entrar"
@@ -49,7 +41,51 @@ export default function HomePage() {
           </a>
         </header>
 
-        <section style={{ maxWidth: 760, padding: "clamp(64px, 12vw, 150px) 0", textAlign: "center", alignSelf: "center" }}>
+        <section style={{ width: "100%", padding: "clamp(42px, 7vw, 84px) 0 clamp(42px, 6vw, 72px)", textAlign: "center", alignSelf: "center" }}>
+          <style>{`
+            .home-hero-art {
+              position: relative;
+              width: min(1120px, 100%);
+              margin: clamp(46px, 6vw, 76px) auto 0;
+              overflow: hidden;
+              box-shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
+            }
+            .home-hero-art picture,
+            .home-hero-art img {
+              display: block;
+              width: 100%;
+              height: auto;
+            }
+            .home-hero-art::before {
+              content: "";
+              position: absolute;
+              z-index: 1;
+              inset: 0 0 auto;
+              height: 22%;
+              pointer-events: none;
+              background: linear-gradient(to bottom, rgba(5, 4, 10, 0.48) 0%, rgba(5, 4, 10, 0.16) 58%, transparent 100%);
+            }
+            @media (max-width: 700px) {
+              .home-hero-art {
+                width: calc(100% + 48px);
+                margin-left: -24px;
+                margin-right: -24px;
+                margin-top: 42px;
+              }
+              .home-hero-art::before {
+                height: 16%;
+                background: linear-gradient(to bottom, rgba(5, 4, 10, 0.36) 0%, transparent 100%);
+              }
+            }
+          `}</style>
+          <Image
+            src="/logo-ink-system.png"
+            alt="Ink System"
+            width={1200}
+            height={355}
+            priority
+            style={{ width: "clamp(210px, 31vw, 380px)", height: "auto", display: "block", margin: "0 auto clamp(28px, 4vw, 42px)" }}
+          />
           <p
             style={{
               margin: 0,
@@ -78,6 +114,19 @@ export default function HomePage() {
           >
             O SISTEMA QUE DEVOLVE O ARTISTA À SUA ARTE.
           </h1>
+          <p
+            style={{
+              maxWidth: 470,
+              margin: "22px auto 0",
+              color: "var(--text-secondary)",
+              fontFamily: "var(--font-heading)",
+              fontStyle: "italic",
+              fontSize: "clamp(18px, 2.2vw, 23px)",
+              lineHeight: 1.45,
+            }}
+          >
+            Organize sua operação e ganhe mais espaço para criar.
+          </p>
           <div style={{ display: "flex", justifyContent: "center", marginTop: "clamp(36px, 6vw, 56px)" }}>
             <a
               href="/conhecer"
@@ -93,6 +142,12 @@ export default function HomePage() {
             <a href="/login" data-cta="home_entrar_secundario" style={{ color: "var(--gold)", textDecoration: "none", fontWeight: 600 }}>
               Entrar
             </a>
+          </div>
+          <div className="home-hero-art">
+            <picture>
+              <source media="(max-width: 700px)" srcSet="/imagens/home/hero/home-hero-mobile.png" />
+              <img src="/imagens/home/hero/home-hero-desktop.png" alt="Tatuadora em seu estúdio, acompanhada pela família durante o processo criativo" />
+            </picture>
           </div>
         </section>
 
