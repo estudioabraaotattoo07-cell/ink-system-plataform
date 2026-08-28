@@ -152,8 +152,13 @@ test("totalDisparos NÃO é incrementado neste bloco -- é um Pipeline move, nã
   assert.doesNotMatch(trecho, /totalDisparos\+\+/);
 });
 
-test("dívida pré-existente registrada em comentário: aguard_prox_sessao->hibernacao (fora de escopo) continua incrementando totalDisparos", () => {
-  assert.match(src, /if \(diasEtapa >= 90\) \{[\s\S]{0,400}totalDisparos\+\+;/);
+test("dívida pré-existente (aguard_prox_sessao->hibernacao incrementava totalDisparos indevidamente) foi removida pelo Bloco C, não apenas contornada", () => {
+  // Bloco C (2026-08-27) removeu o bloco antigo inteiro (aguard_prox_sessao
+  // D+60/D+90) e o substituiu por aguard_agend->hibernacao D+60, que já
+  // nasce sem o bug -- ver cron-disparos.blocoC.test.ts para a cobertura
+  // completa do bloco novo. Esta asserção negativa confirma que o texto do
+  // bug antigo não voltou a existir em nenhum outro lugar do arquivo.
+  assert.doesNotMatch(src, /if \(diasEtapa >= 90\) \{[\s\S]{0,400}totalDisparos\+\+;/);
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -180,7 +185,10 @@ test("Convite Google (D+2) continua com a mesma condição de gatilho -- não fo
   assert.match(src, /status === "positiva" && cliente\.google_convite_em && new Date\(cliente\.google_convite_em\) <= hoje/);
 });
 
-test("bloco de aguard_prox_sessao -> hibernacao (D+90, precedente deste bloco) permanece intocado", () => {
-  assert.match(src, /if \(diasEtapa >= 90\) \{/);
-  assert.match(src, /"Movido automaticamente para Hibernação após 90 dias sem nova solicitação — " \+ cliente\.nome/);
+test("bloco de aguard_prox_sessao -> hibernacao (D+90, precedente histórico deste bloco) foi retirado pelo Bloco C -- substituído por aguard_agend -> hibernacao D+60", () => {
+  // Retirada esperada e autorizada (Bloco C, 2026-08-27): a etapa
+  // aguard_prox_sessao deixou de existir no pipeline; sua régua de
+  // hibernação foi fundida em aguard_agend -> hibernacao D+60.
+  assert.doesNotMatch(src, /"Movido automaticamente para Hibernação após 90 dias sem nova solicitação — " \+ cliente\.nome/);
+  assert.match(src, /"Movido automaticamente para Hibernação após 60 dias em Aguardando Agendamento — " \+ cliente\.nome/);
 });
