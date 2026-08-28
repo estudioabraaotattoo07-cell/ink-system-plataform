@@ -207,72 +207,125 @@ export default function LandingPage() {
         style={{
           position: "relative",
           background:
-            "radial-gradient(ellipse 900px 500px at 50% -10%, rgba(139,92,222,0.32), transparent 65%), var(--bg-void)",
-          padding: "88px 24px 72px",
+            "radial-gradient(ellipse 900px 520px at 50% -14%, rgba(139,92,222,0.3), transparent 66%), var(--bg-void)",
+          padding: "clamp(48px, 8vw, 92px) 24px 0",
         }}
       >
-        <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
-          <div
+        <style>{`
+          .landing-hero-art {
+            position: relative;
+            width: min(1120px, calc(100% + 48px));
+            margin: clamp(42px, 7vw, 74px) -24px 0;
+            overflow: hidden;
+          }
+          .landing-hero-art picture,
+          .landing-hero-art img {
+            display: block;
+            width: 100%;
+            height: auto;
+          }
+          .landing-hero-fade {
+            position: absolute;
+            inset: 0 0 auto;
+            height: 38%;
+            background: linear-gradient(to bottom, var(--bg-void) 0%, rgba(5, 4, 10, 0.94) 17%, rgba(5, 4, 10, 0.54) 54%, transparent 100%);
+            pointer-events: none;
+          }
+          .landing-hero-ctas {
+            position: absolute;
+            z-index: 1;
+            top: clamp(20px, 5vw, 58px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(100% - 32px, 480px);
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+          }
+          @media (max-width: 700px) {
+            .landing-hero-art {
+              width: calc(100% + 48px);
+              margin-top: 36px;
+            }
+            .landing-hero-fade {
+              height: 31%;
+              background: linear-gradient(to bottom, var(--bg-void) 0%, rgba(5, 4, 10, 0.96) 14%, rgba(5, 4, 10, 0.48) 54%, transparent 100%);
+            }
+            .landing-hero-ctas {
+              top: 22px;
+              flex-direction: column;
+              align-items: stretch;
+              width: min(100% - 40px, 360px);
+            }
+          }
+        `}</style>
+        <div style={{ maxWidth: 840, margin: "0 auto", textAlign: "center" }}>
+          <img
+            src="/logo-ink-system.png"
+            alt="Ink System"
             style={{
-              display: "inline-block",
+              display: "block",
+              width: "clamp(190px, 30vw, 330px)",
+              height: "auto",
+              margin: "0 auto clamp(22px, 3vw, 32px)",
+            }}
+          />
+          <p
+            style={{
               fontFamily: "var(--font-body)",
               fontSize: 11,
               fontWeight: 600,
-              letterSpacing: ".12em",
+              letterSpacing: ".16em",
               textTransform: "uppercase",
               color: "var(--gold)",
-              border: "1px solid var(--border-gold-strong)",
-              borderRadius: "var(--radius-pill)",
-              padding: "6px 16px",
-              marginBottom: 24,
+              margin: "0 0 20px",
             }}
           >
             Ink System 1.0
-          </div>
+          </p>
           <h1
             style={{
               fontFamily: "var(--font-heading)",
-              fontSize: "clamp(28px, 4.6vw, 44px)",
+              fontSize: "clamp(32px, 5.2vw, 58px)",
               fontWeight: 700,
               color: "var(--text-primary)",
-              margin: "0 0 22px",
-              lineHeight: 1.25,
+              margin: 0,
+              lineHeight: 1.08,
               textWrap: "balance",
             }}
           >
-            SEU TRABALHO É TATUAR.
+            A TATTOO É COM VOCÊ.
             <br />
-            SUA ROTINA NÃO PRECISA DEPENDER DA SUA MEMÓRIA.
+            A OPERAÇÃO É COM O INK SYSTEM.
           </h1>
-          <p style={{ ...bodyText, fontSize: 16.5, maxWidth: 560, margin: "0 auto" }}>
-            Organize clientes, projetos, agenda e financeiro em um único sistema, desenvolvido para o tatuador que administra a própria rotina.
-          </p>
           <p
             style={{
               fontFamily: "var(--font-heading)",
               fontStyle: "italic",
-              fontSize: "clamp(19px, 2.4vw, 23px)",
+              fontSize: "clamp(19px, 2.5vw, 25px)",
               color: "var(--gold-light)",
-              maxWidth: 560,
-              margin: "22px auto 0",
+              margin: "20px auto 0",
               lineHeight: 1.5,
             }}
           >
-            O sistema que devolve o artista à sua arte.
+            Menos tempo administrando. Mais tempo para criar.
           </p>
-          <div style={{ marginTop: 36, display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 14 }}>
-            <CtaButton origem="cta_hero_trial" tipo="trial" fullWidthMobile>
-              Testar grátis por 7 dias
-            </CtaButton>
-            <CtaButton origem="cta_hero_subscribe" tipo="subscribe" fullWidthMobile>
-              Assinar agora
-            </CtaButton>
+          <div className="landing-hero-art">
+            <picture>
+              <source media="(max-width: 700px)" srcSet="/imagens/landing/hero/hero-ink-system-mobile.png" />
+              <img src="/imagens/landing/hero/hero-ink-system-desktop.png" alt="Ink System em uso na rotina de uma tatuadora" />
+            </picture>
+            <div className="landing-hero-fade" aria-hidden="true" />
+            <div className="landing-hero-ctas">
+              <CtaButton origem="hero_testar_gratis" tipo="trial" fullWidthMobile>
+                Testar grátis por 7 dias
+              </CtaButton>
+              <CtaButton origem="hero_assinar_agora" tipo="subscribe" fullWidthMobile>
+                Assinar agora
+              </CtaButton>
+            </div>
           </div>
-          <p style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-body)", fontSize: 12.5, marginTop: 16, lineHeight: 1.7 }}>
-            Sem cartão. Sem cobrança automática.
-            <br />
-            Os sete dias começam no primeiro acesso ao sistema, após a criação e preparação da conta.
-          </p>
         </div>
       </section>
 
