@@ -27,15 +27,7 @@ export default function HomePage() {
           <a
             href="/login"
             data-cta="home_entrar"
-            style={{
-              color: "var(--text-secondary)",
-              fontFamily: "var(--font-body)",
-              fontSize: 13,
-              textDecoration: "none",
-              letterSpacing: ".04em",
-              textTransform: "uppercase",
-              whiteSpace: "nowrap",
-            }}
+            className="home-top-login"
           >
             Entrar
           </a>
@@ -64,7 +56,7 @@ export default function HomePage() {
               inset: 0 0 auto;
               height: 20%;
               pointer-events: none;
-              background: linear-gradient(to bottom, rgba(0, 0, 0, 0.32) 0%, transparent 100%);
+              background: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.72) 30%, transparent 100%);
             }
             .home-hero-art::after {
               content: "";
@@ -78,6 +70,26 @@ export default function HomePage() {
             .home-hero-title-highlight {
               color: var(--gold);
               text-shadow: 0 0 10px rgba(201, 168, 76, 0.38), 0 0 22px rgba(201, 168, 76, 0.15);
+            }
+            .home-top-login {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 44px;
+              padding: 0 22px;
+              box-sizing: border-box;
+              border: 2px solid var(--border-gold-strong);
+              border-radius: var(--radius-pill);
+              background: transparent;
+              color: var(--gold);
+              font-family: var(--font-body);
+              font-size: 13px;
+              font-weight: 600;
+              letter-spacing: ".04em";
+              text-decoration: none;
+              text-transform: uppercase;
+              white-space: nowrap;
+              box-shadow: 0 0 16px rgba(201, 168, 76, 0.12);
             }
             .home-hero-logo {
               width: clamp(210px, 31vw, 380px);
@@ -94,6 +106,7 @@ export default function HomePage() {
             }
             .home-hero-access-row > a {
               min-width: 220px;
+              border-width: 2px;
             }
             .home-secondary-access {
               color: var(--text-tertiary);
@@ -108,6 +121,11 @@ export default function HomePage() {
               color: var(--gold);
               text-decoration: none;
               font-weight: 600;
+            }
+            .home-hero-title {
+              width: 100%;
+              margin: 0 auto;
+              transform: translateX(0.012em);
             }
             .home-closing {
               max-width: 1120px;
@@ -147,6 +165,17 @@ export default function HomePage() {
               font-size: 0.86em;
             }
             @media (max-width: 700px) {
+              .home-top-login {
+                display: inline;
+                min-height: 0;
+                padding: 0;
+                border: 0;
+                border-radius: 0;
+                background: transparent;
+                color: var(--text-secondary);
+                font-weight: 400;
+                box-shadow: none;
+              }
               .home-hero-logo {
                 margin-bottom: 30px;
               }
@@ -176,6 +205,7 @@ export default function HomePage() {
               .home-hero-access-row > a {
                 width: 100%;
                 min-width: 0;
+                border-width: 1px;
               }
               .home-secondary-access {
                 position: relative;
@@ -203,6 +233,9 @@ export default function HomePage() {
                 max-width: 520px;
                 font-size: clamp(23px, 7vw, 34px);
               }
+              .home-hero-title {
+                transform: none;
+              }
             }
           `}</style>
           <Image
@@ -214,6 +247,7 @@ export default function HomePage() {
             className="home-hero-logo"
           />
           <h1
+            className="home-hero-title"
             style={{
               margin: 0,
               maxWidth: 980,
