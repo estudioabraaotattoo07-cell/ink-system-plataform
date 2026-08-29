@@ -124,8 +124,14 @@ export default function HomePage() {
             }
             .home-hero-title {
               width: 100%;
-              margin: 0 auto;
-              transform: translateX(0.012em);
+              text-align: center;
+            }
+            @media (min-width: 701px) {
+              .home-hero-subtitle {
+                width: max-content;
+                max-width: 100% !important;
+                white-space: nowrap;
+              }
             }
             .home-closing {
               max-width: 1120px;
@@ -269,7 +275,7 @@ export default function HomePage() {
           <h1
             className="home-hero-title"
             style={{
-              margin: 0,
+              margin: "0 auto",
               maxWidth: 980,
               color: "var(--text-primary)",
               fontFamily: "var(--font-heading)",
@@ -287,6 +293,7 @@ export default function HomePage() {
             À SUA <span className="home-hero-title-highlight">ARTE</span><span className="home-hero-title-period">.</span>
           </h1>
           <p
+            className="home-hero-subtitle"
             style={{
               maxWidth: 470,
               margin: "22px auto 0",
