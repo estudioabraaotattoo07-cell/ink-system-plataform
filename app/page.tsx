@@ -187,8 +187,8 @@ export default function HomePage() {
               }
               .home-hero-art::before {
                 display: block;
-                height: 19%;
-                background: linear-gradient(to bottom, rgba(0, 0, 0, 0.48) 0%, transparent 100%);
+                height: 38%;
+                background: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.86) 28%, rgba(0, 0, 0, 0.42) 58%, transparent 100%);
               }
               .home-hero-art::after {
                 height: 30%;
@@ -226,15 +226,35 @@ export default function HomePage() {
                 text-shadow: 0 0 10px rgba(201, 168, 76, 0.2);
               }
               .home-closing-signature {
+                width: 100%;
+                margin-left: auto;
+                margin-right: auto;
+                text-align: center;
+                color: var(--text-primary);
                 font-size: clamp(13px, 4vw, 22px);
                 letter-spacing: 0.04em;
+                text-shadow: 0 0 12px rgba(232, 226, 217, 0.4), 0 0 24px rgba(232, 226, 217, 0.13);
               }
               .home-closing-manifesto {
-                max-width: 520px;
-                font-size: clamp(23px, 7vw, 34px);
+                width: 100%;
+                max-width: none;
+                box-sizing: border-box;
+                padding: 0 4px;
+                font-size: clamp(17px, 4.8vw, 21px);
+                text-align: center;
+              }
+              .home-closing-cta {
+                width: 70% !important;
+                min-height: 44px;
+                padding: 12px 20px;
+                font-size: 13px;
               }
               .home-hero-title {
                 transform: none;
+              }
+              .home-hero-title-period {
+                color: var(--gold);
+                text-shadow: 0 0 10px rgba(201, 168, 76, 0.38), 0 0 22px rgba(201, 168, 76, 0.15);
               }
             }
           `}</style>
@@ -264,7 +284,7 @@ export default function HomePage() {
             <br />
             QUE DEVOLVE O ARTISTA
             <br />
-            À SUA <span className="home-hero-title-highlight">ARTE</span>.
+            À SUA <span className="home-hero-title-highlight">ARTE</span><span className="home-hero-title-period">.</span>
           </h1>
           <p
             style={{
@@ -308,7 +328,7 @@ export default function HomePage() {
             <span className="home-closing-manifesto-line">NÃO SER ENGOLIDO PELA ROTINA.</span>
           </h2>
           <div style={{ display: "flex", justifyContent: "center", marginTop: "clamp(38px, 6vw, 58px)" }}>
-            <a href="/conhecer" data-cta="home_conhecer_ink_system_final" className="cta-btn cta-btn--full-mobile" style={{ textDecoration: "none" }}>
+            <a href="/conhecer" data-cta="home_conhecer_ink_system_final" className="cta-btn cta-btn--full-mobile home-closing-cta" style={{ textDecoration: "none" }}>
               Conhecer o Ink System
             </a>
           </div>
