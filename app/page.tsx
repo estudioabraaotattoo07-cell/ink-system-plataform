@@ -33,7 +33,7 @@ export default function HomePage() {
           </a>
         </header>
 
-        <section style={{ width: "100%", padding: "clamp(42px, 7vw, 84px) 0 clamp(42px, 6vw, 72px)", textAlign: "center", alignSelf: "center" }}>
+        <section className="home-hero-section" style={{ width: "100%", padding: "clamp(42px, 7vw, 84px) 0 clamp(42px, 6vw, 72px)", textAlign: "center", alignSelf: "center" }}>
           <style>{`
             .home-hero-art {
               position: relative;
@@ -127,10 +127,34 @@ export default function HomePage() {
               text-align: center;
             }
             @media (min-width: 701px) {
+              .home-hero-section {
+                background: radial-gradient(ellipse 72% 46% at 50% 82%, rgba(139, 92, 222, 0.16) 0%, rgba(139, 92, 222, 0.07) 36%, transparent 72%);
+              }
               .home-hero-subtitle {
                 width: max-content;
                 max-width: 100% !important;
                 white-space: nowrap;
+              }
+              .home-hero-access-row {
+                position: relative;
+                z-index: 2;
+                flex-direction: column;
+                gap: 12px;
+                width: min(100%, 360px);
+                margin-left: auto;
+                margin-right: auto;
+              }
+              .home-hero-access-row > a {
+                min-width: 0;
+              }
+              .home-hero-access-row > a:first-child {
+                width: 280px;
+              }
+              .home-hero-access-row .home-login-cta {
+                position: relative;
+                top: calc(clamp(46px, 6vw, 76px) + 8px);
+                width: 150px;
+                min-width: 150px;
               }
             }
             .home-closing {
