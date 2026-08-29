@@ -57,14 +57,14 @@ export default function HomePage() {
               height: auto;
             }
             .home-hero-art::before {
-              display: none;
+              display: block;
               content: "";
               position: absolute;
               z-index: 1;
               inset: 0 0 auto;
-              height: 18%;
+              height: 20%;
               pointer-events: none;
-              background: linear-gradient(to bottom, rgba(0, 0, 0, 0.38) 0%, transparent 100%);
+              background: linear-gradient(to bottom, rgba(0, 0, 0, 0.32) 0%, transparent 100%);
             }
             .home-hero-art::after {
               content: "";
@@ -79,13 +79,32 @@ export default function HomePage() {
               color: var(--gold);
               text-shadow: 0 0 10px rgba(201, 168, 76, 0.38), 0 0 22px rgba(201, 168, 76, 0.15);
             }
+            .home-hero-logo {
+              width: clamp(210px, 31vw, 380px);
+              height: auto;
+              display: block;
+              margin: 0 auto clamp(48px, 6vw, 72px);
+            }
+            .home-hero-access-row {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: clamp(18px, 2.4vw, 32px);
+              margin-top: clamp(36px, 6vw, 56px);
+            }
+            .home-hero-access-row > a {
+              min-width: 220px;
+            }
             .home-secondary-access {
-              margin-top: 24px;
               color: var(--text-tertiary);
               font-family: var(--font-body);
               font-size: 13px;
+              line-height: 1.2;
+              white-space: nowrap;
             }
-            .home-secondary-access a {
+            .home-login-cta {
+              min-width: 220px;
+              box-sizing: border-box;
               color: var(--gold);
               text-decoration: none;
               font-weight: 600;
@@ -100,7 +119,7 @@ export default function HomePage() {
               margin: 0;
               color: var(--text-primary);
               font-family: var(--font-body);
-              font-size: clamp(13px, 2.6vw, 35px);
+              font-size: clamp(15px, 3vw, 39px);
               font-weight: 700;
               letter-spacing: 0.08em;
               line-height: 1.15;
@@ -119,7 +138,18 @@ export default function HomePage() {
               text-shadow: 0 0 11px rgba(201, 168, 76, 0.34), 0 0 24px rgba(201, 168, 76, 0.12);
               text-wrap: balance;
             }
+            .home-closing-manifesto-line {
+              display: block;
+              white-space: nowrap;
+            }
+            .home-closing-manifesto-line + .home-closing-manifesto-line {
+              margin-top: 0.12em;
+              font-size: 0.86em;
+            }
             @media (max-width: 700px) {
+              .home-hero-logo {
+                margin-bottom: 30px;
+              }
               .home-hero-art {
                 width: calc(100% + 48px);
                 margin-left: -24px;
@@ -135,31 +165,43 @@ export default function HomePage() {
                 height: 30%;
                 background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.56) 54%, #000 100%);
               }
-              .home-secondary-access {
+              .home-hero-access-row {
                 position: relative;
                 z-index: 2;
-                margin: 22px auto -66px;
+                flex-direction: column;
+                gap: 12px;
+                width: min(100%, 360px);
+                margin: 34px auto -70px;
               }
-              .home-secondary-access a {
+              .home-hero-access-row > a {
+                width: 100%;
+                min-width: 0;
+              }
+              .home-secondary-access {
+                position: relative;
+                font-size: 14px;
+              }
+              .home-login-cta {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                min-height: 42px;
-                margin-left: 8px;
+                width: auto !important;
+                min-width: 126px !important;
+                min-height: 44px;
                 padding: 0 22px;
                 border: 1px solid var(--border-gold-strong);
                 border-radius: var(--radius-pill);
-                background: rgba(5, 4, 10, 0.72);
+                background: rgba(5, 4, 10, 0.34);
                 box-shadow: 0 0 16px rgba(201, 168, 76, 0.16);
                 text-shadow: 0 0 10px rgba(201, 168, 76, 0.2);
               }
               .home-closing-signature {
-                font-size: clamp(12px, 3.7vw, 20px);
-                letter-spacing: 0.055em;
+                font-size: clamp(13px, 4vw, 22px);
+                letter-spacing: 0.04em;
               }
               .home-closing-manifesto {
                 max-width: 520px;
-                font-size: clamp(24px, 7.2vw, 35px);
+                font-size: clamp(23px, 7vw, 34px);
               }
             }
           `}</style>
@@ -169,7 +211,7 @@ export default function HomePage() {
             width={1200}
             height={355}
             priority
-            style={{ width: "clamp(210px, 31vw, 380px)", height: "auto", display: "block", margin: "0 auto clamp(28px, 4vw, 42px)" }}
+            className="home-hero-logo"
           />
           <h1
             style={{
@@ -201,9 +243,9 @@ export default function HomePage() {
               lineHeight: 1.45,
             }}
           >
-            Organize sua operação e ganhe mais espaço para criar.
+            Tenha controle do seu estúdio e ganhe mais tempo para criar.
           </p>
-          <div style={{ display: "flex", justifyContent: "center", marginTop: "clamp(36px, 6vw, 56px)" }}>
+          <div className="home-hero-access-row">
             <a
               href="/conhecer"
               data-cta="home_conhecer_ink_system"
@@ -212,10 +254,8 @@ export default function HomePage() {
             >
               Conhecer o Ink System
             </a>
-          </div>
-          <div className="home-secondary-access">
-            Já sou cliente{" "}
-            <a href="/login" data-cta="home_entrar_secundario">
+            <span className="home-secondary-access">Já sou cliente</span>
+            <a href="/login" data-cta="home_entrar_secundario" className="cta-btn cta-btn--secondary home-login-cta">
               Entrar
             </a>
           </div>
@@ -229,7 +269,10 @@ export default function HomePage() {
 
         <section className="home-closing">
           <p className="home-closing-signature">GESTÃO.RELACIONAMENTO.TEMPO</p>
-          <h2 className="home-closing-manifesto">VOCÊ ESCOLHEU CRIAR. NÃO SER ENGOLIDO PELA ROTINA.</h2>
+          <h2 className="home-closing-manifesto">
+            <span className="home-closing-manifesto-line">VOCÊ ESCOLHEU CRIAR.</span>
+            <span className="home-closing-manifesto-line">NÃO SER ENGOLIDO PELA ROTINA.</span>
+          </h2>
           <div style={{ display: "flex", justifyContent: "center", marginTop: "clamp(38px, 6vw, 58px)" }}>
             <a href="/conhecer" data-cta="home_conhecer_ink_system_final" className="cta-btn cta-btn--full-mobile" style={{ textDecoration: "none" }}>
               Conhecer o Ink System
