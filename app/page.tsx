@@ -239,21 +239,22 @@ export default function HomePage() {
                 color: var(--text-primary);
                 font-size: clamp(13px, 4vw, 22px);
                 letter-spacing: 0.04em;
-                text-shadow: 0 0 12px rgba(232, 226, 217, 0.4), 0 0 24px rgba(232, 226, 217, 0.13);
+                text-shadow: 0 0 12px rgba(232, 226, 217, 0.54), 0 0 26px rgba(232, 226, 217, 0.2);
               }
               .home-closing-manifesto {
                 width: 100%;
                 max-width: none;
                 box-sizing: border-box;
                 padding: 0 4px;
-                font-size: clamp(17px, 4.8vw, 21px);
+                font-size: clamp(16px, 4.5vw, 19px);
                 text-align: center;
               }
               .home-closing-cta {
-                width: 70% !important;
-                min-height: 44px;
-                padding: 12px 20px;
-                font-size: 13px;
+                width: 64% !important;
+                max-width: 250px;
+                min-height: 42px;
+                padding: 10px 18px;
+                font-size: 12.5px;
               }
               .home-hero-title {
                 transform: none;
@@ -261,6 +262,11 @@ export default function HomePage() {
               .home-hero-title-period {
                 color: var(--gold);
                 text-shadow: 0 0 10px rgba(201, 168, 76, 0.38), 0 0 22px rgba(201, 168, 76, 0.15);
+              }
+              .home-hero-title-middle-line {
+                display: inline-block;
+                font-size: 0.76em;
+                white-space: nowrap;
               }
             }
           `}</style>
@@ -288,7 +294,7 @@ export default function HomePage() {
           >
             O <span className="home-hero-title-highlight">SISTEMA</span>
             <br />
-            QUE DEVOLVE O ARTISTA
+            <span className="home-hero-title-middle-line">QUE DEVOLVE O ARTISTA</span>
             <br />
             À SUA <span className="home-hero-title-highlight">ARTE</span><span className="home-hero-title-period">.</span>
           </h1>
