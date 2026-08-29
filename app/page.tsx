@@ -150,6 +150,10 @@ export default function HomePage() {
               .home-hero-access-row > a:first-child {
                 width: 280px;
               }
+              .home-hero-access-row .home-secondary-access {
+                position: relative;
+                top: calc(clamp(23px, 3vw, 38px) + 4px);
+              }
               .home-hero-access-row .home-login-cta {
                 position: relative;
                 top: calc(clamp(46px, 6vw, 76px) + 8px);
@@ -196,15 +200,17 @@ export default function HomePage() {
             }
             @media (max-width: 700px) {
               .home-top-login {
-                display: inline;
-                min-height: 0;
-                padding: 0;
-                border: 0;
-                border-radius: 0;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 38px;
+                padding: 0 16px;
+                border: 1.5px solid var(--border-gold-strong);
+                border-radius: var(--radius-pill);
                 background: transparent;
-                color: var(--text-secondary);
-                font-weight: 400;
-                box-shadow: none;
+                color: var(--gold);
+                font-weight: 600;
+                box-shadow: 0 0 14px rgba(201, 168, 76, 0.13);
               }
               .home-hero-logo {
                 margin-bottom: 30px;
