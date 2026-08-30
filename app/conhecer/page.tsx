@@ -1662,6 +1662,194 @@ export default function LandingPage() {
         <p className="landing-simple-start-closing">UMA CONTA. UM ARTISTA. UMA ROTINA ORGANIZADA.</p>
       </section>
 
+      {/* OBJEÇÕES COMERCIAIS — ÚLTIMA CLAREZA ANTES DA DECISÃO */}
+      <section className="landing-objections secao-entra">
+        <style>{`
+          .landing-objections {
+            position: relative;
+            max-width: 860px;
+            margin: 0 auto;
+            padding: clamp(130px, 15vw, 190px) 24px 0;
+          }
+          .landing-objections::before {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            top: 12%;
+            left: 50%;
+            width: min(980px, 100vw);
+            height: 76%;
+            transform: translateX(-50%);
+            background: radial-gradient(ellipse at center, rgba(94, 60, 128, 0.065) 0%, transparent 70%);
+            pointer-events: none;
+          }
+          .landing-objections-header {
+            max-width: 760px;
+            margin: 0 auto;
+            text-align: center;
+          }
+          .landing-objections-title {
+            margin: 0;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            font-size: clamp(34px, 4.5vw, 54px);
+            font-weight: 700;
+            line-height: 1.12;
+            text-wrap: balance;
+          }
+          .landing-objections-intro {
+            max-width: 660px;
+            margin: clamp(26px, 3vw, 36px) auto 0;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: clamp(16px, 1.35vw, 18px);
+            line-height: 1.72;
+          }
+          .landing-objections-list {
+            margin: clamp(72px, 8vw, 100px) auto 0;
+            border-top: 1px solid rgba(201, 168, 76, 0.22);
+          }
+          .landing-objection {
+            border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+          }
+          .landing-objection summary {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 32px;
+            align-items: center;
+            gap: 24px;
+            min-height: 88px;
+            padding: 22px 2px;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            font-size: clamp(18px, 1.7vw, 22px);
+            font-weight: 700;
+            line-height: 1.35;
+            cursor: pointer;
+            list-style: none;
+          }
+          .landing-objection summary::-webkit-details-marker {
+            display: none;
+          }
+          .landing-objection summary::after {
+            content: "+";
+            justify-self: end;
+            color: var(--gold);
+            font-family: var(--font-body);
+            font-size: 30px;
+            font-weight: 300;
+            line-height: 1;
+            text-shadow: 0 0 12px rgba(201, 168, 76, 0.2);
+          }
+          .landing-objection[open] summary::after {
+            content: "−";
+          }
+          .landing-objection summary:focus-visible {
+            outline: 1px solid var(--gold);
+            outline-offset: 6px;
+          }
+          .landing-objection-answer {
+            max-width: 720px;
+            padding: 0 48px 30px 2px;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: clamp(15.5px, 1.25vw, 17px);
+            line-height: 1.76;
+            animation: landing-objection-reveal 180ms ease-out both;
+          }
+          @keyframes landing-objection-reveal {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .landing-objections-closing {
+            max-width: 720px;
+            margin: clamp(78px, 9vw, 112px) auto 0;
+            color: var(--gold);
+            font-family: var(--font-heading);
+            font-size: clamp(26px, 3.5vw, 42px);
+            font-weight: 700;
+            line-height: 1.2;
+            text-align: center;
+            text-shadow: 0 0 14px rgba(201, 168, 76, 0.16);
+            text-wrap: balance;
+          }
+          .landing-objections-action {
+            display: flex;
+            justify-content: center;
+            margin-top: clamp(36px, 4vw, 48px);
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .landing-objection-answer { animation: none; }
+          }
+          @media (max-width: 700px) {
+            .landing-objections {
+              padding: 116px 22px 0;
+            }
+            .landing-objections-title {
+              font-size: clamp(29px, 8.5vw, 38px);
+            }
+            .landing-objections-intro {
+              margin-top: 25px;
+              font-size: 16px;
+            }
+            .landing-objections-list {
+              margin-top: 64px;
+            }
+            .landing-objection summary {
+              grid-template-columns: minmax(0, 1fr) 28px;
+              gap: 16px;
+              min-height: 82px;
+              padding: 21px 0;
+              font-size: clamp(17px, 5vw, 20px);
+            }
+            .landing-objection summary::after {
+              font-size: 28px;
+            }
+            .landing-objection-answer {
+              padding: 0 36px 27px 0;
+              font-size: 15.5px;
+              line-height: 1.72;
+            }
+            .landing-objections-closing {
+              margin-top: 72px;
+              font-size: clamp(25px, 7.4vw, 34px);
+            }
+            .landing-objections-action {
+              margin-top: 34px;
+            }
+          }
+        `}</style>
+        <header className="landing-objections-header">
+          <h2 className="landing-objections-title">AINDA TEM ALGUMA DÚVIDA ANTES DE COMEÇAR?</h2>
+          <p className="landing-objections-intro">É normal. Estas são algumas das perguntas que costumam aparecer antes da decisão.</p>
+        </header>
+        <div className="landing-objections-list">
+          <details className="landing-objection">
+            <summary>Preciso entender de tecnologia para usar o Ink System?</summary>
+            <div className="landing-objection-answer">Não. O Ink System foi pensado para ser usado por tatuadores, não por especialistas em software. A navegação foi construída para ser simples, clara e acompanhar a rotina de quem trabalha com tatuagem.</div>
+          </details>
+          <details className="landing-objection">
+            <summary>Preciso instalar alguma coisa?</summary>
+            <div className="landing-objection-answer">Não. O acesso é feito pelo navegador, no computador, tablet ou celular. Você entra na sua conta e continua sua rotina de onde estiver.</div>
+          </details>
+          <details className="landing-objection">
+            <summary>Posso testar antes de pagar?</summary>
+            <div className="landing-objection-answer">Sim. Você pode conhecer o Ink System gratuitamente por 7 dias antes de decidir. Sem cartão e sem cobrança automática.</div>
+          </details>
+          <details className="landing-objection">
+            <summary>O Ink System 1.0 é para equipes ou para o tatuador individual?</summary>
+            <div className="landing-objection-answer">O Ink System 1.0 foi pensado para uma operação individual: uma conta, um artista e uma rotina organizada. A proposta é dar clareza para quem administra o próprio trabalho sem transformar a ferramenta em um sistema pesado de gestão de equipe.</div>
+          </details>
+          <details className="landing-objection">
+            <summary>Se eu decidir continuar depois do teste, preciso começar tudo de novo?</summary>
+            <div className="landing-objection-answer">Não. Ao continuar com o Ink System, você permanece na mesma conta e segue com a estrutura que já começou a organizar durante o período de teste.</div>
+          </details>
+        </div>
+        <p className="landing-objections-closing">SE AINDA RESTAVA ALGUMA DÚVIDA, O MELHOR JEITO DE RESPONDER É USANDO.</p>
+        <div className="landing-objections-action">
+          <CtaButton origem="cta_objecoes_trial" tipo="trial" fullWidthMobile>TESTAR GRÁTIS POR 7 DIAS</CtaButton>
+        </div>
+      </section>
+
       {/* BLOCO 7 — ORIGEM, PRODUTO E DECISÃO FINAL */}
       <section className="landing-bloco-7 secao-entra">
         <style>{`
