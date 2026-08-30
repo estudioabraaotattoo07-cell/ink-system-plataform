@@ -23,6 +23,7 @@ export default function LandingPage() {
   return (
     <main className="landing-root" style={{ minHeight: "100vh", background: "var(--bg-void)", color: "var(--text-primary)" }}>
       <Header />
+      <div aria-hidden="true" style={{ height: 68, flexShrink: 0 }} />
 
       {/* 07 — HERO */}
       <section

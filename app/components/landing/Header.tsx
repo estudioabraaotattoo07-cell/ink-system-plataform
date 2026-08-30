@@ -2,8 +2,7 @@
 
 // app/components/landing/Header.tsx
 //
-// Cabeçalho fixo (position: sticky -- não precisa de listener de scroll
-// pra ficar "fixo", o navegador já faz isso). No celular, os links
+// Cabeçalho fixo na viewport. No celular, os links
 // recolhem atrás de um botão de menu; selecionar uma seção fecha o menu.
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -39,8 +38,11 @@ export function Header() {
     <header
       className="landing-header"
       style={{
-        position: "sticky",
+        position: "fixed",
         top: 0,
+        left: 0,
+        right: 0,
+        width: "100%",
         zIndex: 200,
         background: "rgba(4, 3, 8, 0.94)",
         backdropFilter: "blur(12px)",
