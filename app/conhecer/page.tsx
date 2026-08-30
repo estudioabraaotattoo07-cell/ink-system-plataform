@@ -2009,55 +2009,24 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <div style={{ margin: "96px auto 0", textAlign: "center" }} aria-hidden="true">
+        <img
+          src="/logo-ink-icon.png"
+          alt=""
+          style={{
+            display: "block",
+            width: "clamp(48px, 6vw, 62px)",
+            height: "auto",
+            margin: "0 auto",
+            objectFit: "contain",
+            filter: "drop-shadow(0 0 12px rgba(201, 168, 76, 0.18))",
+          }}
+        />
+      </div>
+
       {/* Destinos funcionais preservados após a remoção da landing antiga. */}
       <section className="secao-entra" style={{ maxWidth: 920, margin: "0 auto", padding: "112px 24px 128px" }}>
-        <style>{`
-          .oferta-caminhos-final {
-            grid-template-columns: minmax(0, 1fr);
-          }
-          .oferta-caminhos-divisor {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            min-height: 72px;
-          }
-          .oferta-caminhos-divisor::before,
-          .oferta-caminhos-divisor::after {
-            content: "";
-            height: 1px;
-            flex: 1;
-            background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.42));
-          }
-          .oferta-caminhos-divisor::after {
-            background: linear-gradient(90deg, rgba(201, 168, 76, 0.42), transparent);
-          }
-          .oferta-caminhos-divisor img {
-            width: 48px;
-            height: 48px;
-            margin: 0 14px;
-            object-fit: contain;
-            filter: drop-shadow(0 0 12px rgba(201, 168, 76, 0.2));
-          }
-          @media (min-width: 720px) {
-            .oferta-caminhos-final {
-              grid-template-columns: minmax(0, 1fr) 68px minmax(0, 1fr);
-              gap: 12px;
-              align-items: stretch;
-            }
-            .oferta-caminhos-divisor {
-              align-self: center;
-              min-height: 0;
-            }
-            .oferta-caminhos-divisor img {
-              width: 42px;
-              height: 42px;
-              margin: 0 5px;
-            }
-          }
-        `}</style>
-        <div className="oferta-caminhos oferta-caminhos-final" style={{ display: "grid", gap: 20 }}>
+        <div className="oferta-caminhos" style={{ display: "grid", gap: 20 }}>
           <div
             id="teste-gratis"
             style={{
@@ -2082,10 +2051,6 @@ export default function LandingPage() {
               teste.
             </p>
             <CadastroTesteForm />
-          </div>
-
-          <div className="oferta-caminhos-divisor" aria-hidden="true">
-            <img src="/logo-ink-icon.png" alt="" />
           </div>
 
           <div
