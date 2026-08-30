@@ -2017,7 +2017,7 @@ export default function LandingPage() {
           alt=""
           style={{
             display: "block",
-            width: "clamp(48px, 6vw, 62px)",
+            width: "clamp(52.8px, 6.6vw, 68.2px)",
             height: "auto",
             margin: "0 auto",
             objectFit: "contain",
