@@ -30,6 +30,7 @@ export default function LandingPage() {
         className="secao-entra"
         style={{
           position: "relative",
+          scrollMarginTop: 84,
           background:
             "radial-gradient(ellipse 900px 520px at 50% -14%, rgba(139,92,222,0.3), transparent 66%), var(--bg-void)",
           padding: "clamp(48px, 8vw, 92px) 24px 0",
@@ -991,7 +992,7 @@ export default function LandingPage() {
       />
 
       {/* BLOCO 6 — O PRODUTO NA PRÁTICA */}
-      <section className="landing-bloco-6 secao-entra">
+      <section id="na-pratica" className="landing-bloco-6 secao-entra" style={{ scrollMarginTop: 84 }}>
         <style>{`
           .landing-bloco-6 {
             position: relative;
@@ -1328,7 +1329,7 @@ export default function LandingPage() {
       </section>
 
       {/* BLOCO INTERMEDIÁRIO — COMEÇAR SEM COMPLICAÇÃO */}
-      <section className="landing-simple-start secao-entra">
+      <section id="como-comecar" className="landing-simple-start secao-entra" style={{ scrollMarginTop: 84 }}>
         <style>{`
           .landing-simple-start {
             position: relative;
@@ -1497,7 +1498,7 @@ export default function LandingPage() {
       </section>
 
       {/* OBJEÇÕES COMERCIAIS — ÚLTIMA CLAREZA ANTES DA DECISÃO */}
-      <section className="landing-objections secao-entra">
+      <section id="duvidas" className="landing-objections secao-entra" style={{ scrollMarginTop: 84 }}>
         <style>{`
           .landing-objections {
             position: relative;
@@ -1985,7 +1986,7 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div className="landing-bloco-7-offer">
+        <div id="preco" className="landing-bloco-7-offer" style={{ scrollMarginTop: 84 }}>
           <img className="landing-bloco-7-offer-icon" src="/logo-ink-icon.png" alt="" aria-hidden="true" />
           <div className="landing-bloco-7-brand" aria-label="Ink System 1.0">
             <span className="landing-bloco-7-brand-ink">INK</span>
@@ -2009,7 +2010,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <div style={{ margin: "96px auto 0", textAlign: "center" }} aria-hidden="true">
+      <div style={{ margin: "clamp(64px, 7vw, 80px) auto 0", textAlign: "center" }} aria-hidden="true">
         <img
           src="/logo-ink-icon.png"
           alt=""
@@ -2025,7 +2026,7 @@ export default function LandingPage() {
       </div>
 
       {/* Destinos funcionais preservados após a remoção da landing antiga. */}
-      <section className="secao-entra" style={{ maxWidth: 920, margin: "0 auto", padding: "112px 24px 128px" }}>
+      <section className="secao-entra" style={{ maxWidth: 920, margin: "0 auto", padding: "clamp(64px, 7vw, 80px) 24px 128px" }}>
         <div className="oferta-caminhos" style={{ display: "grid", gap: 20 }}>
           <div
             id="teste-gratis"

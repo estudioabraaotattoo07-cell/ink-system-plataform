@@ -11,10 +11,10 @@ import { CtaButton } from "./CtaButton";
 
 const LINKS = [
   { href: "#inicio", label: "Início" },
-  { href: "#funcionalidades", label: "Funcionalidades" },
-  { href: "#como-comeca", label: "Como funciona" },
-  { href: "#comecar", label: "Preço" },
+  { href: "#na-pratica", label: "Na prática" },
+  { href: "#como-comecar", label: "Como começar" },
   { href: "#duvidas", label: "Dúvidas" },
+  { href: "#preco", label: "Preço" },
 ];
 
 export function Header() {
@@ -37,18 +37,124 @@ export function Header() {
 
   return (
     <header
+      className="landing-header"
       style={{
         position: "sticky",
         top: 0,
-        zIndex: 100,
-        background: "rgba(5, 4, 10, 0.82)",
-        backdropFilter: "blur(10px)",
-        borderBottom: "1px solid var(--border-gold-soft)",
+        zIndex: 200,
+        background: "rgba(4, 3, 8, 0.94)",
+        backdropFilter: "blur(12px)",
+        borderBottom: "1px solid rgba(201, 168, 76, 0.18)",
       }}
     >
+      <style>{`
+        .landing-header {
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
+        }
+        .landing-header .header-nav-desktop {
+          gap: 18px;
+        }
+        .landing-header .header-nav-link {
+          color: var(--text-secondary);
+          font-family: var(--font-body);
+          font-size: 12.5px;
+          text-decoration: none;
+          letter-spacing: 0.01em;
+          white-space: nowrap;
+          transition: color 180ms ease, text-shadow 180ms ease;
+        }
+        .landing-header .header-nav-link:hover {
+          color: var(--gold-light);
+          text-shadow: 0 0 10px rgba(201, 168, 76, 0.24);
+        }
+        .landing-header .header-actions-desktop {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-shrink: 0;
+        }
+        .landing-header .header-action-login,
+        .landing-header .header-actions-desktop .cta-btn,
+        .landing-header .header-menu-actions .cta-btn {
+          min-height: 40px;
+          padding: 9px 16px;
+          border-radius: var(--radius-pill);
+          font-family: var(--font-body);
+          font-size: 12px;
+          font-weight: 600;
+          white-space: nowrap;
+          transition: transform 180ms ease, box-shadow 180ms ease, color 180ms ease, border-color 180ms ease, filter 180ms ease;
+        }
+        .landing-header .header-action-login {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--gold);
+          text-decoration: none;
+          background: transparent;
+          border: 1px solid rgba(201, 168, 76, 0.58);
+          box-shadow: 0 0 10px rgba(201, 168, 76, 0.07);
+        }
+        .landing-header .header-action-subscribe .cta-btn {
+          border-color: rgba(201, 168, 76, 0.72);
+          box-shadow: 0 0 12px rgba(201, 168, 76, 0.12);
+        }
+        .landing-header .header-action-trial .cta-btn {
+          box-shadow: 0 5px 18px rgba(201, 168, 76, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+        .landing-header .header-action-login:hover,
+        .landing-header .header-actions-desktop .cta-btn:hover {
+          transform: translateY(-2px);
+          color: var(--gold-light);
+          border-color: rgba(255, 224, 160, 0.78);
+          box-shadow: 0 5px 18px rgba(201, 168, 76, 0.22);
+        }
+        .landing-header .header-action-trial .cta-btn:hover {
+          color: #17140a;
+          box-shadow: 0 7px 24px rgba(201, 168, 76, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+        .landing-header .header-action-login:active,
+        .landing-header .header-actions-desktop .cta-btn:active,
+        .landing-header .header-menu-actions .cta-btn:active {
+          transform: scale(0.98);
+          filter: brightness(1.08);
+        }
+        .landing-header .header-menu-mobile {
+          max-height: calc(100vh - 69px);
+          overflow-y: auto;
+          background: rgba(4, 3, 8, 0.98);
+        }
+        .landing-header .header-menu-link {
+          color: var(--text-primary);
+          font-family: var(--font-body);
+          font-size: 14px;
+          text-decoration: none;
+          padding: 10px 4px;
+        }
+        .landing-header .header-menu-divider {
+          height: 1px;
+          margin: 10px 0 12px;
+          background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.34), transparent);
+        }
+        .landing-header .header-menu-actions {
+          display: grid;
+          gap: 10px;
+        }
+        .landing-header .header-menu-actions .header-action-login,
+        .landing-header .header-menu-actions .cta-btn {
+          width: 100%;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .landing-header .header-nav-link,
+          .landing-header .header-action-login,
+          .landing-header .cta-btn {
+            transition: none;
+          }
+        }
+      `}</style>
       <div
         style={{
-          maxWidth: 1180,
+          maxWidth: 1320,
           margin: "0 auto",
           padding: "14px 24px",
           display: "flex",
@@ -74,29 +180,21 @@ export function Header() {
             <a
               key={l.href}
               href={l.href}
-              style={{
-                color: "var(--text-secondary)",
-                fontFamily: "var(--font-body)",
-                fontSize: 13,
-                textDecoration: "none",
-                letterSpacing: ".01em",
-              }}
+              className="header-nav-link"
             >
               {l.label}
             </a>
           ))}
         </nav>
 
-        <div className="header-cta-desktop">
-          <a href="/login" style={{ color: "var(--text-secondary)", fontSize: 13, textDecoration: "none", marginRight: 14 }}>Login</a>
-          {/* Cabeçalho não é um dos 3 pontos mínimos que exigem os dois
-              caminhos (hero, oferta, CTA final) -- fica só com o teste,
-              texto compacto ("Testar grátis", sem "por 7 dias") por
-              espaço; o CTA principal completo aparece nas 3 seções
-              obrigatórias. */}
-          <CtaButton origem="cta_header_trial" tipo="trial" variant="secondary">
-            Testar grátis
-          </CtaButton>
+        <div className="header-cta-desktop header-actions-desktop">
+          <a href="/login" className="header-action-login">Entrar</a>
+          <span className="header-action-subscribe">
+            <CtaButton origem="cta_header_subscribe" tipo="subscribe">Assinar agora</CtaButton>
+          </span>
+          <span className="header-action-trial">
+            <CtaButton origem="cta_header_trial" tipo="trial">Teste grátis</CtaButton>
+          </span>
         </div>
 
         {/* Botão de menu -- só aparece no celular via CSS (ver globals.css) */}
@@ -143,20 +241,20 @@ export function Header() {
               key={l.href}
               href={l.href}
               onClick={() => setMenuAberto(false)}
-              style={{
-                color: "var(--text-primary)",
-                fontFamily: "var(--font-body)",
-                fontSize: 14,
-                textDecoration: "none",
-                padding: "10px 4px",
-              }}
+              className="header-menu-link"
             >
               {l.label}
             </a>
           ))}
-          <a href="/login" onClick={() => setMenuAberto(false)} style={{ color: "var(--text-primary)", fontSize: 14, textDecoration: "none", padding: "10px 4px" }}>Já sou cliente — Login</a>
-          <div style={{ marginTop: 8 }}>
-            <CtaButton origem="cta_header_trial" tipo="trial">Testar grátis</CtaButton>
+          <div className="header-menu-divider" aria-hidden="true" />
+          <div className="header-menu-actions" onClick={() => setMenuAberto(false)}>
+            <a href="/login" className="header-action-login">Entrar</a>
+            <span className="header-action-subscribe">
+              <CtaButton origem="cta_header_mobile_subscribe" tipo="subscribe">Assinar agora</CtaButton>
+            </span>
+            <span className="header-action-trial">
+              <CtaButton origem="cta_header_mobile_trial" tipo="trial">Teste grátis</CtaButton>
+            </span>
           </div>
         </nav>
       )}
