@@ -1493,6 +1493,175 @@ export default function LandingPage() {
         <p className="landing-bloco-6-closing">VOCÊ NÃO PRECISA MAIS LEMBRAR DE TUDO. <strong>SÓ PRECISA CRIAR.</strong></p>
       </section>
 
+      {/* BLOCO INTERMEDIÁRIO — COMEÇAR SEM COMPLICAÇÃO */}
+      <section className="landing-simple-start secao-entra">
+        <style>{`
+          .landing-simple-start {
+            position: relative;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: clamp(128px, 15vw, 190px) 24px 0;
+          }
+          .landing-simple-start::before {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            top: 7%;
+            left: 50%;
+            width: min(1100px, 100vw);
+            height: 88%;
+            transform: translateX(-50%);
+            background: radial-gradient(ellipse at center, rgba(103, 67, 140, 0.085) 0%, rgba(14, 10, 19, 0) 70%);
+            pointer-events: none;
+          }
+          .landing-simple-start-header {
+            max-width: 840px;
+            margin: 0 auto;
+            text-align: center;
+          }
+          .landing-simple-start-eyebrow {
+            margin: 0 0 24px;
+            color: var(--gold-light);
+            font-family: var(--font-body);
+            font-size: clamp(12px, 1vw, 14px);
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            line-height: 1.4;
+          }
+          .landing-simple-start-title {
+            margin: 0;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            font-size: clamp(34px, 4.8vw, 58px);
+            font-weight: 700;
+            line-height: 1.1;
+            text-wrap: balance;
+          }
+          .landing-simple-start-intro {
+            max-width: 720px;
+            margin: clamp(28px, 3.5vw, 40px) auto 0;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: clamp(16px, 1.45vw, 18px);
+            line-height: 1.72;
+          }
+          .landing-simple-start-modules {
+            max-width: 780px;
+            margin: clamp(72px, 9vw, 108px) auto 0;
+          }
+          .landing-simple-start-module {
+            padding: 0 24px;
+            text-align: center;
+          }
+          .landing-simple-start-module + .landing-simple-start-module {
+            position: relative;
+            margin-top: clamp(48px, 6vw, 68px);
+            padding-top: clamp(48px, 6vw, 68px);
+          }
+          .landing-simple-start-module + .landing-simple-start-module::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: min(520px, 82%);
+            height: 1px;
+            transform: translateX(-50%);
+            background: linear-gradient(to right, transparent, rgba(201, 168, 76, 0.3), transparent);
+          }
+          .landing-simple-start-module-title {
+            margin: 0;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            font-size: clamp(24px, 3vw, 34px);
+            font-weight: 700;
+            line-height: 1.2;
+          }
+          .landing-simple-start-module-copy {
+            max-width: 650px;
+            margin: 20px auto 0;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: clamp(15.5px, 1.35vw, 17.5px);
+            line-height: 1.72;
+          }
+          .landing-simple-start-closing {
+            max-width: 850px;
+            margin: clamp(82px, 10vw, 124px) auto 0;
+            color: var(--gold);
+            font-family: var(--font-heading);
+            font-size: clamp(28px, 4vw, 48px);
+            font-weight: 700;
+            line-height: 1.18;
+            text-align: center;
+            text-shadow: 0 0 14px rgba(201, 168, 76, 0.16), 0 0 28px rgba(201, 168, 76, 0.05);
+            text-wrap: balance;
+          }
+          @media (max-width: 700px) {
+            .landing-simple-start {
+              padding: 120px 22px 0;
+            }
+            .landing-simple-start-header {
+              width: min(100%, 540px);
+            }
+            .landing-simple-start-eyebrow {
+              margin-bottom: 22px;
+              font-size: 12px;
+            }
+            .landing-simple-start-title {
+              font-size: clamp(29px, 8.6vw, 39px);
+            }
+            .landing-simple-start-intro {
+              margin-top: 28px;
+              font-size: 16px;
+              line-height: 1.7;
+            }
+            .landing-simple-start-modules {
+              margin-top: 68px;
+            }
+            .landing-simple-start-module {
+              padding-inline: 0;
+            }
+            .landing-simple-start-module + .landing-simple-start-module {
+              margin-top: 48px;
+              padding-top: 48px;
+            }
+            .landing-simple-start-module-title {
+              font-size: clamp(23px, 7vw, 30px);
+            }
+            .landing-simple-start-module-copy {
+              margin-top: 18px;
+              font-size: 16px;
+              line-height: 1.7;
+            }
+            .landing-simple-start-closing {
+              width: min(100%, 540px);
+              margin-top: 76px;
+              font-size: clamp(26px, 7.8vw, 35px);
+            }
+          }
+        `}</style>
+        <header className="landing-simple-start-header">
+          <p className="landing-simple-start-eyebrow">COMEÇAR NÃO PRECISA SER COMPLICADO</p>
+          <h2 className="landing-simple-start-title">VOCÊ NÃO PRECISA ENTENDER DE TECNOLOGIA.</h2>
+          <p className="landing-simple-start-intro">O Ink System foi criado para entrar na rotina de quem tatua — não para transformar o tatuador em especialista em sistemas.</p>
+        </header>
+        <div className="landing-simple-start-modules">
+          <article className="landing-simple-start-module">
+            <h3 className="landing-simple-start-module-title">ACESSE ONDE ESTIVER</h3>
+            <p className="landing-simple-start-module-copy">Use no computador, no tablet ou no celular, direto pelo navegador. Sem depender de uma instalação complexa.</p>
+          </article>
+          <article className="landing-simple-start-module">
+            <h3 className="landing-simple-start-module-title">COMECE COM O ESSENCIAL</h3>
+            <p className="landing-simple-start-module-copy">Crie sua conta, confirme seus dados e conheça o sistema aos poucos, de forma simples e prática.</p>
+          </article>
+          <article className="landing-simple-start-module">
+            <h3 className="landing-simple-start-module-title">TESTE NA SUA PRÓPRIA ROTINA</h3>
+            <p className="landing-simple-start-module-copy">Você tem 7 dias para usar o Ink System antes de decidir. Se continuar, sua conta e seus dados permanecem com você.</p>
+          </article>
+        </div>
+        <p className="landing-simple-start-closing">UMA CONTA. UM ARTISTA. UMA ROTINA ORGANIZADA.</p>
+      </section>
+
       {/* BLOCO 7 — ORIGEM, PRODUTO E DECISÃO FINAL */}
       <section className="landing-bloco-7 secao-entra">
         <style>{`
@@ -1593,49 +1762,17 @@ export default function LandingPage() {
             color: var(--gold);
             text-shadow: 0 0 14px rgba(201, 168, 76, 0.18), 0 0 28px rgba(201, 168, 76, 0.06);
           }
-          .landing-bloco-7-transition {
-            position: relative;
-            max-width: 920px;
-            margin: clamp(118px, 14vw, 174px) auto 0;
-            padding: clamp(58px, 7vw, 78px) 24px;
-            text-align: center;
-          }
-          .landing-bloco-7-transition::before,
-          .landing-bloco-7-transition::after {
-            content: "";
-            position: absolute;
-            left: 50%;
-            width: min(620px, 78%);
-            height: 1px;
-            transform: translateX(-50%);
-            background: linear-gradient(to right, transparent, rgba(201, 168, 76, 0.34), transparent);
-          }
-          .landing-bloco-7-transition::before {
-            top: 0;
-          }
-          .landing-bloco-7-transition::after {
-            bottom: 0;
-          }
-          .landing-bloco-7-transition-title {
-            margin: 0;
-            color: var(--text-primary);
-            font-family: var(--font-heading);
-            font-size: clamp(27px, 3.8vw, 45px);
-            font-weight: 700;
-            line-height: 1.18;
-          }
-          .landing-bloco-7-transition-copy {
-            margin: 18px 0 0;
-            color: var(--gold-light);
-            font-family: var(--font-heading);
-            font-size: clamp(18px, 2.25vw, 26px);
-            font-weight: 600;
-            line-height: 1.35;
-          }
           .landing-bloco-7-offer {
             max-width: 820px;
             margin: clamp(110px, 13vw, 160px) auto 0;
             text-align: center;
+          }
+          .landing-bloco-7-offer-icon {
+            display: block;
+            width: clamp(74px, 8vw, 104px);
+            height: auto;
+            margin: 0 auto 28px;
+            filter: drop-shadow(0 0 14px rgba(201, 168, 76, 0.16));
           }
           .landing-bloco-7-brand {
             display: inline-flex;
@@ -1773,19 +1910,12 @@ export default function LandingPage() {
               margin-top: 38px;
               font-size: clamp(22px, 6.7vw, 29px);
             }
-            .landing-bloco-7-transition {
-              margin-top: 102px;
-              padding: 52px 8px;
-            }
-            .landing-bloco-7-transition-title {
-              font-size: clamp(25px, 7.6vw, 34px);
-            }
-            .landing-bloco-7-transition-copy {
-              margin-top: 16px;
-              font-size: clamp(17px, 5.2vw, 22px);
-            }
             .landing-bloco-7-offer {
               margin-top: 96px;
+            }
+            .landing-bloco-7-offer-icon {
+              width: 76px;
+              margin-bottom: 24px;
             }
             .landing-bloco-7-brand {
               font-size: clamp(31px, 9.2vw, 42px);
@@ -1833,12 +1963,8 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div className="landing-bloco-7-transition">
-          <p className="landing-bloco-7-transition-title">NO COMPUTADOR, NO TABLET OU NO CELULAR.</p>
-          <p className="landing-bloco-7-transition-copy">O INK SYSTEM ACOMPANHA A FORMA COMO VOCÊ TRABALHA.</p>
-        </div>
-
         <div className="landing-bloco-7-offer">
+          <img className="landing-bloco-7-offer-icon" src="/logo-ink-icon.png" alt="" aria-hidden="true" />
           <div className="landing-bloco-7-brand" aria-label="Ink System 1.0">
             <span className="landing-bloco-7-brand-ink">INK</span>
             <span className="landing-bloco-7-brand-system">SYSTEM</span>
