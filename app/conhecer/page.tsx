@@ -618,6 +618,9 @@ export default function LandingPage() {
             font-weight: inherit;
             text-shadow: 0 0 14px rgba(201, 168, 76, 0.2), 0 0 28px rgba(201, 168, 76, 0.07);
           }
+          .landing-mobile-divider-arrow {
+            display: none;
+          }
           @media (max-width: 700px) {
             .landing-bloco-3 {
               padding: 104px 22px 0;
@@ -671,6 +674,18 @@ export default function LandingPage() {
               margin-top: 52px;
               font-size: clamp(26px, 7.8vw, 34px);
             }
+            .landing-mobile-divider-arrow {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 34px;
+              height: 52px;
+              margin: 64px auto 0;
+              color: var(--gold);
+              font-size: 28px;
+              line-height: 1;
+              text-shadow: 0 0 12px rgba(201, 168, 76, 0.24);
+            }
           }
         `}</style>
         <h2 className="landing-bloco-3-title">O PROBLEMA NÃO É ESQUECER DE RESPONDER UMA MENSAGEM. É TUDO O QUE ACONTECE DEPOIS.</h2>
@@ -696,6 +711,8 @@ export default function LandingPage() {
         </div>
         <p className="landing-bloco-3-closing">QUANDO AS INFORMAÇÕES ESTÃO ESPALHADAS, O SISTEMA É <strong>VOCÊ.</strong></p>
       </section>
+
+      <div className="landing-mobile-divider-arrow" aria-hidden="true">↓</div>
 
       {/* BLOCO 4 — A CARGA MENTAL QUE DISPUTA ESPAÇO COM A ARTE */}
       <section className="landing-bloco-4 secao-entra">
@@ -876,6 +893,10 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <div className="landing-mobile-divider-logo" aria-hidden="true">
+        <img src="/logo-ink-icon.png" alt="" />
+      </div>
+
       {/* BLOCO 5 — A VIRADA PARA UMA OPERAÇÃO COM ESTRUTURA */}
       <section className="landing-bloco-5 secao-entra">
         <style>{`
@@ -1005,6 +1026,15 @@ export default function LandingPage() {
           .landing-bloco-5-closing .landing-bloco-5-brand {
             font-size: 1.14em;
           }
+          .landing-bloco-5-closing-line {
+            display: block;
+          }
+          .landing-bloco-5-closing-line + .landing-bloco-5-closing-line {
+            margin-top: 0.22em;
+          }
+          .landing-mobile-divider-logo {
+            display: none;
+          }
           @media (max-width: 700px) {
             .landing-bloco-5 {
               padding: 120px 22px 0;
@@ -1074,14 +1104,28 @@ export default function LandingPage() {
             }
             .landing-bloco-5-closing .landing-bloco-5-brand {
               display: inline-flex;
-              margin-top: 0.14em;
               font-size: 1.13em;
+            }
+            .landing-mobile-divider-logo {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 62px;
+              height: 62px;
+              margin: 68px auto 0;
+            }
+            .landing-mobile-divider-logo img {
+              display: block;
+              width: 100%;
+              height: 100%;
+              object-fit: contain;
+              filter: drop-shadow(0 0 12px rgba(201, 168, 76, 0.18));
             }
           }
         `}</style>
         <div className="landing-bloco-5-grid">
           <p className="landing-bloco-5-eyebrow">E SE NÃO PRECISASSE SER ASSIM?</p>
-          <h2 className="landing-bloco-5-headline">E SE SUA OPERAÇÃO LEMBRASSE POR VOCÊ?</h2>
+          <h2 className="landing-bloco-5-headline">E SE EXISTISSE UM SISTEMA QUE LEMBRASSE DE TUDO POR VOCÊ?</h2>
           <p className="landing-bloco-5-support-one">
             Enquanto você tatua, cria e atende, o
             <span className="landing-bloco-5-brand" aria-label="Ink System">
@@ -1100,12 +1144,15 @@ export default function LandingPage() {
           <p className="landing-bloco-5-emotional">Você continua presente na <em>sua arte</em>. O sistema mantém você presente na <em>sua operação</em>.</p>
         </div>
         <p className="landing-bloco-5-closing">
-          É AQUI QUE ENTRA O
-          <span className="landing-bloco-5-brand" aria-label="Ink System">
-            <span className="landing-bloco-5-brand-ink">INK</span>
-            <span className="landing-bloco-5-brand-system">SYSTEM</span>
+          <span className="landing-bloco-5-closing-line">VOCÊ CONTINUA PRESENTE NA SUA ARTE.</span>
+          <span className="landing-bloco-5-closing-line">
+            O
+            <span className="landing-bloco-5-brand" aria-label="Ink System">
+              <span className="landing-bloco-5-brand-ink">INK</span>
+              <span className="landing-bloco-5-brand-system">SYSTEM</span>
+            </span>
+            MANTÉM SUA OPERAÇÃO SOB CONTROLE.
           </span>
-          .
         </p>
       </section>
 
