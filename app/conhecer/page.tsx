@@ -365,6 +365,143 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* BLOCO 2 — A OPERAÇÃO QUE CONTINUA DEPOIS DO EXPEDIENTE */}
+      <section className="landing-bloco-2 secao-entra">
+        <style>{`
+          .landing-bloco-2 {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: clamp(96px, 11vw, 142px) 24px 0;
+          }
+          .landing-bloco-2-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            grid-template-areas:
+              "copy art"
+              "closing art";
+            column-gap: clamp(48px, 7vw, 92px);
+            align-items: center;
+          }
+          .landing-bloco-2-copy {
+            grid-area: copy;
+            align-self: end;
+          }
+          .landing-bloco-2-title {
+            margin: 0;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            font-size: clamp(28px, 3.4vw, 43px);
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            line-height: 1.12;
+            text-wrap: balance;
+          }
+          .landing-bloco-2-body {
+            margin-top: clamp(28px, 3.5vw, 40px);
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: clamp(15.5px, 1.45vw, 18px);
+            line-height: 1.75;
+          }
+          .landing-bloco-2-body p {
+            margin: 0;
+          }
+          .landing-bloco-2-body p + p {
+            margin-top: 18px;
+          }
+          .landing-bloco-2-opening {
+            color: var(--text-primary);
+            font-weight: 600;
+          }
+          .landing-bloco-2-thought {
+            margin: 24px 0;
+            color: var(--gold-light);
+            font-family: var(--font-heading);
+            font-size: clamp(19px, 2vw, 24px);
+            font-style: italic;
+            line-height: 1.4;
+            text-shadow: 0 0 14px rgba(201, 168, 76, 0.12);
+          }
+          .landing-bloco-2-art {
+            grid-area: art;
+            width: 100%;
+            align-self: center;
+          }
+          .landing-bloco-2-art picture,
+          .landing-bloco-2-art img {
+            display: block;
+            width: 100%;
+            height: auto;
+          }
+          .landing-bloco-2-closing {
+            grid-area: closing;
+            align-self: start;
+            margin: clamp(28px, 3.5vw, 42px) 0 0;
+            color: var(--gold);
+            font-family: var(--font-heading);
+            font-size: clamp(19px, 2.2vw, 25px);
+            font-weight: 700;
+            line-height: 1.4;
+            text-shadow: 0 0 12px rgba(201, 168, 76, 0.22), 0 0 24px rgba(201, 168, 76, 0.08);
+            text-wrap: balance;
+          }
+          @media (max-width: 700px) {
+            .landing-bloco-2 {
+              padding: 88px 22px 0;
+            }
+            .landing-bloco-2-grid {
+              grid-template-columns: minmax(0, 1fr);
+              grid-template-areas:
+                "copy"
+                "art"
+                "closing";
+              row-gap: 0;
+            }
+            .landing-bloco-2-title {
+              font-size: clamp(27px, 8.2vw, 36px);
+              text-align: center;
+            }
+            .landing-bloco-2-body {
+              width: min(100%, 540px);
+              margin: 28px auto 0;
+              font-size: 16px;
+              line-height: 1.72;
+            }
+            .landing-bloco-2-thought {
+              margin: 22px 0;
+              text-align: center;
+            }
+            .landing-bloco-2-art {
+              width: calc(100% + 20px);
+              margin: 38px -10px 0;
+            }
+            .landing-bloco-2-closing {
+              margin: 34px auto 0;
+              font-size: clamp(20px, 6.2vw, 26px);
+              text-align: center;
+            }
+          }
+        `}</style>
+        <div className="landing-bloco-2-grid">
+          <div className="landing-bloco-2-copy">
+            <h2 className="landing-bloco-2-title">QUANDO A OPERAÇÃO DEPENDE DA SUA MEMÓRIA, O DIA TERMINA, MAS O TRABALHO NÃO.</h2>
+            <div className="landing-bloco-2-body">
+              <p className="landing-bloco-2-opening">Você termina a última tattoo do dia.</p>
+              <p>Ainda tem orçamento para responder, cliente para confirmar, referência no WhatsApp e uma mensagem que você prometeu retornar.</p>
+              <blockquote className="landing-bloco-2-thought">“Amanhã eu resolvo.”</blockquote>
+              <p>Só que amanhã chega com outro cliente, outra mensagem e outra coisa para lembrar.</p>
+            </div>
+          </div>
+          <div className="landing-bloco-2-art">
+            <picture>
+              <source media="(max-width: 700px)" srcSet="/imagens/landing/bloco-2/bloco-2-mobile.png" />
+              <img src="/imagens/landing/bloco-2/bloco-2-desktop.png" alt="Tatuadora encerrando o expediente enquanto a operação do estúdio continua" />
+            </picture>
+          </div>
+          <p className="landing-bloco-2-closing">E começa tudo de novo antes das tarefas anteriores terminarem.</p>
+        </div>
+      </section>
+
       {/* 08 — IDENTIFICAÇÃO DO PÚBLICO */}
       <section className="secao-entra" style={{ maxWidth: 780, margin: "0 auto", textAlign: "center", padding: "104px 24px 0" }}>
         <h2 style={{ ...sectionHeading, fontSize: "clamp(22px, 3vw, 27px)" }}>FEITO PARA O TATUADOR QUE CUIDA DA PRÓPRIA OPERAÇÃO</h2>
