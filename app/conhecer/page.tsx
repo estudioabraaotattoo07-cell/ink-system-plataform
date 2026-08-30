@@ -1195,14 +1195,25 @@ export default function LandingPage() {
             margin: 0;
             color: var(--text-primary);
             font-family: var(--font-heading);
-            font-size: clamp(33px, 4.7vw, 58px);
+            font-size: clamp(31px, 4.3vw, 52px);
             font-weight: 700;
             letter-spacing: 0.002em;
             line-height: 1.1;
-            text-wrap: balance;
+          }
+          .landing-bloco-6-title-line,
+          .landing-bloco-6-intro-line {
+            display: block;
+            white-space: nowrap;
+          }
+          .landing-bloco-6-title-scattered {
+            color: #c64a4a;
+          }
+          .landing-bloco-6-title-function {
+            color: var(--gold);
+            text-shadow: 0 0 13px rgba(201, 168, 76, 0.24), 0 0 26px rgba(201, 168, 76, 0.08);
           }
           .landing-bloco-6-intro {
-            max-width: 720px;
+            max-width: 820px;
             margin: clamp(28px, 3.5vw, 40px) auto 0;
             color: var(--text-secondary);
             font-family: var(--font-body);
@@ -1265,10 +1276,59 @@ export default function LandingPage() {
             border-radius: 7px;
             background: #08070a;
           }
-          .landing-bloco-6-art img {
+          .landing-bloco-6-zoom {
+            display: block;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            border-radius: inherit;
+            background: transparent;
+            cursor: zoom-in;
+          }
+          .landing-bloco-6-art img,
+          .landing-bloco-6-lightbox img {
             display: block;
             width: 100%;
             height: auto;
+          }
+          .landing-bloco-6-lightbox {
+            width: min(94vw, 1440px);
+            max-width: none;
+            max-height: 92dvh;
+            margin: auto;
+            padding: 18px;
+            overflow: visible;
+            border: 1px solid rgba(201, 168, 76, 0.34);
+            border-radius: 10px;
+            background: #08070a;
+            box-shadow: 0 22px 80px rgba(0, 0, 0, 0.72);
+          }
+          .landing-bloco-6-lightbox::backdrop {
+            background: rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(3px);
+          }
+          .landing-bloco-6-lightbox img {
+            max-height: calc(92dvh - 36px);
+            object-fit: contain;
+          }
+          .landing-bloco-6-lightbox-close {
+            position: absolute;
+            z-index: 2;
+            top: -14px;
+            right: -14px;
+            display: grid;
+            width: 42px;
+            height: 42px;
+            place-items: center;
+            border: 1px solid rgba(201, 168, 76, 0.7);
+            border-radius: 999px;
+            background: #0b090d;
+            color: var(--gold-light);
+            font-family: var(--font-body);
+            font-size: 21px;
+            line-height: 1;
+            cursor: pointer;
           }
           .landing-bloco-6-closing {
             max-width: 920px;
@@ -1302,12 +1362,12 @@ export default function LandingPage() {
               font-size: 12px;
             }
             .landing-bloco-6-title {
-              font-size: clamp(30px, 8.8vw, 40px);
+              font-size: clamp(17px, 5.6vw, 27px);
             }
             .landing-bloco-6-intro {
               margin-top: 28px;
-              font-size: 16px;
-              line-height: 1.7;
+              font-size: clamp(10px, 3.15vw, 14px);
+              line-height: 1.65;
             }
             .landing-bloco-6-modules {
               margin-top: 70px;
@@ -1346,6 +1406,21 @@ export default function LandingPage() {
               margin: 34px -8px 0;
               border-radius: 5px;
             }
+            .landing-bloco-6-lightbox {
+              width: 94vw;
+              max-height: 88dvh;
+              padding: 10px;
+              border-radius: 7px;
+            }
+            .landing-bloco-6-lightbox img {
+              max-height: calc(88dvh - 20px);
+            }
+            .landing-bloco-6-lightbox-close {
+              top: -12px;
+              right: -8px;
+              width: 40px;
+              height: 40px;
+            }
             .landing-bloco-6-closing {
               width: min(100%, 540px);
               margin-top: 86px;
@@ -1355,8 +1430,15 @@ export default function LandingPage() {
         `}</style>
         <header className="landing-bloco-6-header">
           <p className="landing-bloco-6-eyebrow">NA PRÁTICA</p>
-          <h2 className="landing-bloco-6-title">O QUE ANTES FICAVA ESPALHADO PASSA A FUNCIONAR EM UM FLUXO CLARO.</h2>
-          <p className="landing-bloco-6-intro">Pipeline, agenda e projeto deixam de ser tarefas soltas e passam a trabalhar juntos dentro da sua operação.</p>
+          <h2 className="landing-bloco-6-title">
+            <span className="landing-bloco-6-title-line">O QUE ANTES FICAVA <span className="landing-bloco-6-title-scattered">ESPALHADO,</span></span>
+            <span className="landing-bloco-6-title-line">PASSA A <span className="landing-bloco-6-title-function">FUNCIONAR</span></span>
+            <span className="landing-bloco-6-title-line">EM UM FLUXO CLARO.</span>
+          </h2>
+          <p className="landing-bloco-6-intro">
+            <span className="landing-bloco-6-intro-line">Pipeline, agenda e projeto deixam de ser tarefas soltas</span>
+            <span className="landing-bloco-6-intro-line">Eles passam a trabalhar juntos dentro da sua operação.</span>
+          </p>
         </header>
         <div className="landing-bloco-6-modules">
           <article className="landing-bloco-6-module">
@@ -1366,7 +1448,13 @@ export default function LandingPage() {
               <p className="landing-bloco-6-module-copy">Visualize em que etapa cada atendimento está, o que precisa ser feito e quem está conduzindo cada caso. Sem depender da memória para acompanhar o fluxo.</p>
             </div>
             <div className="landing-bloco-6-art">
-              <img src="/imagens/landing/bloco-6/bloco-6-pipeline-desktop.png" alt="Pipeline do Ink System com os clientes organizados por etapa" />
+              <button className="landing-bloco-6-zoom" type="button" popoverTarget="landing-bloco-6-lightbox-pipeline" aria-label="Ampliar imagem do pipeline">
+                <img src="/imagens/landing/bloco-6/bloco-6-pipeline-desktop.png" alt="Pipeline do Ink System com os clientes organizados por etapa" />
+              </button>
+            </div>
+            <div className="landing-bloco-6-lightbox" id="landing-bloco-6-lightbox-pipeline" popover="auto">
+              <button className="landing-bloco-6-lightbox-close" type="button" popoverTarget="landing-bloco-6-lightbox-pipeline" popoverTargetAction="hide" aria-label="Fechar imagem ampliada">×</button>
+              <img src="/imagens/landing/bloco-6/bloco-6-pipeline-desktop.png" alt="Pipeline do Ink System ampliado" />
             </div>
           </article>
           <article className="landing-bloco-6-module landing-bloco-6-module-reverse">
@@ -1376,7 +1464,13 @@ export default function LandingPage() {
               <p className="landing-bloco-6-module-copy">Sessões, horários e distribuição dos atendimentos ficam visíveis de forma clara, ajudando você a organizar o tempo e reduzir conflitos, esquecimentos e encaixes mal resolvidos.</p>
             </div>
             <div className="landing-bloco-6-art">
-              <img src="/imagens/landing/bloco-6/bloco-6-agenda-desktop.png" alt="Agenda semanal do Ink System com sessões e horários organizados" />
+              <button className="landing-bloco-6-zoom" type="button" popoverTarget="landing-bloco-6-lightbox-agenda" aria-label="Ampliar imagem da agenda">
+                <img src="/imagens/landing/bloco-6/bloco-6-agenda-desktop.png" alt="Agenda semanal do Ink System com sessões e horários organizados" />
+              </button>
+            </div>
+            <div className="landing-bloco-6-lightbox" id="landing-bloco-6-lightbox-agenda" popover="auto">
+              <button className="landing-bloco-6-lightbox-close" type="button" popoverTarget="landing-bloco-6-lightbox-agenda" popoverTargetAction="hide" aria-label="Fechar imagem ampliada">×</button>
+              <img src="/imagens/landing/bloco-6/bloco-6-agenda-desktop.png" alt="Agenda semanal do Ink System ampliada" />
             </div>
           </article>
           <article className="landing-bloco-6-module">
@@ -1386,7 +1480,13 @@ export default function LandingPage() {
               <p className="landing-bloco-6-module-copy">Projeto, serviço, profissional responsável, valor e descrição ficam organizados no mesmo lugar, para que nada importante se perca no meio da rotina.</p>
             </div>
             <div className="landing-bloco-6-art">
-              <img src="/imagens/landing/bloco-6/bloco-6-projeto-desktop.png" alt="Projeto no Ink System com serviço, profissional, valor e descrição organizados" />
+              <button className="landing-bloco-6-zoom" type="button" popoverTarget="landing-bloco-6-lightbox-projeto" aria-label="Ampliar imagem do projeto">
+                <img src="/imagens/landing/bloco-6/bloco-6-projeto-desktop.png" alt="Projeto no Ink System com serviço, profissional, valor e descrição organizados" />
+              </button>
+            </div>
+            <div className="landing-bloco-6-lightbox" id="landing-bloco-6-lightbox-projeto" popover="auto">
+              <button className="landing-bloco-6-lightbox-close" type="button" popoverTarget="landing-bloco-6-lightbox-projeto" popoverTargetAction="hide" aria-label="Fechar imagem ampliada">×</button>
+              <img src="/imagens/landing/bloco-6/bloco-6-projeto-desktop.png" alt="Projeto no Ink System ampliado" />
             </div>
           </article>
         </div>
