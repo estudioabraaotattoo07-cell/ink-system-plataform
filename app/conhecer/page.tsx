@@ -1493,6 +1493,374 @@ export default function LandingPage() {
         <p className="landing-bloco-6-closing">VOCÊ NÃO PRECISA MAIS LEMBRAR DE TUDO. <strong>SÓ PRECISA CRIAR.</strong></p>
       </section>
 
+      {/* BLOCO 7 — ORIGEM, PRODUTO E DECISÃO FINAL */}
+      <section className="landing-bloco-7 secao-entra">
+        <style>{`
+          .landing-bloco-7 {
+            position: relative;
+            max-width: 1160px;
+            margin: 0 auto;
+            padding: clamp(140px, 16vw, 208px) 24px clamp(120px, 14vw, 178px);
+          }
+          .landing-bloco-7::before {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            inset: 3% 50% 4%;
+            width: min(1240px, 100vw);
+            transform: translateX(-50%);
+            background:
+              radial-gradient(ellipse at 28% 18%, rgba(112, 72, 150, 0.1) 0%, transparent 58%),
+              radial-gradient(ellipse at 68% 64%, rgba(201, 168, 76, 0.035) 0%, transparent 56%);
+            pointer-events: none;
+          }
+          .landing-bloco-7-origin {
+            display: grid;
+            grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
+            grid-template-areas:
+              "art headline"
+              "art identity"
+              "art copy"
+              "art difference";
+            column-gap: clamp(58px, 8vw, 104px);
+            align-items: center;
+          }
+          .landing-bloco-7-origin-art {
+            grid-area: art;
+            width: 100%;
+            overflow: hidden;
+            border-radius: 7px;
+          }
+          .landing-bloco-7-origin-art img {
+            display: block;
+            width: 100%;
+            height: auto;
+          }
+          .landing-bloco-7-origin-title {
+            grid-area: headline;
+            align-self: end;
+            margin: 0;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            font-size: clamp(32px, 4.5vw, 56px);
+            font-weight: 700;
+            line-height: 1.1;
+            text-wrap: balance;
+          }
+          .landing-bloco-7-identity {
+            grid-area: identity;
+            margin-top: clamp(32px, 4vw, 44px);
+          }
+          .landing-bloco-7-founder {
+            margin: 0;
+            color: var(--gold-light);
+            font-family: var(--font-heading);
+            font-size: clamp(25px, 3vw, 36px);
+            font-weight: 700;
+            letter-spacing: 0.025em;
+          }
+          .landing-bloco-7-founder-role {
+            margin: 9px 0 0;
+            color: var(--text-tertiary);
+            font-family: var(--font-body);
+            font-size: clamp(13px, 1.2vw, 15px);
+            line-height: 1.5;
+          }
+          .landing-bloco-7-origin-copy {
+            grid-area: copy;
+            margin: 30px 0 0;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: clamp(15.5px, 1.4vw, 18px);
+            line-height: 1.72;
+          }
+          .landing-bloco-7-difference {
+            grid-area: difference;
+            margin: clamp(34px, 4vw, 48px) 0 0;
+            font-family: var(--font-heading);
+            font-size: clamp(23px, 2.8vw, 34px);
+            font-weight: 700;
+            line-height: 1.25;
+          }
+          .landing-bloco-7-difference-line {
+            display: block;
+          }
+          .landing-bloco-7-difference-line:first-child {
+            color: var(--text-primary);
+          }
+          .landing-bloco-7-difference-line:last-child {
+            margin-top: 0.18em;
+            color: var(--gold);
+            text-shadow: 0 0 14px rgba(201, 168, 76, 0.18), 0 0 28px rgba(201, 168, 76, 0.06);
+          }
+          .landing-bloco-7-transition {
+            position: relative;
+            max-width: 920px;
+            margin: clamp(118px, 14vw, 174px) auto 0;
+            padding: clamp(58px, 7vw, 78px) 24px;
+            text-align: center;
+          }
+          .landing-bloco-7-transition::before,
+          .landing-bloco-7-transition::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            width: min(620px, 78%);
+            height: 1px;
+            transform: translateX(-50%);
+            background: linear-gradient(to right, transparent, rgba(201, 168, 76, 0.34), transparent);
+          }
+          .landing-bloco-7-transition::before {
+            top: 0;
+          }
+          .landing-bloco-7-transition::after {
+            bottom: 0;
+          }
+          .landing-bloco-7-transition-title {
+            margin: 0;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            font-size: clamp(27px, 3.8vw, 45px);
+            font-weight: 700;
+            line-height: 1.18;
+          }
+          .landing-bloco-7-transition-copy {
+            margin: 18px 0 0;
+            color: var(--gold-light);
+            font-family: var(--font-heading);
+            font-size: clamp(18px, 2.25vw, 26px);
+            font-weight: 600;
+            line-height: 1.35;
+          }
+          .landing-bloco-7-offer {
+            max-width: 820px;
+            margin: clamp(110px, 13vw, 160px) auto 0;
+            text-align: center;
+          }
+          .landing-bloco-7-brand {
+            display: inline-flex;
+            flex-wrap: nowrap;
+            align-items: baseline;
+            gap: 0.2em;
+            white-space: nowrap;
+            font-family: var(--font-heading);
+            font-size: clamp(35px, 5.1vw, 62px);
+            font-weight: 800;
+            letter-spacing: 0.025em;
+            line-height: 1;
+          }
+          .landing-bloco-7-brand-ink {
+            color: #f7f4ef;
+            text-shadow: 0 0 11px rgba(255, 255, 255, 0.22), 0 0 24px rgba(255, 255, 255, 0.08);
+          }
+          .landing-bloco-7-brand-system {
+            color: var(--gold);
+            text-shadow: 0 0 13px rgba(201, 168, 76, 0.27), 0 0 28px rgba(201, 168, 76, 0.09);
+          }
+          .landing-bloco-7-brand-version {
+            margin-left: 0.08em;
+            color: var(--text-tertiary);
+            font-family: var(--font-body);
+            font-size: 0.45em;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+          }
+          .landing-bloco-7-offer-copy {
+            max-width: 650px;
+            margin: 32px auto 0;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: clamp(16px, 1.5vw, 18px);
+            line-height: 1.72;
+          }
+          .landing-bloco-7-offer-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 38px;
+          }
+          .landing-bloco-7-note {
+            margin: 16px 0 0;
+            color: var(--text-tertiary);
+            font-family: var(--font-body);
+            font-size: 12px;
+            line-height: 1.5;
+          }
+          .landing-bloco-7-emotional {
+            max-width: 930px;
+            margin: clamp(132px, 16vw, 198px) auto 0;
+            text-align: center;
+          }
+          .landing-bloco-7-emotional-first,
+          .landing-bloco-7-emotional-final {
+            margin: 0;
+            font-family: var(--font-heading);
+            font-weight: 700;
+            text-wrap: balance;
+          }
+          .landing-bloco-7-emotional-first {
+            color: var(--text-secondary);
+            font-size: clamp(23px, 3vw, 35px);
+            line-height: 1.28;
+          }
+          .landing-bloco-7-emotional-final {
+            margin-top: 28px;
+            color: var(--text-primary);
+            font-size: clamp(34px, 5vw, 60px);
+            line-height: 1.12;
+          }
+          .landing-bloco-7-emotional-final strong {
+            color: var(--gold);
+            font-weight: inherit;
+            text-shadow: 0 0 15px rgba(201, 168, 76, 0.21), 0 0 30px rgba(201, 168, 76, 0.07);
+          }
+          .landing-bloco-7-final-action {
+            display: flex;
+            justify-content: center;
+            margin-top: 42px;
+          }
+          @media (max-width: 700px) {
+            .landing-bloco-7 {
+              padding: 128px 22px 112px;
+            }
+            .landing-bloco-7::before {
+              background:
+                radial-gradient(ellipse at 50% 16%, rgba(112, 72, 150, 0.09) 0%, transparent 56%),
+                radial-gradient(ellipse at 50% 68%, rgba(201, 168, 76, 0.03) 0%, transparent 58%);
+            }
+            .landing-bloco-7-origin {
+              grid-template-columns: minmax(0, 1fr);
+              grid-template-areas:
+                "headline"
+                "art"
+                "identity"
+                "copy"
+                "difference";
+              column-gap: 0;
+            }
+            .landing-bloco-7-origin-title {
+              width: min(100%, 540px);
+              margin: 0 auto;
+              font-size: clamp(30px, 8.8vw, 40px);
+              text-align: center;
+            }
+            .landing-bloco-7-origin-art {
+              width: calc(100% + 16px);
+              margin: 46px -8px 0;
+              border-radius: 5px;
+            }
+            .landing-bloco-7-identity,
+            .landing-bloco-7-origin-copy,
+            .landing-bloco-7-difference {
+              width: min(100%, 520px);
+              margin-inline: auto;
+              text-align: center;
+            }
+            .landing-bloco-7-identity {
+              margin-top: 42px;
+            }
+            .landing-bloco-7-founder {
+              font-size: clamp(26px, 7.8vw, 34px);
+            }
+            .landing-bloco-7-origin-copy {
+              margin-top: 28px;
+              font-size: 16px;
+              line-height: 1.7;
+            }
+            .landing-bloco-7-difference {
+              margin-top: 38px;
+              font-size: clamp(22px, 6.7vw, 29px);
+            }
+            .landing-bloco-7-transition {
+              margin-top: 102px;
+              padding: 52px 8px;
+            }
+            .landing-bloco-7-transition-title {
+              font-size: clamp(25px, 7.6vw, 34px);
+            }
+            .landing-bloco-7-transition-copy {
+              margin-top: 16px;
+              font-size: clamp(17px, 5.2vw, 22px);
+            }
+            .landing-bloco-7-offer {
+              margin-top: 96px;
+            }
+            .landing-bloco-7-brand {
+              font-size: clamp(31px, 9.2vw, 42px);
+            }
+            .landing-bloco-7-offer-copy {
+              margin-top: 28px;
+              font-size: 16px;
+            }
+            .landing-bloco-7-offer-actions {
+              flex-direction: column;
+              margin-top: 34px;
+            }
+            .landing-bloco-7-offer-actions .cta-btn,
+            .landing-bloco-7-final-action .cta-btn {
+              width: min(100%, 340px);
+            }
+            .landing-bloco-7-emotional {
+              margin-top: 116px;
+            }
+            .landing-bloco-7-emotional-first {
+              font-size: clamp(21px, 6.4vw, 28px);
+            }
+            .landing-bloco-7-emotional-final {
+              margin-top: 24px;
+              font-size: clamp(30px, 8.8vw, 40px);
+            }
+            .landing-bloco-7-final-action {
+              margin-top: 38px;
+            }
+          }
+        `}</style>
+        <div className="landing-bloco-7-origin">
+          <div className="landing-bloco-7-origin-art">
+            <img src="/imagens/landing/bloco-7/bloco-7-abraao-fundador-desktop.png" alt="Abraão Tattoo, fundador do Ink System" />
+          </div>
+          <h2 className="landing-bloco-7-origin-title">CRIADO POR QUEM VIVE A TATUAGEM.</h2>
+          <div className="landing-bloco-7-identity">
+            <p className="landing-bloco-7-founder">ABRAÃO TATTOO</p>
+            <p className="landing-bloco-7-founder-role">Tatuador desde 2007 · Fundador do Ink System</p>
+          </div>
+          <p className="landing-bloco-7-origin-copy">O Ink System não nasceu da adaptação de um CRM genérico. Nasceu de anos vivendo, na prática, os mesmos problemas que hoje ele ajuda a organizar.</p>
+          <p className="landing-bloco-7-difference">
+            <span className="landing-bloco-7-difference-line">NÃO FOI ADAPTADO PARA A TATUAGEM.</span>
+            <span className="landing-bloco-7-difference-line">FOI CONSTRUÍDO A PARTIR DELA.</span>
+          </p>
+        </div>
+
+        <div className="landing-bloco-7-transition">
+          <p className="landing-bloco-7-transition-title">NO COMPUTADOR, NO TABLET OU NO CELULAR.</p>
+          <p className="landing-bloco-7-transition-copy">O INK SYSTEM ACOMPANHA A FORMA COMO VOCÊ TRABALHA.</p>
+        </div>
+
+        <div className="landing-bloco-7-offer">
+          <div className="landing-bloco-7-brand" aria-label="Ink System 1.0">
+            <span className="landing-bloco-7-brand-ink">INK</span>
+            <span className="landing-bloco-7-brand-system">SYSTEM</span>
+            <span className="landing-bloco-7-brand-version">1.0</span>
+          </div>
+          <p className="landing-bloco-7-offer-copy">Uma conta individual para organizar clientes, projetos, agenda e operação em um só lugar.</p>
+          <div className="landing-bloco-7-offer-actions">
+            <CtaButton origem="cta_bloco_7_trial" tipo="trial" fullWidthMobile>TESTAR GRÁTIS POR 7 DIAS</CtaButton>
+            <CtaButton origem="cta_bloco_7_subscribe" tipo="subscribe" fullWidthMobile>ASSINAR AGORA</CtaButton>
+          </div>
+          <p className="landing-bloco-7-note">Sem cartão. Sem cobrança automática.</p>
+        </div>
+
+        <div className="landing-bloco-7-emotional">
+          <p className="landing-bloco-7-emotional-first">VOCÊ PODE CONTINUAR CARREGANDO TUDO NA CABEÇA.</p>
+          <p className="landing-bloco-7-emotional-final">OU PODE DEVOLVER ESSE ESPAÇO <strong>À SUA ARTE.</strong></p>
+          <div className="landing-bloco-7-final-action">
+            <CtaButton origem="cta_bloco_7_final_trial" tipo="trial" fullWidthMobile>TESTAR GRÁTIS POR 7 DIAS</CtaButton>
+          </div>
+        </div>
+      </section>
+
       {/* 08 — IDENTIFICAÇÃO DO PÚBLICO */}
       <section className="secao-entra" style={{ maxWidth: 780, margin: "0 auto", textAlign: "center", padding: "104px 24px 0" }}>
         <h2 style={{ ...sectionHeading, fontSize: "clamp(22px, 3vw, 27px)" }}>FEITO PARA O TATUADOR QUE CUIDA DA PRÓPRIA OPERAÇÃO</h2>
