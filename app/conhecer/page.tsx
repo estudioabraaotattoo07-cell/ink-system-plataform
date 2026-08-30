@@ -1968,19 +1968,19 @@ export default function LandingPage() {
             align-items: baseline;
             gap: 0.2em;
             white-space: nowrap;
-            font-family: var(--font-heading);
+            font-family: var(--font-body);
             font-size: clamp(35px, 5.1vw, 62px);
-            font-weight: 800;
-            letter-spacing: 0.025em;
+            font-weight: 700;
+            letter-spacing: 0.08em;
             line-height: 1;
           }
           .landing-bloco-7-brand-ink {
-            color: #f7f4ef;
-            text-shadow: 0 0 11px rgba(255, 255, 255, 0.22), 0 0 24px rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            text-shadow: 0 0 10px rgba(232, 226, 217, 0.42), 0 0 22px rgba(232, 226, 217, 0.16);
           }
           .landing-bloco-7-brand-system {
             color: var(--gold);
-            text-shadow: 0 0 13px rgba(201, 168, 76, 0.27), 0 0 28px rgba(201, 168, 76, 0.09);
+            text-shadow: 0 0 10px rgba(201, 168, 76, 0.38), 0 0 22px rgba(201, 168, 76, 0.16);
           }
           .landing-bloco-7-brand-version {
             margin-left: 0.08em;
