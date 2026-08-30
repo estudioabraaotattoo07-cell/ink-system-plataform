@@ -1,6 +1,5 @@
 import type { CSSProperties } from "react";
 import { Header } from "../components/landing/Header";
-import { Footer } from "../components/landing/Footer";
 import { CtaButton } from "../components/landing/CtaButton";
 import CadastroTesteForm from "../components/landing/CadastroTesteForm";
 import { PRECO_ASSINATURA } from "../components/landing/config";
@@ -2089,7 +2088,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <Footer />
     </main>
   );
 }
