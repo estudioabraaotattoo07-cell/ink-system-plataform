@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { CTA_DESTINO_ASSINATURA } from "./components/landing/config";
 
 export default function HomePage() {
   return (
@@ -108,6 +109,29 @@ export default function HomePage() {
               min-width: 220px;
               border-width: 2px;
             }
+            .home-hero-primary-actions {
+              display: flex;
+              align-items: stretch;
+              justify-content: center;
+              gap: clamp(14px, 2vw, 22px);
+            }
+            .home-hero-primary-actions > a {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 48px;
+              box-sizing: border-box;
+              text-decoration: none;
+            }
+            .home-subscribe-cta {
+              width: 220px;
+              border: 2px solid var(--border-gold-strong);
+              border-radius: var(--radius-pill);
+              background: transparent;
+              color: var(--gold);
+              box-shadow: 0 0 16px rgba(201, 168, 76, 0.13);
+              text-shadow: 0 0 10px rgba(201, 168, 76, 0.16);
+            }
             .home-secondary-access {
               color: var(--text-tertiary);
               font-family: var(--font-body);
@@ -140,14 +164,14 @@ export default function HomePage() {
                 z-index: 2;
                 flex-direction: column;
                 gap: 12px;
-                width: min(100%, 360px);
+                width: min(100%, 640px);
                 margin-left: auto;
                 margin-right: auto;
               }
-              .home-hero-access-row > a {
+              .home-hero-primary-actions > a {
                 min-width: 0;
               }
-              .home-hero-access-row > a:first-child {
+              .home-hero-primary-actions > a:first-child {
                 width: 280px;
               }
               .home-hero-access-row .home-secondary-access {
@@ -241,6 +265,19 @@ export default function HomePage() {
               .home-hero-access-row > a {
                 width: 100%;
                 min-width: 0;
+                border-width: 1px;
+              }
+              .home-hero-primary-actions {
+                flex-direction: column;
+                align-items: stretch;
+                width: 100%;
+                gap: 12px;
+              }
+              .home-hero-primary-actions > a {
+                width: 100% !important;
+                min-width: 0;
+              }
+              .home-subscribe-cta {
                 border-width: 1px;
               }
               .home-secondary-access {
@@ -343,14 +380,23 @@ export default function HomePage() {
             Tenha controle do seu estúdio e ganhe mais tempo para criar.
           </p>
           <div className="home-hero-access-row">
-            <a
-              href="/conhecer"
-              data-cta="home_conhecer_ink_system"
-              className="cta-btn cta-btn--full-mobile"
-              style={{ textDecoration: "none" }}
-            >
-              Conhecer o Ink System
-            </a>
+            <div className="home-hero-primary-actions">
+              <a
+                href="/conhecer"
+                data-cta="home_conhecer_ink_system"
+                className="cta-btn cta-btn--full-mobile"
+                style={{ textDecoration: "none" }}
+              >
+                Conhecer o Ink System
+              </a>
+              <a
+                href={`/conhecer${CTA_DESTINO_ASSINATURA}`}
+                data-cta="home_assinar_agora"
+                className="cta-btn cta-btn--secondary home-subscribe-cta"
+              >
+                Assinar agora
+              </a>
+            </div>
             <span className="home-secondary-access">Já sou cliente</span>
             <a href="/login" data-cta="home_entrar_secundario" className="cta-btn cta-btn--secondary home-login-cta">
               Entrar

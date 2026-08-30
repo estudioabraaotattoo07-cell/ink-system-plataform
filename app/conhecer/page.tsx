@@ -1156,6 +1156,16 @@ export default function LandingPage() {
         </p>
       </section>
 
+      <div
+        aria-hidden="true"
+        style={{
+          width: "min(520px, 68%)",
+          height: 1,
+          margin: "clamp(96px, 11vw, 138px) auto 0",
+          background: "linear-gradient(to right, transparent, rgba(201, 168, 76, 0.32), transparent)",
+        }}
+      />
+
       {/* BLOCO 6 — O PRODUTO NA PRÁTICA */}
       <section className="landing-bloco-6 secao-entra">
         <style>{`
