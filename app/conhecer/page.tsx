@@ -502,6 +502,201 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* BLOCO 3 — AS CONSEQUÊNCIAS DA OPERAÇÃO ESPALHADA */}
+      <section className="landing-bloco-3 secao-entra">
+        <style>{`
+          .landing-bloco-3 {
+            position: relative;
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: clamp(112px, 13vw, 168px) 24px 0;
+          }
+          .landing-bloco-3::before {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            top: 18%;
+            left: 50%;
+            width: min(1100px, 100vw);
+            height: 68%;
+            transform: translateX(-50%);
+            background: radial-gradient(ellipse at center, rgba(88, 53, 126, 0.09) 0%, rgba(16, 12, 22, 0) 70%);
+            pointer-events: none;
+          }
+          .landing-bloco-3-title {
+            max-width: 920px;
+            margin: 0 auto;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            font-size: clamp(30px, 4.1vw, 52px);
+            font-weight: 700;
+            letter-spacing: 0.005em;
+            line-height: 1.12;
+            text-align: center;
+            text-wrap: balance;
+          }
+          .landing-bloco-3-sequence {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            margin: clamp(58px, 7vw, 82px) auto 0;
+          }
+          .landing-bloco-3-consequence {
+            position: relative;
+            padding: 2px clamp(28px, 4vw, 54px);
+            text-align: center;
+          }
+          .landing-bloco-3-consequence + .landing-bloco-3-consequence::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 1px;
+            height: 52px;
+            transform: translateY(-50%);
+            background: linear-gradient(to bottom, transparent, rgba(201, 168, 76, 0.42), transparent);
+          }
+          .landing-bloco-3-consequence h3 {
+            margin: 0;
+            color: var(--gold-light);
+            font-family: var(--font-heading);
+            font-size: clamp(18px, 1.9vw, 23px);
+            font-weight: 700;
+            letter-spacing: 0.045em;
+            line-height: 1.25;
+          }
+          .landing-bloco-3-consequence p {
+            margin: 12px 0 0;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: clamp(15px, 1.35vw, 17px);
+            line-height: 1.55;
+          }
+          .landing-bloco-3-art {
+            position: relative;
+            width: min(100%, 940px);
+            margin: clamp(58px, 7vw, 84px) auto 0;
+            overflow: hidden;
+            border-radius: 6px;
+          }
+          .landing-bloco-3-art::before,
+          .landing-bloco-3-art::after {
+            content: "";
+            position: absolute;
+            z-index: 1;
+            left: 0;
+            width: 100%;
+            height: 13%;
+            pointer-events: none;
+          }
+          .landing-bloco-3-art::before {
+            top: 0;
+            background: linear-gradient(to bottom, rgba(5, 4, 7, 0.72), transparent);
+          }
+          .landing-bloco-3-art::after {
+            bottom: 0;
+            background: linear-gradient(to top, rgba(5, 4, 7, 0.78), transparent);
+          }
+          .landing-bloco-3-art picture,
+          .landing-bloco-3-art img {
+            display: block;
+            width: 100%;
+            height: auto;
+          }
+          .landing-bloco-3-closing {
+            max-width: 900px;
+            margin: clamp(66px, 8vw, 96px) auto 0;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            font-size: clamp(28px, 4vw, 48px);
+            font-weight: 700;
+            line-height: 1.18;
+            text-align: center;
+            text-wrap: balance;
+          }
+          .landing-bloco-3-closing strong {
+            color: var(--gold);
+            font-weight: inherit;
+            text-shadow: 0 0 14px rgba(201, 168, 76, 0.2), 0 0 28px rgba(201, 168, 76, 0.07);
+          }
+          @media (max-width: 700px) {
+            .landing-bloco-3 {
+              padding: 104px 22px 0;
+            }
+            .landing-bloco-3::before {
+              top: 16%;
+              height: 72%;
+            }
+            .landing-bloco-3-title {
+              width: min(100%, 540px);
+              font-size: clamp(27px, 8.1vw, 36px);
+            }
+            .landing-bloco-3-sequence {
+              display: block;
+              width: min(100%, 500px);
+              margin-top: 54px;
+            }
+            .landing-bloco-3-consequence {
+              padding: 0 10px;
+            }
+            .landing-bloco-3-consequence + .landing-bloco-3-consequence {
+              margin-top: 32px;
+              padding-top: 32px;
+            }
+            .landing-bloco-3-consequence + .landing-bloco-3-consequence::before {
+              top: 0;
+              left: 50%;
+              width: 72px;
+              height: 1px;
+              transform: translateX(-50%);
+              background: linear-gradient(to right, transparent, rgba(201, 168, 76, 0.4), transparent);
+            }
+            .landing-bloco-3-consequence h3 {
+              font-size: clamp(19px, 5.8vw, 23px);
+            }
+            .landing-bloco-3-consequence p {
+              margin-top: 9px;
+              font-size: 16px;
+            }
+            .landing-bloco-3-art {
+              width: calc(100% + 20px);
+              margin: 48px -10px 0;
+              border-radius: 4px;
+            }
+            .landing-bloco-3-art::before,
+            .landing-bloco-3-art::after {
+              height: 10%;
+            }
+            .landing-bloco-3-closing {
+              width: min(100%, 520px);
+              margin-top: 52px;
+              font-size: clamp(26px, 7.8vw, 34px);
+            }
+          }
+        `}</style>
+        <h2 className="landing-bloco-3-title">O PROBLEMA NÃO É ESQUECER DE RESPONDER UMA MENSAGEM. É TUDO O QUE ACONTECE DEPOIS.</h2>
+        <div className="landing-bloco-3-sequence" aria-label="Consequências de uma operação dependente da memória">
+          <div className="landing-bloco-3-consequence">
+            <h3>VOCÊ NÃO RESPONDE</h3>
+            <p>O cliente esfria.</p>
+          </div>
+          <div className="landing-bloco-3-consequence">
+            <h3>VOCÊ NÃO CONFIRMA</h3>
+            <p>O horário fica vazio.</p>
+          </div>
+          <div className="landing-bloco-3-consequence">
+            <h3>VOCÊ NÃO REGISTRA</h3>
+            <p>A informação se espalha.</p>
+          </div>
+        </div>
+        <div className="landing-bloco-3-art">
+          <picture>
+            <source media="(max-width: 700px)" srcSet="/imagens/landing/bloco-3/bloco-3-mobile.png" />
+            <img src="/imagens/landing/bloco-3/bloco-3-desktop.png" alt="Tatuadora conferindo mensagens pendentes no celular ao fim do expediente" />
+          </picture>
+        </div>
+        <p className="landing-bloco-3-closing">QUANDO AS INFORMAÇÕES ESTÃO ESPALHADAS, O SISTEMA É <strong>VOCÊ.</strong></p>
+      </section>
+
       {/* 08 — IDENTIFICAÇÃO DO PÚBLICO */}
       <section className="secao-entra" style={{ maxWidth: 780, margin: "0 auto", textAlign: "center", padding: "104px 24px 0" }}>
         <h2 style={{ ...sectionHeading, fontSize: "clamp(22px, 3vw, 27px)" }}>FEITO PARA O TATUADOR QUE CUIDA DA PRÓPRIA OPERAÇÃO</h2>
