@@ -25,6 +25,9 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: "INK SYSTEM",
   description: "CRM para profissionais que atendem cliente presencial",
+  icons: {
+    icon: [{ url: "/logo-ink-icon.png", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({
