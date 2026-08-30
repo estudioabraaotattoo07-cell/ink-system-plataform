@@ -1156,6 +1156,243 @@ export default function LandingPage() {
         </p>
       </section>
 
+      {/* BLOCO 6 — O PRODUTO NA PRÁTICA */}
+      <section className="landing-bloco-6 secao-entra">
+        <style>{`
+          .landing-bloco-6 {
+            position: relative;
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: clamp(132px, 15vw, 194px) 24px 0;
+          }
+          .landing-bloco-6::before {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            top: 5%;
+            left: 50%;
+            width: min(1240px, 100vw);
+            height: 90%;
+            transform: translateX(-50%);
+            background: radial-gradient(ellipse at center, rgba(99, 63, 137, 0.075) 0%, rgba(15, 11, 20, 0) 72%);
+            pointer-events: none;
+          }
+          .landing-bloco-6-header {
+            max-width: 920px;
+            margin: 0 auto;
+            text-align: center;
+          }
+          .landing-bloco-6-eyebrow {
+            margin: 0 0 24px;
+            color: var(--gold-light);
+            font-family: var(--font-body);
+            font-size: clamp(12px, 1vw, 14px);
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            line-height: 1.4;
+          }
+          .landing-bloco-6-title {
+            margin: 0;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            font-size: clamp(33px, 4.7vw, 58px);
+            font-weight: 700;
+            letter-spacing: 0.002em;
+            line-height: 1.1;
+            text-wrap: balance;
+          }
+          .landing-bloco-6-intro {
+            max-width: 720px;
+            margin: clamp(28px, 3.5vw, 40px) auto 0;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: clamp(16px, 1.45vw, 18px);
+            line-height: 1.72;
+          }
+          .landing-bloco-6-modules {
+            margin-top: clamp(78px, 9vw, 112px);
+          }
+          .landing-bloco-6-module {
+            display: grid;
+            grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+            grid-template-areas: "copy art";
+            column-gap: clamp(52px, 7vw, 92px);
+            align-items: center;
+          }
+          .landing-bloco-6-module-reverse {
+            grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.82fr);
+            grid-template-areas: "art copy";
+          }
+          .landing-bloco-6-module + .landing-bloco-6-module {
+            margin-top: clamp(86px, 10vw, 128px);
+            padding-top: clamp(86px, 10vw, 128px);
+            border-top: 1px solid transparent;
+            border-image: linear-gradient(to right, transparent, rgba(201, 168, 76, 0.32), transparent) 1;
+          }
+          .landing-bloco-6-copy {
+            grid-area: copy;
+          }
+          .landing-bloco-6-number {
+            display: block;
+            margin-bottom: 20px;
+            color: var(--gold);
+            font-family: var(--font-heading);
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+          }
+          .landing-bloco-6-module-title {
+            margin: 0;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            font-size: clamp(26px, 3vw, 38px);
+            font-weight: 700;
+            line-height: 1.18;
+            text-wrap: balance;
+          }
+          .landing-bloco-6-module-copy {
+            margin: 24px 0 0;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: clamp(15.5px, 1.35vw, 17.5px);
+            line-height: 1.72;
+          }
+          .landing-bloco-6-art {
+            grid-area: art;
+            width: 100%;
+            overflow: hidden;
+            border: 1px solid rgba(201, 168, 76, 0.18);
+            border-radius: 7px;
+            background: #08070a;
+          }
+          .landing-bloco-6-art img {
+            display: block;
+            width: 100%;
+            height: auto;
+          }
+          .landing-bloco-6-closing {
+            max-width: 920px;
+            margin: clamp(104px, 12vw, 152px) auto 0;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            font-size: clamp(29px, 4.2vw, 50px);
+            font-weight: 700;
+            line-height: 1.17;
+            text-align: center;
+            text-wrap: balance;
+          }
+          .landing-bloco-6-closing strong {
+            color: var(--gold);
+            font-weight: inherit;
+            text-shadow: 0 0 14px rgba(201, 168, 76, 0.2), 0 0 28px rgba(201, 168, 76, 0.07);
+          }
+          @media (max-width: 700px) {
+            .landing-bloco-6 {
+              padding: 120px 22px 0;
+            }
+            .landing-bloco-6::before {
+              top: 3%;
+              height: 94%;
+            }
+            .landing-bloco-6-header {
+              width: min(100%, 540px);
+            }
+            .landing-bloco-6-eyebrow {
+              margin-bottom: 22px;
+              font-size: 12px;
+            }
+            .landing-bloco-6-title {
+              font-size: clamp(30px, 8.8vw, 40px);
+            }
+            .landing-bloco-6-intro {
+              margin-top: 28px;
+              font-size: 16px;
+              line-height: 1.7;
+            }
+            .landing-bloco-6-modules {
+              margin-top: 70px;
+            }
+            .landing-bloco-6-module,
+            .landing-bloco-6-module-reverse {
+              grid-template-columns: minmax(0, 1fr);
+              grid-template-areas:
+                "copy"
+                "art";
+              column-gap: 0;
+            }
+            .landing-bloco-6-module + .landing-bloco-6-module {
+              margin-top: 64px;
+              padding-top: 64px;
+            }
+            .landing-bloco-6-copy {
+              width: min(100%, 520px);
+              margin: 0 auto;
+              text-align: center;
+            }
+            .landing-bloco-6-number {
+              margin-bottom: 16px;
+              font-size: 16px;
+            }
+            .landing-bloco-6-module-title {
+              font-size: clamp(25px, 7.4vw, 32px);
+            }
+            .landing-bloco-6-module-copy {
+              margin-top: 20px;
+              font-size: 16px;
+              line-height: 1.7;
+            }
+            .landing-bloco-6-art {
+              width: calc(100% + 16px);
+              margin: 34px -8px 0;
+              border-radius: 5px;
+            }
+            .landing-bloco-6-closing {
+              width: min(100%, 540px);
+              margin-top: 86px;
+              font-size: clamp(27px, 8vw, 36px);
+            }
+          }
+        `}</style>
+        <header className="landing-bloco-6-header">
+          <p className="landing-bloco-6-eyebrow">NA PRÁTICA</p>
+          <h2 className="landing-bloco-6-title">O QUE ANTES FICAVA ESPALHADO PASSA A FUNCIONAR EM UM FLUXO CLARO.</h2>
+          <p className="landing-bloco-6-intro">Pipeline, agenda e projeto deixam de ser tarefas soltas e passam a trabalhar juntos dentro da sua operação.</p>
+        </header>
+        <div className="landing-bloco-6-modules">
+          <article className="landing-bloco-6-module">
+            <div className="landing-bloco-6-copy">
+              <span className="landing-bloco-6-number">01</span>
+              <h3 className="landing-bloco-6-module-title">Cada cliente no lugar certo.</h3>
+              <p className="landing-bloco-6-module-copy">Visualize em que etapa cada atendimento está, o que precisa ser feito e quem está conduzindo cada caso. Sem depender da memória para acompanhar o fluxo.</p>
+            </div>
+            <div className="landing-bloco-6-art">
+              <img src="/imagens/landing/bloco-6/bloco-6-pipeline-desktop.png" alt="Pipeline do Ink System com os clientes organizados por etapa" />
+            </div>
+          </article>
+          <article className="landing-bloco-6-module landing-bloco-6-module-reverse">
+            <div className="landing-bloco-6-copy">
+              <span className="landing-bloco-6-number">02</span>
+              <h3 className="landing-bloco-6-module-title">Sua semana deixa de ser improviso.</h3>
+              <p className="landing-bloco-6-module-copy">Sessões, horários e distribuição dos atendimentos ficam visíveis de forma clara, ajudando você a organizar o tempo e reduzir conflitos, esquecimentos e encaixes mal resolvidos.</p>
+            </div>
+            <div className="landing-bloco-6-art">
+              <img src="/imagens/landing/bloco-6/bloco-6-agenda-desktop.png" alt="Agenda semanal do Ink System com sessões e horários organizados" />
+            </div>
+          </article>
+          <article className="landing-bloco-6-module">
+            <div className="landing-bloco-6-copy">
+              <span className="landing-bloco-6-number">03</span>
+              <h3 className="landing-bloco-6-module-title">Cada trabalho com contexto completo.</h3>
+              <p className="landing-bloco-6-module-copy">Projeto, serviço, profissional responsável, valor e descrição ficam organizados no mesmo lugar, para que nada importante se perca no meio da rotina.</p>
+            </div>
+            <div className="landing-bloco-6-art">
+              <img src="/imagens/landing/bloco-6/bloco-6-projeto-desktop.png" alt="Projeto no Ink System com serviço, profissional, valor e descrição organizados" />
+            </div>
+          </article>
+        </div>
+        <p className="landing-bloco-6-closing">VOCÊ NÃO PRECISA MAIS LEMBRAR DE TUDO. <strong>SÓ PRECISA CRIAR.</strong></p>
+      </section>
+
       {/* 08 — IDENTIFICAÇÃO DO PÚBLICO */}
       <section className="secao-entra" style={{ maxWidth: 780, margin: "0 auto", textAlign: "center", padding: "104px 24px 0" }}>
         <h2 style={{ ...sectionHeading, fontSize: "clamp(22px, 3vw, 27px)" }}>FEITO PARA O TATUADOR QUE CUIDA DA PRÓPRIA OPERAÇÃO</h2>
