@@ -876,6 +876,239 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* BLOCO 5 — A VIRADA PARA UMA OPERAÇÃO COM ESTRUTURA */}
+      <section className="landing-bloco-5 secao-entra">
+        <style>{`
+          .landing-bloco-5 {
+            position: relative;
+            max-width: 1160px;
+            margin: 0 auto;
+            padding: clamp(128px, 15vw, 190px) 24px 0;
+          }
+          .landing-bloco-5::before {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            top: 5%;
+            left: 50%;
+            width: min(1200px, 100vw);
+            height: 88%;
+            transform: translateX(-50%);
+            background:
+              radial-gradient(ellipse at 72% 46%, rgba(126, 82, 168, 0.13) 0%, rgba(32, 22, 43, 0.055) 38%, transparent 70%),
+              radial-gradient(ellipse at 30% 74%, rgba(201, 168, 76, 0.04) 0%, transparent 62%);
+            pointer-events: none;
+          }
+          .landing-bloco-5-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
+            grid-template-areas:
+              "eyebrow art"
+              "headline art"
+              "support-one art"
+              "support-two art"
+              "emotional art";
+            column-gap: clamp(54px, 7vw, 94px);
+            align-items: center;
+          }
+          .landing-bloco-5-eyebrow {
+            grid-area: eyebrow;
+            align-self: end;
+            margin: 0 0 24px;
+            color: var(--gold-light);
+            font-family: var(--font-body);
+            font-size: clamp(12px, 1vw, 14px);
+            font-weight: 700;
+            letter-spacing: 0.19em;
+            line-height: 1.4;
+          }
+          .landing-bloco-5-headline {
+            grid-area: headline;
+            margin: 0;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            font-size: clamp(34px, 4.8vw, 60px);
+            font-weight: 700;
+            letter-spacing: 0.002em;
+            line-height: 1.08;
+            text-wrap: balance;
+          }
+          .landing-bloco-5-support-one,
+          .landing-bloco-5-support-two,
+          .landing-bloco-5-emotional {
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: clamp(15.5px, 1.4vw, 18px);
+            line-height: 1.72;
+          }
+          .landing-bloco-5-support-one {
+            grid-area: support-one;
+            margin: clamp(32px, 4vw, 46px) 0 0;
+          }
+          .landing-bloco-5-support-two {
+            grid-area: support-two;
+            margin: 26px 0 0;
+            color: var(--text-primary);
+            font-weight: 600;
+          }
+          .landing-bloco-5-emotional {
+            grid-area: emotional;
+            margin: 30px 0 0;
+          }
+          .landing-bloco-5-emotional em {
+            color: var(--gold-light);
+            font-style: normal;
+          }
+          .landing-bloco-5-art {
+            grid-area: art;
+            width: 100%;
+            align-self: center;
+            overflow: hidden;
+            border-radius: 6px;
+          }
+          .landing-bloco-5-art picture,
+          .landing-bloco-5-art img {
+            display: block;
+            width: 100%;
+            height: auto;
+          }
+          .landing-bloco-5-brand {
+            display: inline-flex;
+            flex-wrap: nowrap;
+            align-items: baseline;
+            gap: 0.22em;
+            margin-inline: 0.12em;
+            white-space: nowrap;
+            font-family: var(--font-heading);
+            font-size: 1.08em;
+            font-weight: 800;
+            letter-spacing: 0.025em;
+          }
+          .landing-bloco-5-brand-ink {
+            color: #f7f4ef;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.22), 0 0 22px rgba(255, 255, 255, 0.08);
+          }
+          .landing-bloco-5-brand-system {
+            color: var(--gold);
+            text-shadow: 0 0 12px rgba(201, 168, 76, 0.25), 0 0 24px rgba(201, 168, 76, 0.09);
+          }
+          .landing-bloco-5-closing {
+            margin: clamp(78px, 9vw, 112px) auto 0;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            font-size: clamp(27px, 3.75vw, 46px);
+            font-weight: 700;
+            line-height: 1.2;
+            text-align: center;
+            text-wrap: balance;
+          }
+          .landing-bloco-5-closing .landing-bloco-5-brand {
+            font-size: 1.14em;
+          }
+          @media (max-width: 700px) {
+            .landing-bloco-5 {
+              padding: 120px 22px 0;
+            }
+            .landing-bloco-5::before {
+              top: 7%;
+              height: 90%;
+              background:
+                radial-gradient(ellipse at 50% 44%, rgba(126, 82, 168, 0.12) 0%, rgba(32, 22, 43, 0.05) 42%, transparent 72%),
+                radial-gradient(ellipse at 50% 80%, rgba(201, 168, 76, 0.035) 0%, transparent 62%);
+            }
+            .landing-bloco-5-grid {
+              grid-template-columns: minmax(0, 1fr);
+              grid-template-areas:
+                "eyebrow"
+                "headline"
+                "support-one"
+                "art"
+                "support-two"
+                "emotional";
+              column-gap: 0;
+            }
+            .landing-bloco-5-eyebrow {
+              width: min(100%, 520px);
+              margin: 0 auto 22px;
+              font-size: 12px;
+              text-align: center;
+            }
+            .landing-bloco-5-headline {
+              width: min(100%, 540px);
+              margin: 0 auto;
+              font-size: clamp(31px, 9.2vw, 42px);
+              text-align: center;
+            }
+            .landing-bloco-5-support-one,
+            .landing-bloco-5-support-two,
+            .landing-bloco-5-emotional {
+              width: min(100%, 520px);
+              margin-inline: auto;
+              font-size: 16px;
+              text-align: center;
+            }
+            .landing-bloco-5-support-one {
+              margin-top: 32px;
+            }
+            .landing-bloco-5-art {
+              width: calc(100% + 20px);
+              margin: 46px -10px 0;
+              border-radius: 4px;
+            }
+            .landing-bloco-5-support-two {
+              margin-top: 42px;
+              font-size: 17px;
+              line-height: 1.65;
+            }
+            .landing-bloco-5-emotional {
+              margin-top: 34px;
+              line-height: 1.75;
+            }
+            .landing-bloco-5-brand {
+              font-size: 1.07em;
+            }
+            .landing-bloco-5-closing {
+              width: min(100%, 540px);
+              margin-top: 70px;
+              font-size: clamp(25px, 7.5vw, 34px);
+            }
+            .landing-bloco-5-closing .landing-bloco-5-brand {
+              display: inline-flex;
+              margin-top: 0.14em;
+              font-size: 1.13em;
+            }
+          }
+        `}</style>
+        <div className="landing-bloco-5-grid">
+          <p className="landing-bloco-5-eyebrow">E SE NÃO PRECISASSE SER ASSIM?</p>
+          <h2 className="landing-bloco-5-headline">E SE SUA OPERAÇÃO LEMBRASSE POR VOCÊ?</h2>
+          <p className="landing-bloco-5-support-one">
+            Enquanto você tatua, cria e atende, o
+            <span className="landing-bloco-5-brand" aria-label="Ink System">
+              <span className="landing-bloco-5-brand-ink">INK</span>
+              <span className="landing-bloco-5-brand-system">SYSTEM</span>
+            </span>
+            mantém sua operação organizada e visível.
+          </p>
+          <div className="landing-bloco-5-art">
+            <picture>
+              <source media="(max-width: 700px)" srcSet="/imagens/landing/bloco-5/bloco-5-mobile.png" />
+              <img src="/imagens/landing/bloco-5/bloco-5-desktop.png" alt="Tatuadora trabalhando com o pipeline do Ink System visível no notebook" />
+            </picture>
+          </div>
+          <p className="landing-bloco-5-support-two">Clientes, projetos, agenda, financeiro e acompanhamentos em um só lugar.</p>
+          <p className="landing-bloco-5-emotional">Você continua presente na <em>sua arte</em>. O sistema mantém você presente na <em>sua operação</em>.</p>
+        </div>
+        <p className="landing-bloco-5-closing">
+          É AQUI QUE ENTRA O
+          <span className="landing-bloco-5-brand" aria-label="Ink System">
+            <span className="landing-bloco-5-brand-ink">INK</span>
+            <span className="landing-bloco-5-brand-system">SYSTEM</span>
+          </span>
+          .
+        </p>
+      </section>
+
       {/* 08 — IDENTIFICAÇÃO DO PÚBLICO */}
       <section className="secao-entra" style={{ maxWidth: 780, margin: "0 auto", textAlign: "center", padding: "104px 24px 0" }}>
         <h2 style={{ ...sectionHeading, fontSize: "clamp(22px, 3vw, 27px)" }}>FEITO PARA O TATUADOR QUE CUIDA DA PRÓPRIA OPERAÇÃO</h2>
