@@ -697,6 +697,185 @@ export default function LandingPage() {
         <p className="landing-bloco-3-closing">QUANDO AS INFORMAÇÕES ESTÃO ESPALHADAS, O SISTEMA É <strong>VOCÊ.</strong></p>
       </section>
 
+      {/* BLOCO 4 — A CARGA MENTAL QUE DISPUTA ESPAÇO COM A ARTE */}
+      <section className="landing-bloco-4 secao-entra">
+        <style>{`
+          .landing-bloco-4 {
+            position: relative;
+            max-width: 1160px;
+            margin: 0 auto;
+            padding: clamp(120px, 14vw, 176px) 24px 0;
+          }
+          .landing-bloco-4::before {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            top: 12%;
+            left: 50%;
+            width: min(1160px, 100vw);
+            height: 78%;
+            transform: translateX(-50%);
+            background: radial-gradient(ellipse at 72% 46%, rgba(82, 48, 116, 0.085) 0%, rgba(10, 8, 13, 0) 68%);
+            pointer-events: none;
+          }
+          .landing-bloco-4-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+            grid-template-areas:
+              "headline art"
+              "narrative art";
+            column-gap: clamp(52px, 7vw, 92px);
+            align-items: center;
+          }
+          .landing-bloco-4-headline {
+            grid-area: headline;
+            align-self: end;
+            margin: 0;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            font-size: clamp(29px, 3.6vw, 46px);
+            font-weight: 700;
+            letter-spacing: 0.005em;
+            line-height: 1.12;
+            text-wrap: balance;
+          }
+          .landing-bloco-4-headline strong {
+            color: var(--gold-light);
+            font-weight: inherit;
+            text-shadow: 0 0 14px rgba(201, 168, 76, 0.17), 0 0 28px rgba(201, 168, 76, 0.06);
+          }
+          .landing-bloco-4-art {
+            grid-area: art;
+            width: 100%;
+            align-self: center;
+            overflow: hidden;
+            border-radius: 6px;
+          }
+          .landing-bloco-4-art picture,
+          .landing-bloco-4-art img {
+            display: block;
+            width: 100%;
+            height: auto;
+          }
+          .landing-bloco-4-narrative {
+            grid-area: narrative;
+            align-self: start;
+            margin-top: clamp(42px, 5vw, 58px);
+          }
+          .landing-bloco-4-statement {
+            margin: 0;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            font-size: clamp(22px, 2.55vw, 31px);
+            font-weight: 700;
+            line-height: 1.25;
+            text-wrap: balance;
+          }
+          .landing-bloco-4-copy {
+            margin: 30px 0 0;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: clamp(15.5px, 1.35vw, 17.5px);
+            line-height: 1.72;
+          }
+          .landing-bloco-4-terms {
+            margin: 30px 0 0;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            font-size: clamp(16px, 1.55vw, 19px);
+            font-weight: 600;
+            letter-spacing: 0.055em;
+            line-height: 1.65;
+          }
+          .landing-bloco-4-weight {
+            margin: 30px 0 0;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: clamp(15.5px, 1.35vw, 17.5px);
+            line-height: 1.72;
+          }
+          .landing-bloco-4-closing {
+            margin: clamp(42px, 5vw, 58px) 0 0;
+            color: var(--gold);
+            font-family: var(--font-heading);
+            font-size: clamp(22px, 2.65vw, 32px);
+            font-weight: 700;
+            line-height: 1.25;
+            text-shadow: 0 0 14px rgba(201, 168, 76, 0.2), 0 0 30px rgba(201, 168, 76, 0.07);
+            text-wrap: balance;
+          }
+          @media (max-width: 700px) {
+            .landing-bloco-4 {
+              padding: 112px 22px 0;
+            }
+            .landing-bloco-4::before {
+              top: 18%;
+              height: 68%;
+              background: radial-gradient(ellipse at center, rgba(82, 48, 116, 0.075) 0%, rgba(10, 8, 13, 0) 72%);
+            }
+            .landing-bloco-4-grid {
+              grid-template-columns: minmax(0, 1fr);
+              grid-template-areas:
+                "headline"
+                "art"
+                "narrative";
+              column-gap: 0;
+            }
+            .landing-bloco-4-headline {
+              width: min(100%, 540px);
+              margin: 0 auto;
+              font-size: clamp(27px, 8vw, 36px);
+              text-align: center;
+            }
+            .landing-bloco-4-art {
+              width: calc(100% + 20px);
+              margin: 48px -10px 0;
+              border-radius: 4px;
+            }
+            .landing-bloco-4-narrative {
+              width: min(100%, 520px);
+              margin: 50px auto 0;
+              text-align: center;
+            }
+            .landing-bloco-4-statement {
+              font-size: clamp(22px, 6.8vw, 29px);
+            }
+            .landing-bloco-4-copy,
+            .landing-bloco-4-weight {
+              margin-top: 28px;
+              font-size: 16px;
+              line-height: 1.7;
+            }
+            .landing-bloco-4-terms {
+              margin-top: 30px;
+              font-size: clamp(16px, 4.8vw, 19px);
+              line-height: 1.75;
+            }
+            .landing-bloco-4-closing {
+              margin: 48px auto 0;
+              font-size: clamp(23px, 7.1vw, 31px);
+              text-align: center;
+            }
+          }
+        `}</style>
+        <div className="landing-bloco-4-grid">
+          <h2 className="landing-bloco-4-headline">SE VOCÊ PRECISA LEMBRAR DE TUDO, <strong>SUA CABEÇA NUNCA SAI DO TRABALHO.</strong></h2>
+          <div className="landing-bloco-4-art">
+            <picture>
+              <source media="(max-width: 700px)" srcSet="/imagens/landing/bloco-4/bloco-4-mobile.png" />
+              <img src="/imagens/landing/bloco-4/bloco-4-desktop.png" alt="Tatuadora desenhando enquanto pensa nas tarefas operacionais do estúdio" />
+            </picture>
+          </div>
+          <div className="landing-bloco-4-narrative">
+            <h3 className="landing-bloco-4-statement">VOCÊ NÃO COMEÇOU A TATUAR PARA PASSAR O DIA ADMINISTRANDO.</h3>
+            <p className="landing-bloco-4-copy">Mesmo quando o estúdio fecha, a operação continua aberta na sua cabeça.</p>
+            <p className="landing-bloco-4-terms">Retorno. Agenda. Pagamento. Referência. Confirmação.</p>
+            <p className="landing-bloco-4-weight">O problema não é só o tempo que isso consome.<br />É o espaço mental que isso ocupa.</p>
+            <p className="landing-bloco-4-closing">A OPERAÇÃO DEVE SUSTENTAR SUA ARTE. NÃO SUFOCÁ-LA.</p>
+          </div>
+        </div>
+      </section>
+
       {/* 08 — IDENTIFICAÇÃO DO PÚBLICO */}
       <section className="secao-entra" style={{ maxWidth: 780, margin: "0 auto", textAlign: "center", padding: "104px 24px 0" }}>
         <h2 style={{ ...sectionHeading, fontSize: "clamp(22px, 3vw, 27px)" }}>FEITO PARA O TATUADOR QUE CUIDA DA PRÓPRIA OPERAÇÃO</h2>
