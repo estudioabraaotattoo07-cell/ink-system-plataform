@@ -129,5 +129,5 @@ test("action não lê hash como token público, não registra token e falha de e
   assert.doesNotMatch(trecho, /tokenDaImplantacao|select\(["']token["']\)/);
   assert.doesNotMatch(trecho, /console\.(?:log|info|warn|error)\([^\n]*token/);
   assert.doesNotMatch(trecho, /api\/provisionar|\.insert\(\{\s*email/);
-  assert.match(trecho, /if \(!envio\.ok\) return envio/);
+  assert.match(trecho, /comunicacao: "pendente"/);
 });

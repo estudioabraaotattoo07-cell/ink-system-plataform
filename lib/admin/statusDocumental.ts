@@ -1,7 +1,7 @@
 import type { StatusItem } from "@/lib/implantacaoItens";
 
 export type ResultadoAtualizacaoStatus =
-  | { ok: true }
+  | { ok: true; comunicacao?: "enviado" | "pendente"; aviso?: string }
   | { ok: false; error?: string };
 
 type AtualizarStatus = (
@@ -44,7 +44,7 @@ export function criarControleStatusDocumental(atualizarStatus: AtualizarStatus) 
         }
 
         alteracao.aoConfirmar();
-        return { ok: true as const, bloqueado: false as const };
+        return { ok: true as const, bloqueado: false as const, resultado };
       } catch {
         alteracao.aoFalhar("Não foi possível atualizar o status.");
         return { ok: false as const, bloqueado: false as const };

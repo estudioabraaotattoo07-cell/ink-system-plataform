@@ -6,6 +6,7 @@ import { tipoDeItem } from "@/lib/implantacaoItens";
 import { exigirAdmin, registrarAuditoriaAdmin } from "@/lib/admin/autorizacao";
 import { gerarTokenImplantacao, hashTokenImplantacao, tokenImplantacaoExpiraEm } from "@/lib/implantacao/token";
 import { montarUrlComplementacao, rotacionarTokenReenvio } from "@/lib/implantacao/reenvioDocumental";
+import { eventoComunicacaoReenvio } from "@/lib/implantacao/comunicacaoReenvio";
 
 function getAdminClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
@@ -446,18 +447,90 @@ export async function atualizarStatusItem(
   }).eq("id", itemId);
   if (error) return { ok: false, error: error.message };
 
-  if (emailReenvio) {
-    const envio = await enviarEmail(emailReenvio.destino, "Sua solicitação precisa de algumas informações complementares", emailReenvio.html);
-    if (!envio.ok) return envio;
-  }
-
-  await sb.from("ink_implantacao_historico").insert({
+  const { error: erroHistorico } = await sb.from("ink_implantacao_historico").insert({
     implantacao_id: item.implantacao_id,
     evento: `Item "${status === "solicitar_novo" ? "reenvio solicitado" : status}": ${item.tipo}`,
   });
+  if (erroHistorico) {
+    return { ok: false, error: "O status foi salvo, mas o histórico da implantação não pôde ser atualizado." };
+  }
+
+  if (emailReenvio) {
+    const { error: erroPendencia } = await sb.from("ink_implantacao_historico").insert({
+      implantacao_id: item.implantacao_id,
+      evento: eventoComunicacaoReenvio(itemId, "pendente"),
+    });
+    if (erroPendencia) {
+      return { ok: false, error: "O pedido foi salvo, mas não foi possível registrar a comunicação pendente." };
+    }
+
+    const envio = await enviarEmail(emailReenvio.destino, "Sua solicitação precisa de algumas informações complementares", emailReenvio.html);
+    if (!envio.ok) {
+      await registrarAuditoriaAdmin({ admin, acao: "solicitar_reenvio_documento", recurso: "ink_implantacao_itens", recursoId: itemId, detalhes: { status, comunicacao: "pendente" } });
+      revalidatePath("/admin");
+      return { ok: true, comunicacao: "pendente" as const, aviso: "Pedido salvo. O e-mail não foi enviado e precisa ser reenviado." };
+    }
+
+    const { error: erroEnviado } = await sb.from("ink_implantacao_historico").insert({
+      implantacao_id: item.implantacao_id,
+      evento: eventoComunicacaoReenvio(itemId, "enviado"),
+    });
+    if (erroEnviado) return { ok: false, error: "O e-mail foi enviado, mas o histórico não pôde ser atualizado." };
+  }
 
   await registrarAuditoriaAdmin({ admin, acao: "atualizar_documento", recurso: "ink_implantacao_itens", recursoId: itemId, detalhes: { status } });
 
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+export async function reenviarEmailDocumento(itemId: string) {
+  const admin = await exigirAdmin();
+  const sb = getAdminClient();
+  const { data: item, error: erroItem } = await sb
+    .from("ink_implantacao_itens")
+    .select("id, implantacao_id, tipo, status, observacao_admin")
+    .eq("id", itemId)
+    .maybeSingle();
+  if (erroItem || !item) return { ok: false, error: "Item não encontrado." };
+  if (item.status !== "solicitar_novo") return { ok: false, error: "Este item não possui pedido de reenvio ativo." };
+
+  const { data: implantacao, error: erroImplantacao } = await sb
+    .from("ink_implantacao_dados")
+    .select("id, email, nome_completo")
+    .eq("id", item.implantacao_id)
+    .maybeSingle();
+  if (erroImplantacao || !implantacao?.email) return { ok: false, error: "Implantação não encontrada para reenviar o e-mail." };
+
+  const rotacao = await rotacionarTokenReenvio(sb, implantacao.id);
+  if (!rotacao.ok) return rotacao;
+
+  const rotulo = tipoDeItem(item.tipo).rotulo;
+  const primeiroNome = implantacao.nome_completo?.split(" ")[0] || "";
+  const html = paragrafos([
+    `Olá, ${primeiroNome}.`,
+    `Durante a análise da sua documentação, identificamos que o item "${rotulo}" precisa ser reenviado.`,
+    ...(item.observacao_admin ? [`Motivo: ${item.observacao_admin}`] : []),
+    "Clique no botão abaixo para enviar novamente apenas este item — não é necessário refazer o restante da complementação.",
+  ]) + BOTAO_HTML("Reenviar documento", montarUrlComplementacao(rotacao.tokenOriginal)) + RODAPE;
+
+  const envio = await enviarEmail(implantacao.email, "Sua solicitação precisa de algumas informações complementares", html);
+  if (!envio.ok) {
+    await sb.from("ink_implantacao_historico").insert({
+      implantacao_id: item.implantacao_id,
+      evento: eventoComunicacaoReenvio(itemId, "pendente"),
+    });
+    await registrarAuditoriaAdmin({ admin, acao: "reenviar_email_documento", recurso: "ink_implantacao_itens", recursoId: itemId, detalhes: { comunicacao: "pendente" } });
+    return envio;
+  }
+
+  const { error: erroHistorico } = await sb.from("ink_implantacao_historico").insert({
+    implantacao_id: item.implantacao_id,
+    evento: eventoComunicacaoReenvio(itemId, "enviado"),
+  });
+  if (erroHistorico) return { ok: false, error: "O e-mail foi enviado, mas o histórico não pôde ser atualizado." };
+
+  await registrarAuditoriaAdmin({ admin, acao: "reenviar_email_documento", recurso: "ink_implantacao_itens", recursoId: itemId, detalhes: { comunicacao: "enviado" } });
   revalidatePath("/admin");
   return { ok: true };
 }

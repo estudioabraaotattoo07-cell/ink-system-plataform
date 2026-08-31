@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { buscarImplantacao, revelarCPF, gerarUrlArquivo, atualizarStatusItem, salvarAuthUserId } from "./actions";
+import { buscarImplantacao, revelarCPF, gerarUrlArquivo, atualizarStatusItem, reenviarEmailDocumento, salvarAuthUserId } from "./actions";
 import { tipoDeItem, STATUS_LABEL, type StatusItem } from "@/lib/implantacaoItens";
 import { criarControleStatusDocumental } from "@/lib/admin/statusDocumental";
+import { descricaoEventoImplantacao, estadosComunicacaoReenvio } from "@/lib/implantacao/comunicacaoReenvio";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -30,6 +31,8 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
   const [motivo, setMotivo] = useState("");
   const [itensSalvando, setItensSalvando] = useState<Record<string, boolean>>({});
   const [errosStatus, setErrosStatus] = useState<Record<string, string>>({});
+  const [itensReenviandoEmail, setItensReenviandoEmail] = useState<Record<string, boolean>>({});
+  const retriesEmAndamentoRef = useRef(new Set<string>());
   const controleStatusRef = useRef(criarControleStatusDocumental(atualizarStatusItem));
   const [authUserIdEditando, setAuthUserIdEditando] = useState(false);
   const [authUserIdInput, setAuthUserIdInput] = useState("");
@@ -93,8 +96,36 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
   const confirmarSolicitarNovo = async (itemId: string) => {
     const resultado = await persistirStatus(itemId, "solicitar_novo", motivo || undefined);
     if (resultado.ok) {
+      const recarregado = await buscarImplantacao(email);
+      if (recarregado) {
+        setItens(recarregado.itens);
+        setHistorico(recarregado.historico);
+      }
       setPedindoMotivo(null);
       setMotivo("");
+    }
+  };
+
+  const reenviarEmail = async (itemId: string) => {
+    if (retriesEmAndamentoRef.current.has(itemId)) return;
+    retriesEmAndamentoRef.current.add(itemId);
+    setItensReenviandoEmail((prev) => ({ ...prev, [itemId]: true }));
+    setErrosStatus((prev) => ({ ...prev, [itemId]: "" }));
+    try {
+      const resultado = await reenviarEmailDocumento(itemId);
+      if (!resultado.ok) {
+        setErrosStatus((prev) => ({ ...prev, [itemId]: resultado.error || "Não foi possível reenviar o e-mail." }));
+      }
+      const recarregado = await buscarImplantacao(email);
+      if (recarregado) {
+        setItens(recarregado.itens);
+        setHistorico(recarregado.historico);
+      }
+    } catch {
+      setErrosStatus((prev) => ({ ...prev, [itemId]: "Não foi possível reenviar o e-mail." }));
+    } finally {
+      retriesEmAndamentoRef.current.delete(itemId);
+      setItensReenviandoEmail((prev) => ({ ...prev, [itemId]: false }));
     }
   };
 
@@ -147,6 +178,7 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
     { label: "Aprovação final", ok: estagioFicha === "aprovado" },
   ];
   const concluidas = etapas.filter((e) => e.ok).length;
+  const comunicacoesReenvio = estadosComunicacaoReenvio(historico);
 
   return (
     <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 18, paddingTop: 16 }}>
@@ -260,6 +292,8 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
             {itens.map((item) => {
               const trait = tipoDeItem(item.tipo);
               const salvandoStatus = !!itensSalvando[item.id];
+              const reenviandoEmail = !!itensReenviandoEmail[item.id];
+              const comunicacaoPendente = comunicacoesReenvio[item.id] === "pendente";
               return (
                 <div key={item.id} style={{ background: "#141414", borderRadius: 6, padding: "8px 10px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
@@ -277,6 +311,16 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
                   )}
                   {item.observacao_admin && item.status === "solicitar_novo" && (
                     <div style={{ fontSize: 10, color: "#E0A85A", marginTop: 4, fontStyle: "italic" }}>Motivo enviado: {item.observacao_admin}</div>
+                  )}
+                  {comunicacaoPendente && (
+                    <div style={{ marginTop: 6, padding: "6px 8px", border: "1px solid rgba(224,168,90,0.35)", borderRadius: 6, background: "rgba(224,168,90,0.08)" }}>
+                      <div role="status" style={{ color: "#E0A85A", fontSize: 10, marginBottom: 5 }}>
+                        Pedido salvo — e-mail pendente de envio.
+                      </div>
+                      <button disabled={reenviandoEmail} onClick={() => reenviarEmail(item.id)} style={{ background: "transparent", border: "1px solid rgba(201,168,76,0.55)", color: "#C9A84C", borderRadius: 999, padding: "3px 10px", fontSize: 10, cursor: reenviandoEmail ? "wait" : "pointer", opacity: reenviandoEmail ? 0.65 : 1 }}>
+                        {reenviandoEmail ? "Reenviando..." : "Reenviar e-mail"}
+                      </button>
+                    </div>
                   )}
                   <div style={{ marginTop: 6 }}>
                     {pedindoMotivo === item.id ? (
@@ -353,7 +397,7 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {historico.map((h) => (
               <div key={h.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#A09585" }}>
-                <span>{h.evento}</span>
+                <span>{descricaoEventoImplantacao(h.evento)}</span>
                 <span>{new Date(h.criado_em).toLocaleDateString("pt-BR")}</span>
               </div>
             ))}
