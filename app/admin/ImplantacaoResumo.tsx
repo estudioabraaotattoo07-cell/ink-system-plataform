@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { buscarImplantacao, revelarCPF, gerarUrlArquivo, atualizarStatusItem, salvarAuthUserId } from "./actions";
 import { tipoDeItem, STATUS_LABEL, type StatusItem } from "@/lib/implantacaoItens";
+import { criarControleStatusDocumental } from "@/lib/admin/statusDocumental";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -27,6 +28,9 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
   const [cpfRevelado, setCpfRevelado] = useState<string | null>(null);
   const [pedindoMotivo, setPedindoMotivo] = useState<string | null>(null);
   const [motivo, setMotivo] = useState("");
+  const [itensSalvando, setItensSalvando] = useState<Record<string, boolean>>({});
+  const [errosStatus, setErrosStatus] = useState<Record<string, string>>({});
+  const controleStatusRef = useRef(criarControleStatusDocumental(atualizarStatusItem));
   const [authUserIdEditando, setAuthUserIdEditando] = useState(false);
   const [authUserIdInput, setAuthUserIdInput] = useState("");
   const [authUserIdSalvando, setAuthUserIdSalvando] = useState(false);
@@ -60,20 +64,38 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
     if (r.ok) window.open(r.url, "_blank");
   };
 
-  const mudarStatus = (itemId: string, status: StatusItem) => {
+  const persistirStatus = async (itemId: string, status: StatusItem, observacao?: string) => {
+    setErrosStatus((prev) => ({ ...prev, [itemId]: "" }));
+    return controleStatusRef.current!.executar({
+      itemId,
+      status,
+      observacao,
+      aoProcessar: (processando) => setItensSalvando((prev) => ({ ...prev, [itemId]: processando })),
+      aoConfirmar: () => setItens((prev) => prev.map((item) => (
+        item.id === itemId
+          ? { ...item, status, observacao_admin: observacao ?? item.observacao_admin }
+          : item
+      ))),
+      aoFalhar: (mensagem) => setErrosStatus((prev) => ({ ...prev, [itemId]: mensagem })),
+    });
+  };
+
+  const mudarStatus = async (itemId: string, status: StatusItem) => {
     if (status === "solicitar_novo") {
+      setErrosStatus((prev) => ({ ...prev, [itemId]: "" }));
       setPedindoMotivo(itemId);
       setMotivo("");
       return;
     }
-    setItens((prev) => prev.map((i) => (i.id === itemId ? { ...i, status } : i)));
-    atualizarStatusItem(itemId, status);
+    await persistirStatus(itemId, status);
   };
 
-  const confirmarSolicitarNovo = (itemId: string) => {
-    setItens((prev) => prev.map((i) => (i.id === itemId ? { ...i, status: "solicitar_novo", observacao_admin: motivo || null } : i)));
-    atualizarStatusItem(itemId, "solicitar_novo", motivo || undefined);
-    setPedindoMotivo(null);
+  const confirmarSolicitarNovo = async (itemId: string) => {
+    const resultado = await persistirStatus(itemId, "solicitar_novo", motivo || undefined);
+    if (resultado.ok) {
+      setPedindoMotivo(null);
+      setMotivo("");
+    }
   };
 
   const todosItensRecebidos = itens.length > 0 && itens.every((i) => i.status !== "pendente");
@@ -237,6 +259,7 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
             {itens.map((item) => {
               const trait = tipoDeItem(item.tipo);
+              const salvandoStatus = !!itensSalvando[item.id];
               return (
                 <div key={item.id} style={{ background: "#141414", borderRadius: 6, padding: "8px 10px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
@@ -261,15 +284,16 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
                         <textarea
                           value={motivo}
                           onChange={(e) => setMotivo(e.target.value)}
+                          disabled={salvandoStatus}
                           placeholder="Motivo (opcional) — aparece no e-mail pro cliente"
                           style={{ background: "#0A0A0A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 6, color: "#E8E2D9", fontSize: 11, padding: 6, resize: "vertical", minHeight: 40 }}
                         />
                         <div style={{ display: "flex", gap: 8 }}>
-                          <button onClick={() => setPedindoMotivo(null)} style={{ background: "none", border: "1px solid rgba(255,255,255,0.2)", color: "#A09585", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer" }}>
+                          <button disabled={salvandoStatus} onClick={() => setPedindoMotivo(null)} style={{ background: "none", border: "1px solid rgba(255,255,255,0.2)", color: "#A09585", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: salvandoStatus ? "wait" : "pointer", opacity: salvandoStatus ? 0.6 : 1 }}>
                             Cancelar
                           </button>
-                          <button onClick={() => confirmarSolicitarNovo(item.id)} style={{ background: "#C9A84C", border: "none", color: "#17140A", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
-                            Enviar solicitação
+                          <button disabled={salvandoStatus} onClick={() => confirmarSolicitarNovo(item.id)} style={{ background: "#C9A84C", border: "none", color: "#17140A", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 700, cursor: salvandoStatus ? "wait" : "pointer", opacity: salvandoStatus ? 0.7 : 1 }}>
+                            {salvandoStatus ? "Enviando..." : "Enviar solicitação"}
                           </button>
                         </div>
                       </div>
@@ -277,12 +301,19 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
                       <select
                         value={item.status}
                         onChange={(e) => mudarStatus(item.id, e.target.value as StatusItem)}
-                        style={{ background: "#0A0A0A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 6, color: "#A09585", fontSize: 10, padding: "2px 6px", cursor: "pointer" }}
+                        disabled={salvandoStatus}
+                        aria-busy={salvandoStatus}
+                        style={{ background: "#0A0A0A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 6, color: "#A09585", fontSize: 10, padding: "2px 6px", cursor: salvandoStatus ? "wait" : "pointer", opacity: salvandoStatus ? 0.65 : 1 }}
                       >
                         {Object.entries(STATUS_LABEL).map(([v, l]) => (
                           <option key={v} value={v}>{l}</option>
                         ))}
                       </select>
+                    )}
+                    {errosStatus[item.id] && (
+                      <div role="alert" style={{ color: "#EF9A9A", fontSize: 10, marginTop: 5 }}>
+                        {errosStatus[item.id]}
+                      </div>
                     )}
                   </div>
                 </div>
