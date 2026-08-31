@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { tipoDeItem } from "@/lib/implantacaoItens";
 import { exigirAdmin, registrarAuditoriaAdmin } from "@/lib/admin/autorizacao";
 import { gerarTokenImplantacao, hashTokenImplantacao, tokenImplantacaoExpiraEm } from "@/lib/implantacao/token";
+import { montarUrlComplementacao, rotacionarTokenReenvio } from "@/lib/implantacao/reenvioDocumental";
 
 function getAdminClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
@@ -411,6 +412,33 @@ export async function atualizarStatusItem(
   const { data: item, error: errItem } = await sb.from("ink_implantacao_itens").select("*").eq("id", itemId).maybeSingle();
   if (errItem || !item) return { ok: false, error: "Item não encontrado." };
 
+  let emailReenvio: { destino: string; html: string } | null = null;
+  if (status === "solicitar_novo") {
+    const { data: implantacao, error: erroImplantacao } = await sb
+      .from("ink_implantacao_dados")
+      .select("id, email, nome_completo")
+      .eq("id", item.implantacao_id)
+      .maybeSingle();
+    if (erroImplantacao || !implantacao?.email) {
+      return { ok: false, error: "Implantação não encontrada para solicitar o reenvio." };
+    }
+
+    const rotacao = await rotacionarTokenReenvio(sb, implantacao.id);
+    if (!rotacao.ok) return rotacao;
+
+    const rotulo = tipoDeItem(item.tipo).rotulo;
+    const primeiroNome = implantacao.nome_completo?.split(" ")[0] || "";
+    emailReenvio = {
+      destino: implantacao.email,
+      html: paragrafos([
+        `Olá, ${primeiroNome}.`,
+        `Durante a análise da sua documentação, identificamos que o item "${rotulo}" precisa ser reenviado.`,
+        ...(observacao ? [`Motivo: ${observacao}`] : []),
+        "Clique no botão abaixo para enviar novamente apenas este item — não é necessário refazer o restante da complementação.",
+      ]) + BOTAO_HTML("Reenviar documento", montarUrlComplementacao(rotacao.tokenOriginal)) + RODAPE,
+    };
+  }
+
   const { error } = await sb.from("ink_implantacao_itens").update({
     status,
     observacao_admin: observacao ?? item.observacao_admin,
@@ -418,20 +446,9 @@ export async function atualizarStatusItem(
   }).eq("id", itemId);
   if (error) return { ok: false, error: error.message };
 
-  if (status === "solicitar_novo") {
-    const { data: implantacao } = await sb.from("ink_implantacao_dados").select("email, nome_completo").eq("id", item.implantacao_id).maybeSingle();
-    if (implantacao?.email) {
-      const rotulo = tipoDeItem(item.tipo).rotulo;
-      const primeiroNome = implantacao.nome_completo?.split(" ")[0] || "";
-      const html = paragrafos([
-        `Olá, ${primeiroNome}.`,
-        `Durante a análise da sua documentação, identificamos que o item "${rotulo}" precisa ser reenviado.`,
-        ...(observacao ? [`Motivo: ${observacao}`] : []),
-        "Clique no botão abaixo para enviar novamente apenas este item — não é necessário refazer o restante da complementação.",
-      ]) + BOTAO_HTML("Reenviar documento", "https://inksystem.com.br/complementar/" + await tokenDaImplantacao(sb, item.implantacao_id))
-        + RODAPE;
-      await enviarEmail(implantacao.email, "Sua solicitação precisa de algumas informações complementares", html);
-    }
+  if (emailReenvio) {
+    const envio = await enviarEmail(emailReenvio.destino, "Sua solicitação precisa de algumas informações complementares", emailReenvio.html);
+    if (!envio.ok) return envio;
   }
 
   await sb.from("ink_implantacao_historico").insert({
@@ -443,9 +460,4 @@ export async function atualizarStatusItem(
 
   revalidatePath("/admin");
   return { ok: true };
-}
-
-async function tokenDaImplantacao(sb: ReturnType<typeof getAdminClient>, implantacaoId: string) {
-  const { data } = await sb.from("ink_implantacao_dados").select("token").eq("id", implantacaoId).maybeSingle();
-  return data?.token || "";
 }
