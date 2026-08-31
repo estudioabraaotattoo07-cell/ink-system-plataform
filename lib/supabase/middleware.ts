@@ -45,7 +45,11 @@ export async function updateSession(request: NextRequest) {
   }
 
   const path = request.nextUrl.pathname;
-  const { protegida: isRotaProtegida, suspensa: isRotaSuspenso } = classificarRota(path);
+  const {
+    protegida: isRotaProtegida,
+    suspensa: isRotaSuspenso,
+    testeEncerrado: isRotaTesteEncerrado,
+  } = classificarRota(path);
   // "/admin/login/entrar" precisa ser pública -- é o próprio pedido que
   // estabelece a sessão (não existe usuário ainda no momento da chamada).
   const isAdminPublica = path === "/admin/login" || path === "/admin/login/entrar";
@@ -95,7 +99,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && (isRotaProtegida || isRotaSuspenso)) {
+  if (user && (isRotaProtegida || isRotaSuspenso || isRotaTesteEncerrado)) {
     // Falha técnica na verificação bloqueia com segurança -- avaliarAcesso()
     // já devolve permitido:false tanto pra bloqueio comercial real quanto
     // pra erro de consulta, então nenhum tratamento extra é necessário
@@ -109,7 +113,12 @@ export async function updateSession(request: NextRequest) {
     // assinatura interna de avaliarAcesso() continua 100% tipada (zero
     // "any"); só este ponto de fronteira precisa da conversão.
     const resultado = await avaliarAcesso(supabase as unknown as ClienteSupabaseMinimo, user.id);
-    const decisao = decidirRedirecionamento(resultado, isRotaProtegida, isRotaSuspenso);
+    const decisao = decidirRedirecionamento(
+      resultado,
+      isRotaProtegida,
+      isRotaSuspenso,
+      isRotaTesteEncerrado
+    );
 
     if (decisao.destino) {
       const url = request.nextUrl.clone();

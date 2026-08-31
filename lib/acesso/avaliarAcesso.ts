@@ -17,8 +17,12 @@
 // independente; este módulo nunca escreve em nenhuma das duas, e nunca
 // usa o valor de uma pra decidir ou alterar o valor da outra.
 //
-// data_vencimento não participa desta decisão nesta fase -- uma licença
-// com status "ativo" e data_vencimento no passado continua liberando.
+// Contas de teste também precisam estar antes do instante registrado em
+// ink_clientes.data_vencimento. Essa é a cópia operacional do mesmo
+// v_termina_em calculado no primeiro acesso; ao contrário de
+// licencas.data_vencimento, ela preserva data e hora. Contas pagas e legadas
+// continuam regidas pelos status -- esta correção não cria uma regra de
+// cobrança nem interpreta vencimento financeiro.
 //
 // .maybeSingle() (não .single()) é usado nas duas consultas: cada tabela
 // já tem UNIQUE garantindo no máximo 1 linha por usuário
@@ -34,9 +38,13 @@ export type MotivoBloqueio =
   | "sem_ink_clientes"
   | "ink_clientes_nao_ativo"
   | "sem_licenca"
-  | "licenca_nao_ativa";
+  | "licenca_nao_ativa"
+  | "teste_expirado";
 
-export type MotivoErro = "erro_consulta_ink_clientes" | "erro_consulta_licencas";
+export type MotivoErro =
+  | "erro_consulta_ink_clientes"
+  | "erro_consulta_licencas"
+  | "teste_vencimento_invalido";
 
 export type ResultadoAcesso =
   | { permitido: true; slug: string }
@@ -53,6 +61,9 @@ export type ResultadoAcesso =
 interface LinhaInkCliente {
   status: string | null;
   slug: string;
+  periodo: string | null;
+  plano: string | null;
+  data_vencimento: string | null;
 }
 
 interface LinhaLicenca {
@@ -92,14 +103,39 @@ function statusLiberado(valor: unknown): boolean {
   return valor.trim().toLowerCase() === STATUS_LIBERADO;
 }
 
+function valorNormalizado(valor: unknown): string {
+  return typeof valor === "string" ? valor.trim().toLowerCase() : "";
+}
+
+function clienteEmTeste(cliente: LinhaInkCliente): boolean {
+  return valorNormalizado(cliente.periodo) === "teste" || valorNormalizado(cliente.plano) === "1.0-teste";
+}
+
+function avaliarVencimentoTeste(
+  cliente: LinhaInkCliente,
+  agora: Date
+): { expirado: boolean; inconsistente: boolean } {
+  if (!clienteEmTeste(cliente)) return { expirado: false, inconsistente: false };
+  if (!cliente.data_vencimento || Number.isNaN(agora.getTime())) {
+    return { expirado: false, inconsistente: true };
+  }
+  const vencimentoMs = Date.parse(cliente.data_vencimento);
+  if (Number.isNaN(vencimentoMs)) return { expirado: false, inconsistente: true };
+  return { expirado: agora.getTime() >= vencimentoMs, inconsistente: false };
+}
+
 /**
  * @param supabase Cliente Supabase já autenticado/construído pelo chamador.
  * @param userId auth.users.id do usuário já autenticado.
  */
-export async function avaliarAcesso(supabase: ClienteSupabaseMinimo, userId: string): Promise<ResultadoAcesso> {
+export async function avaliarAcesso(
+  supabase: ClienteSupabaseMinimo,
+  userId: string,
+  agora: Date = new Date()
+): Promise<ResultadoAcesso> {
   const { data: cliente, error: erroCliente } = await supabase
     .from("ink_clientes")
-    .select<LinhaInkCliente>("status, slug")
+    .select<LinhaInkCliente>("status, slug, periodo, plano, data_vencimento")
     .eq("auth_user_id", userId)
     .maybeSingle();
 
@@ -111,6 +147,14 @@ export async function avaliarAcesso(supabase: ClienteSupabaseMinimo, userId: str
   }
   if (!statusLiberado(cliente.status)) {
     return { permitido: false, falhaTecnica: false, motivo: "ink_clientes_nao_ativo" };
+  }
+
+  const vencimentoTeste = avaliarVencimentoTeste(cliente, agora);
+  if (vencimentoTeste.inconsistente) {
+    return { permitido: false, falhaTecnica: true, motivo: "teste_vencimento_invalido" };
+  }
+  if (vencimentoTeste.expirado) {
+    return { permitido: false, falhaTecnica: false, motivo: "teste_expirado" };
   }
 
   const { data: licenca, error: erroLicenca } = await supabase
@@ -147,8 +191,12 @@ export async function avaliarAcesso(supabase: ClienteSupabaseMinimo, userId: str
 // Nenhuma regra funcional muda: é a mesma lógica que antes estava
 // inline em updateSession() e getTenantUserId(), só realocada.
 
-export function classificarRota(path: string): { protegida: boolean; suspensa: boolean } {
-  return { protegida: path.startsWith("/app/"), suspensa: path === "/suspenso" };
+export function classificarRota(path: string): { protegida: boolean; suspensa: boolean; testeEncerrado: boolean } {
+  return {
+    protegida: path === "/app" || path.startsWith("/app/"),
+    suspensa: path === "/suspenso",
+    testeEncerrado: path === "/teste-encerrado",
+  };
 }
 
 export type DecisaoRedirecionamento = { destino: string } | { destino: null };
@@ -156,13 +204,20 @@ export type DecisaoRedirecionamento = { destino: string } | { destino: null };
 export function decidirRedirecionamento(
   resultado: ResultadoAcesso,
   protegida: boolean,
-  suspensa: boolean
+  suspensa: boolean,
+  testeEncerrado: boolean = false
 ): DecisaoRedirecionamento {
   if (protegida && !resultado.permitido) {
-    return { destino: "/suspenso" };
+    return { destino: !resultado.falhaTecnica && resultado.motivo === "teste_expirado" ? "/teste-encerrado" : "/suspenso" };
   }
-  if (suspensa && resultado.permitido) {
+  if ((suspensa || testeEncerrado) && resultado.permitido) {
     return { destino: "/app/" + resultado.slug };
+  }
+  if (suspensa && !resultado.permitido && !resultado.falhaTecnica && resultado.motivo === "teste_expirado") {
+    return { destino: "/teste-encerrado" };
+  }
+  if (testeEncerrado && (!resultado.permitido && (resultado.falhaTecnica || resultado.motivo !== "teste_expirado"))) {
+    return { destino: "/suspenso" };
   }
   return { destino: null };
 }
