@@ -4,8 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
 import { itensParaTipoPessoa } from "@/lib/implantacaoItens";
 import { randomUUID } from "node:crypto";
-import { hashTokenImplantacao } from "@/lib/implantacao/token";
 import { extensaoSeguraDocumento, validarDocumentoUpload } from "@/lib/implantacao/arquivo";
+import { atualizarImplantacaoPorId, resolverImplantacaoPorToken } from "@/lib/implantacao/complementacao";
 
 // Versão dos documentos aceitos no aceite eletrônico -- se o texto mudar no
 // futuro, sobe esse número; o aceite antigo já registrado não muda. Não pode
@@ -26,16 +26,7 @@ async function obterIP() {
 }
 
 async function buscarPorToken(token: string) {
-  if (!token || token.length > 200) return null;
-  const sb = getAdminClient();
-  const { data, error } = await sb
-    .from("ink_implantacao_dados")
-    .select("*")
-    .eq("token", hashTokenImplantacao(token))
-    .gt("token_expira_em", new Date().toISOString())
-    .maybeSingle();
-  if (error || !data) return null;
-  return data;
+  return resolverImplantacaoPorToken(getAdminClient(), token);
 }
 
 // Só o resumo da ação, nunca o conteúdo -- CPF/CNPJ/documentos nunca
@@ -50,14 +41,14 @@ export async function salvarEtapaResponsavel(token: string, dados: { nomeComplet
   const registro = await buscarPorToken(token);
   if (!registro) return { ok: false, error: "Link inválido." };
   const sb = getAdminClient();
-  const { error } = await sb.from("ink_implantacao_dados").update({
+  const atualizacao = await atualizarImplantacaoPorId(sb, registro.id, {
     nome_completo: dados.nomeCompleto,
     cpf: dados.cpf,
     telefone: dados.telefone,
     etapa_atual: Math.max(registro.etapa_atual, 2),
     atualizado_em: new Date().toISOString(),
-  }).eq("token", token);
-  if (error) return { ok: false, error: error.message };
+  });
+  if (!atualizacao.ok) return atualizacao;
   await registrarHistorico(registro.id, "Dados do responsável enviados");
   return { ok: true };
 }
@@ -72,7 +63,7 @@ export async function salvarEtapaEstudio(token: string, dados: {
   const registro = await buscarPorToken(token);
   if (!registro) return { ok: false, error: "Link inválido." };
   const sb = getAdminClient();
-  const { error } = await sb.from("ink_implantacao_dados").update({
+  const atualizacao = await atualizarImplantacaoPorId(sb, registro.id, {
     tipo_pessoa: dados.tipoPessoa,
     cnpj: dados.cnpj,
     nome_fantasia: dados.nomeFantasia,
@@ -83,8 +74,8 @@ export async function salvarEtapaEstudio(token: string, dados: {
     qtd_artistas: dados.qtdArtistas,
     etapa_atual: Math.max(registro.etapa_atual, 3),
     atualizado_em: new Date().toISOString(),
-  }).eq("token", token);
-  if (error) return { ok: false, error: error.message };
+  });
+  if (!atualizacao.ok) return atualizacao;
 
   const { data: itensExistentes } = await sb.from("ink_implantacao_itens").select("id").eq("implantacao_id", registro.id);
   if (!itensExistentes || itensExistentes.length === 0) {
@@ -148,11 +139,11 @@ export async function avancarParaDocumentosConcluidos(token: string) {
   if (itens?.some((i) => i.status === "pendente")) {
     return { ok: false, error: "Ainda falta enviar algum documento antes de continuar." };
   }
-  const { error } = await sb.from("ink_implantacao_dados").update({
+  const atualizacao = await atualizarImplantacaoPorId(sb, registro.id, {
     etapa_atual: Math.max(registro.etapa_atual, 4),
     atualizado_em: new Date().toISOString(),
-  }).eq("token", token);
-  if (error) return { ok: false, error: error.message };
+  });
+  if (!atualizacao.ok) return atualizacao;
   await registrarHistorico(registro.id, "Documentos enviados");
   return { ok: true };
 }
@@ -162,14 +153,14 @@ export async function aceitarPolitica(token: string) {
   if (!registro) return { ok: false, error: "Link inválido." };
   const ip = await obterIP();
   const sb = getAdminClient();
-  const { error } = await sb.from("ink_implantacao_dados").update({
+  const atualizacao = await atualizarImplantacaoPorId(sb, registro.id, {
     politica_aceita_em: new Date().toISOString(),
     politica_aceita_ip: ip,
     politica_versao: POLITICA_VERSAO,
     etapa_atual: Math.max(registro.etapa_atual, 5),
     atualizado_em: new Date().toISOString(),
-  }).eq("token", token);
-  if (error) return { ok: false, error: error.message };
+  });
+  if (!atualizacao.ok) return atualizacao;
   await registrarHistorico(registro.id, `Política de Privacidade v${POLITICA_VERSAO} aceita`);
   return { ok: true };
 }
@@ -185,14 +176,14 @@ export async function aceitarTermos(token: string) {
   if (!registro) return { ok: false, error: "Link inválido." };
   const ip = await obterIP();
   const sb = getAdminClient();
-  const { error } = await sb.from("ink_implantacao_dados").update({
+  const atualizacao = await atualizarImplantacaoPorId(sb, registro.id, {
     termos_aceito_em: new Date().toISOString(),
     termos_aceito_ip: ip,
     termos_versao: TERMOS_VERSAO,
     concluido: true,
     atualizado_em: new Date().toISOString(),
-  }).eq("token", token);
-  if (error) return { ok: false, error: error.message };
+  });
+  if (!atualizacao.ok) return atualizacao;
   await registrarHistorico(registro.id, `Termos de Uso v${TERMOS_VERSAO} aceitos`);
 
   const { error: errLead } = await sb.from("ink_leads").update({ estagio: "documentacao_recebida" }).eq("email", registro.email);
