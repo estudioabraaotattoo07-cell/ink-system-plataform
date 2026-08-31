@@ -13,10 +13,6 @@
 export const CTA_DESTINO_TESTE = "#teste-gratis";
 export const CTA_DESTINO_ASSINATURA = "#assinar";
 
-// null = preço ainda não decidido. Nenhum componente deve exibir
-// "R$ [VALOR]" nem qualquer outro placeholder visível -- a seção de
-// oferta já sabe omitir o valor quando isto for null, e passa a exibir
-// automaticamente assim que uma decisão de produto definir este valor.
-// Nome sem "mensal" de propósito -- a periodicidade da assinatura também
-// não foi decidida ainda, então nem o nome da constante deve presumi-la.
-export const PRECO_ASSINATURA: string | null = null;
+// Preço oficial central do Ink System 1.0. Condições promocionais temporárias
+// pertencem à superfície comercial que as apresenta e não substituem este valor.
+export const PRECO_ASSINATURA = "R$ 157/mês";

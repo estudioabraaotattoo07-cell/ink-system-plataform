@@ -18,6 +18,8 @@ const bodyText: CSSProperties = {
   lineHeight: 1.75,
 };
 
+const PRECO_LANCAMENTO = "R$ 97/mês";
+
 export default function LandingPage() {
   return (
     <main className="landing-root" style={{ minHeight: "100vh", background: "var(--bg-void)", color: "var(--text-primary)" }}>
@@ -1790,6 +1792,14 @@ export default function LandingPage() {
             margin: clamp(110px, 13vw, 160px) auto 0;
             text-align: center;
           }
+          .landing-bloco-7-offer-eyebrow {
+            margin: 0 0 24px;
+            color: var(--gold);
+            font-family: var(--font-body);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+          }
           .landing-bloco-7-offer-icon {
             display: block;
             width: clamp(74px, 8vw, 104px);
@@ -1832,6 +1842,100 @@ export default function LandingPage() {
             font-family: var(--font-body);
             font-size: clamp(16px, 1.5vw, 18px);
             line-height: 1.72;
+          }
+          .landing-bloco-7-official {
+            margin-top: 44px;
+          }
+          .landing-bloco-7-official-price,
+          .landing-bloco-7-launch-price {
+            margin: 0;
+            font-family: var(--font-heading);
+            font-weight: 700;
+            white-space: nowrap;
+          }
+          .landing-bloco-7-official-price {
+            color: var(--text-primary);
+            font-size: clamp(27px, 3.5vw, 42px);
+          }
+          .landing-bloco-7-official-label {
+            margin: 8px 0 0;
+            color: var(--text-tertiary);
+            font-family: var(--font-body);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+          }
+          .landing-bloco-7-launch {
+            margin-top: 38px;
+            padding-top: 38px;
+            border-top: 1px solid rgba(201, 168, 76, 0.22);
+          }
+          .landing-bloco-7-launch-price {
+            color: var(--gold-light);
+            font-size: clamp(34px, 5vw, 58px);
+            line-height: 1.12;
+            text-shadow: 0 0 16px rgba(201, 168, 76, 0.2), 0 0 32px rgba(201, 168, 76, 0.07);
+          }
+          .landing-bloco-7-launch-after,
+          .landing-bloco-7-launch-limit,
+          .landing-bloco-7-launch-account,
+          .landing-bloco-7-launch-context {
+            font-family: var(--font-body);
+          }
+          .landing-bloco-7-launch-after {
+            margin: 14px 0 0;
+            color: var(--text-secondary);
+            font-size: clamp(15px, 1.5vw, 18px);
+          }
+          .landing-bloco-7-launch-limit {
+            max-width: 650px;
+            margin: 30px auto 0;
+            color: var(--text-primary);
+            font-size: clamp(14px, 1.35vw, 16px);
+            line-height: 1.65;
+          }
+          .landing-bloco-7-launch-account {
+            max-width: 680px;
+            margin: 34px auto 0;
+            color: var(--text-primary);
+            font-size: clamp(18px, 2vw, 24px);
+            font-weight: 700;
+            line-height: 1.45;
+          }
+          .landing-bloco-7-launch-account strong {
+            color: var(--gold-light);
+            font-weight: inherit;
+          }
+          .landing-bloco-7-launch-context {
+            margin: 9px 0 0;
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.6;
+          }
+          .landing-bloco-7-benefits {
+            display: grid;
+            gap: 13px;
+            max-width: 660px;
+            margin: 40px auto 0;
+            padding: 32px 0 0;
+            border-top: 1px solid rgba(201, 168, 76, 0.16);
+            list-style: none;
+            text-align: left;
+          }
+          .landing-bloco-7-benefits li {
+            position: relative;
+            padding-left: 22px;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: clamp(14px, 1.35vw, 16px);
+            line-height: 1.55;
+          }
+          .landing-bloco-7-benefits li::before {
+            content: "·";
+            position: absolute;
+            left: 4px;
+            color: var(--gold);
+            font-weight: 700;
           }
           .landing-bloco-7-offer-actions {
             display: flex;
@@ -1936,6 +2040,11 @@ export default function LandingPage() {
             .landing-bloco-7-offer {
               margin-top: 96px;
             }
+            .landing-bloco-7-offer-eyebrow {
+              margin-bottom: 22px;
+              font-size: 10px;
+              letter-spacing: 0.13em;
+            }
             .landing-bloco-7-offer-icon {
               width: 76px;
               margin-bottom: 24px;
@@ -1946,6 +2055,28 @@ export default function LandingPage() {
             .landing-bloco-7-offer-copy {
               margin-top: 28px;
               font-size: 16px;
+            }
+            .landing-bloco-7-official {
+              margin-top: 38px;
+            }
+            .landing-bloco-7-launch {
+              margin-top: 32px;
+              padding-top: 32px;
+            }
+            .landing-bloco-7-launch-price {
+              font-size: clamp(30px, 9.2vw, 43px);
+              white-space: normal;
+            }
+            .landing-bloco-7-launch-limit {
+              margin-top: 26px;
+            }
+            .landing-bloco-7-launch-account {
+              margin-top: 30px;
+              font-size: 19px;
+            }
+            .landing-bloco-7-benefits {
+              margin-top: 34px;
+              padding-top: 28px;
             }
             .landing-bloco-7-offer-actions {
               flex-direction: column;
@@ -1987,6 +2118,7 @@ export default function LandingPage() {
         </div>
 
         <div id="preco" className="landing-bloco-7-offer" style={{ scrollMarginTop: 84 }}>
+          <p className="landing-bloco-7-offer-eyebrow">PRIMEIRA TURMA INK SYSTEM 1.0</p>
           <img className="landing-bloco-7-offer-icon" src="/logo-ink-icon.png" alt="" aria-hidden="true" />
           <div className="landing-bloco-7-brand" aria-label="Ink System 1.0">
             <span className="landing-bloco-7-brand-ink">INK</span>
@@ -1994,6 +2126,23 @@ export default function LandingPage() {
             <span className="landing-bloco-7-brand-version">1.0</span>
           </div>
           <p className="landing-bloco-7-offer-copy">Uma conta individual para organizar clientes, projetos, agenda e operação em um só lugar.</p>
+          <div className="landing-bloco-7-official">
+            <p className="landing-bloco-7-official-price">{PRECO_ASSINATURA}</p>
+            <p className="landing-bloco-7-official-label">VALOR OFICIAL</p>
+          </div>
+          <div className="landing-bloco-7-launch">
+            <p className="landing-bloco-7-launch-price">{PRECO_LANCAMENTO} nos seus 3 primeiros meses</p>
+            <p className="landing-bloco-7-launch-after">A partir do 4º mês, {PRECO_ASSINATURA}.</p>
+            <p className="landing-bloco-7-launch-limit">Válido para as primeiras 50 assinaturas ou até 15/09/2026, o que acontecer primeiro.</p>
+            <p className="landing-bloco-7-launch-account">Nos seus 3 primeiros meses, <strong>R$ 180 da sua assinatura ficam por nossa conta.</strong></p>
+            <p className="landing-bloco-7-launch-context">Enquanto você coloca o Ink System para trabalhar na sua rotina.</p>
+          </div>
+          <ul className="landing-bloco-7-benefits">
+            <li>7 dias grátis para testar antes de decidir</li>
+            <li>30 e-mails incluídos durante o período de teste</li>
+            <li>400 e-mails incluídos por ciclo mensal após a assinatura</li>
+            <li>Créditos adicionais disponíveis quando você precisar</li>
+          </ul>
           <div className="landing-bloco-7-offer-actions">
             <CtaButton origem="cta_bloco_7_trial" tipo="trial" fullWidthMobile>TESTAR GRÁTIS POR 7 DIAS</CtaButton>
             <CtaButton origem="cta_bloco_7_subscribe" tipo="subscribe" fullWidthMobile>ASSINAR AGORA</CtaButton>
@@ -2046,6 +2195,7 @@ export default function LandingPage() {
             <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 19, color: "var(--text-primary)", marginBottom: 6 }}>
               7 dias para conhecer o Ink System
             </div>
+            <p style={{ ...bodyText, color: "var(--gold-light)", fontSize: 13.5, fontWeight: 700, margin: "0 0 8px" }}>7 dias grátis · 30 e-mails incluídos</p>
             <p style={{ ...bodyText, fontSize: 13.5, margin: "0 0 4px" }}>Sem cartão. Sem cobrança automática.</p>
             <p style={{ ...bodyText, fontSize: 13.5, margin: 0 }}>
               Os sete dias começam no primeiro acesso ao sistema, após a criação e preparação da conta. Você pode assinar durante ou depois do
@@ -2071,14 +2221,8 @@ export default function LandingPage() {
             <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 19, color: "var(--text-primary)", marginBottom: 6 }}>
               Já decidiu?
             </div>
-            <p style={{ ...bodyText, fontSize: 13.5, margin: 0 }}>
-              Assine agora e comece diretamente com sua conta ativa, sem precisar passar pelo teste gratuito antes.
-            </p>
-            <p style={{ ...bodyText, fontSize: 13.5, margin: "12px 0 0" }}>
-              {PRECO_ASSINATURA
-                ? `${PRECO_ASSINATURA}, com renovação automática até o cancelamento.`
-                : "Renovação automática até o cancelamento. O valor e as condições completas, incluindo a periodicidade, serão apresentados antes da confirmação do pagamento."}
-            </p>
+            <p style={{ ...bodyText, fontSize: 13.5, margin: 0 }}>Comece por {PRECO_LANCAMENTO} nos seus 3 primeiros meses.</p>
+            <p style={{ ...bodyText, fontSize: 13.5, margin: "12px 0 0" }}>Depois, sua assinatura segue pelo valor oficial do Ink System 1.0: {PRECO_ASSINATURA}.</p>
             <div style={{ marginTop: 22 }}>
               <CtaButton origem="cta_oferta_subscribe" tipo="subscribe" fullWidthMobile>
                 Assinar agora
