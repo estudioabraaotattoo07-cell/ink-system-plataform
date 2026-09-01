@@ -3,10 +3,11 @@ import PipelineBoard from "./PipelineBoard";
 import AdminTabs from "./AdminTabs";
 import ClientesTable from "./ClientesTable";
 import { type LinhaCliente } from "./ClienteFichaModal";
-import { exigirAdmin } from "@/lib/admin/autorizacao";
+import { exigirPermissao } from "@/lib/admin/autorizacao";
 import JornadaCompradoresBoard, { type CompradorView } from "./JornadaCompradoresBoard";
 import { etapaJornadaValida } from "@/lib/comercial/cicloComprador";
 import { LABORATORIO_AUTH_USER_ID } from "@/lib/admin/laboratorio";
+import { permissoesInterfaceAdmin } from "@/lib/admin/permissoes";
 
 // Sempre busca dado fresco — nunca cachear/pré-renderizar a lista de clientes.
 export const dynamic = "force-dynamic";
@@ -22,7 +23,8 @@ function getAdminClient() {
 }
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
-  await exigirAdmin();
+  const admin = await exigirPermissao("painel.visualizar");
+  const permissoes = permissoesInterfaceAdmin(admin.papel);
   const { tab: tabParam } = await searchParams;
   const abaAtiva = tabParam === "clientes" || tabParam === "solicitacoes" ? tabParam : "pipeline";
   const sbAdmin = getAdminClient();
@@ -237,7 +239,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
       {abaAtiva === "solicitacoes" && (
         <div className="mb-8">
-          <PipelineBoard leads={leadsVisiveis} />
+          <PipelineBoard leads={leadsVisiveis} permissoes={permissoes} />
         </div>
       )}
 
@@ -278,7 +280,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               </div>
             )}
           </div>
-          <ClientesTable linhas={linhasView} />
+          <ClientesTable linhas={linhasView} permissoes={permissoes} />
         </>
       )}
     </main>

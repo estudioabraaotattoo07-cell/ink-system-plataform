@@ -3,7 +3,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { upsertVercelEnv, redeployInqSaas } from "./vercel";
-import { exigirAdmin, registrarAuditoriaAdmin } from "@/lib/admin/autorizacao";
+import { exigirPermissao, registrarAuditoriaAdmin } from "@/lib/admin/autorizacao";
 import { validarAlteracaoLicenca, type ResultadoLicenca } from "@/lib/admin/confiabilidadeLicencas";
 
 function getAdminClient() {
@@ -39,7 +39,7 @@ export type ChavesInfra = {
 // Salva tudo na mesma linha/tabela `configuracoes` que o CRM antigo usava — só
 // muda quem edita (agora é aqui, não mais dentro do CRM).
 export async function salvarChavesInfra(fields: ChavesInfra) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("infraestrutura.alterar");
   const sb = getAdminClient();
   const dbFields = {
     aura_api_key: fields.auraApiKey || null,
@@ -87,7 +87,7 @@ export async function salvarChavesInfra(fields: ChavesInfra) {
 // A chave da Anthropic fica de fora por enquanto (Aura ainda não tem fallback
 // de servidor — decisão pendente de conversa separada).
 export async function aplicarChavesNoVercel(vercelToken: string, fields: Pick<ChavesInfra, "resendApiKey" | "emailRemetente" | "zenviaApiKey">) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("infraestrutura.aplicar");
   if (!vercelToken) return { ok: false, error: "Preencha o Token do Vercel antes de aplicar." };
 
   const resultados: { key: string; ok: boolean; error?: string }[] = [];
@@ -103,7 +103,7 @@ export async function aplicarChavesNoVercel(vercelToken: string, fields: Pick<Ch
 // Redeploy separado e explícito — trocar a variável de ambiente não tem efeito
 // nos deploys já existentes até um novo build rodar.
 export async function redeployAposChaves(vercelToken: string) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("infraestrutura.redeploy");
   if (!vercelToken) return { ok: false, error: "Preencha o Token do Vercel antes de reimplantar." };
   const resultado = await redeployInqSaas(vercelToken);
   if (resultado.ok) await registrarAuditoriaAdmin({ admin, acao: "redeploy_infra", recurso: "vercel_deploy" });
@@ -111,7 +111,7 @@ export async function redeployAposChaves(vercelToken: string) {
 }
 
 export async function atualizarLicencaTenant(id: string, fields: { status?: string; data_vencimento?: string }): Promise<ResultadoLicenca> {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("licencas.alterar");
   const sb = getAdminClient();
   const validacao = validarAlteracaoLicenca(id, fields);
   if (!validacao.ok) return validacao;

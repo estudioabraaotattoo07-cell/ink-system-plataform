@@ -4,11 +4,12 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { cookie2FAValido } from "@/lib/admin/cookie2fa";
+import { papelAdminValido, temPermissaoAdmin, type PapelAdmin, type PermissaoAdmin } from "@/lib/admin/permissoes";
 
 export type AdminAtual = {
   id: string;
   authUserId: string;
-  papel: "proprietario" | "administrador" | "suporte";
+  papel: PapelAdmin;
 };
 
 // Único caminho de entrada: sessão real do Supabase + linha ativa em
@@ -28,7 +29,7 @@ export async function obterAdminAtual(): Promise<AdminAtual | null> {
     .eq("ativo", true)
     .maybeSingle();
 
-  if (erroAdmin || !admin || !['proprietario', 'administrador', 'suporte'].includes(admin.papel)) {
+  if (erroAdmin || !admin || !papelAdminValido(admin.papel)) {
     return null;
   }
 
@@ -47,6 +48,21 @@ export async function exigirAdmin(): Promise<AdminAtual> {
   const admin = await obterAdminAtual();
   if (!admin) throw new Error("Acesso administrativo nao autorizado.");
   return admin;
+}
+
+export async function exigirPermissao(permissao: PermissaoAdmin): Promise<AdminAtual> {
+  const admin = await exigirAdmin();
+  if (temPermissaoAdmin(admin.papel, permissao)) return admin;
+  try {
+    const sb = criarClienteAdministrativo();
+    await sb.from("ink_admin_auditoria").insert({
+      admin_usuario_id: admin.id, acao: "permissao_negada", recurso: "rbac_admin",
+      recurso_id: null, conta_id: null, detalhes: { papel: admin.papel, permissao },
+    });
+  } catch {
+    // Falha da auditoria nunca transforma negação em acesso.
+  }
+  throw new Error("Você não tem permissão para executar esta operação.");
 }
 
 export function criarClienteAdministrativo() {

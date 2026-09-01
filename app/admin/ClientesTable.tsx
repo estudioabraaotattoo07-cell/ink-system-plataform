@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ClienteFichaModal, { type LinhaCliente } from "./ClienteFichaModal";
+import type { PermissoesInterfaceAdmin } from "@/lib/admin/permissoes";
 
 function diasParaVencimento(dataVenc: string | null) {
   if (!dataVenc) return "—";
@@ -10,7 +11,7 @@ function diasParaVencimento(dataVenc: string | null) {
   return `${diff}d`;
 }
 
-export default function ClientesTable({ linhas }: { linhas: LinhaCliente[] }) {
+export default function ClientesTable({ linhas, permissoes }: { linhas: LinhaCliente[]; permissoes: PermissoesInterfaceAdmin }) {
   const [aberta, setAberta] = useState<LinhaCliente | null>(null);
 
   return (
@@ -98,7 +99,7 @@ export default function ClientesTable({ linhas }: { linhas: LinhaCliente[] }) {
       </table>
       <style>{`.cliente-row:hover td { background: rgba(201,168,76,0.06) !important; }`}</style>
 
-      {aberta && <ClienteFichaModal linha={aberta} onClose={() => setAberta(null)} />}
+      {aberta && <ClienteFichaModal linha={aberta} permissoes={permissoes} onClose={() => setAberta(null)} />}
     </div>
   );
 }

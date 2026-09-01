@@ -1,3 +1,6 @@
+import { exigirAdmin } from "@/lib/admin/autorizacao";
+import { temPermissaoAdmin } from "@/lib/admin/permissoes";
+
 const TABS = [
   { id: "pipeline", label: "Jornada", href: "/admin" },
   { id: "solicitacoes", label: "Solicitações", href: "/admin?tab=solicitacoes" },
@@ -7,14 +10,16 @@ const TABS = [
   { id: "licencas", label: "Chaves de Acesso", href: "/admin/licencas" },
 ] as const;
 
-export default function AdminTabs({ active, pipelineBadge }: { active: "pipeline" | "solicitacoes" | "clientes" | "relacionamento" | "financeiro" | "licencas"; pipelineBadge?: number }) {
+export default async function AdminTabs({ active, pipelineBadge }: { active: "pipeline" | "solicitacoes" | "clientes" | "relacionamento" | "financeiro" | "licencas"; pipelineBadge?: number }) {
+  const admin = await exigirAdmin();
+  const tabsVisiveis = TABS.filter((tab) => tab.id !== "financeiro" || temPermissaoAdmin(admin.papel, "financeiro.visualizar"));
   return (
     <div
       className="mb-8 flex items-center gap-2"
       style={{ borderBottom: "1px solid rgba(201,168,76,0.18)", justifyContent: "space-between" }}
     >
       <div className="flex items-center gap-2" style={{ overflowX: "auto" }}>
-        {TABS.map((t) => (
+        {tabsVisiveis.map((t) => (
           <a
             key={t.id}
             href={t.href}

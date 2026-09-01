@@ -2,6 +2,7 @@
 
 import { createPortal } from "react-dom";
 import TestarEnvioButton from "./TestarEnvioButton";
+import type { PermissoesInterfaceAdmin } from "@/lib/admin/permissoes";
 
 function diasParaVencimento(dataVenc: string | null) {
   if (!dataVenc) return "—";
@@ -28,7 +29,7 @@ function Campo({ label, valor }: { label: string; valor: React.ReactNode }) {
   );
 }
 
-export default function ClienteFichaModal({ linha, onClose }: { linha: LinhaCliente; onClose: () => void }) {
+export default function ClienteFichaModal({ linha, permissoes, onClose }: { linha: LinhaCliente; permissoes: PermissoesInterfaceAdmin; onClose: () => void }) {
   const { cliente: c, chamados, extras, falhas } = linha;
   const planoCor = c.plano === "ouro" ? "#C9A84C" : c.plano === "prata" ? "#B8BCC4" : c.plano === "bronze" ? "#CD7F32" : "#A09585";
   const statusCor = c.status === "ativo" ? "#27AE60" : ["suspenso", "inativo", "cancelado", "vencido"].includes(c.status) ? "#E74C3C" : c.status === "teste" ? "#4A9EBF" : "#A09585";
@@ -123,7 +124,7 @@ export default function ClienteFichaModal({ linha, onClose }: { linha: LinhaClie
           </div>
         )}
 
-        <TestarEnvioButton clienteId={c.id} />
+        {permissoes.testarMensagens && <TestarEnvioButton clienteId={c.id} />}
       </div>
     </div>,
     document.body

@@ -3,7 +3,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { tipoDeItem, type StatusItem } from "@/lib/implantacaoItens";
-import { exigirAdmin, registrarAuditoriaAdmin } from "@/lib/admin/autorizacao";
+import { exigirPermissao, registrarAuditoriaAdmin } from "@/lib/admin/autorizacao";
 import { gerarTokenImplantacao, hashTokenImplantacao, tokenImplantacaoExpiraEm } from "@/lib/implantacao/token";
 import { montarUrlComplementacao, rotacionarTokenReenvio } from "@/lib/implantacao/reenvioDocumental";
 import { eventoComunicacaoReenvio } from "@/lib/implantacao/comunicacaoReenvio";
@@ -47,7 +47,7 @@ const RODAPE = `<p style="margin:20px 0 0;color:#555;">Equipe Ink System</p>`;
 // Resend já está configurada) -- chama o endpoint que já existe em vez de
 // duplicar credencial num segundo projeto Vercel.
 export async function responderLead(leadId: string, resposta: string) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("leads.responder");
   const sb = getAdminClient();
   const { data: lead, error: errLead } = await sb.from("ink_leads").select("*").eq("id", leadId).single();
   if (errLead || !lead) return { ok: false, error: "Solicitação não encontrada." };
@@ -86,7 +86,7 @@ export async function responderLead(leadId: string, resposta: string) {
 // drag-and-drop. Atualiza todas as linhas daquele e-mail pra manter a etapa
 // consistente mesmo se a pessoa mandar uma solicitação nova depois.
 export async function moverFichaEstagio(email: string, estagio: string) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("jornada.operar");
   const ESTAGIOS_VALIDOS = ["lead", "em_analise", "complementacao_solicitada", "documentacao_recebida", "aprovado", "encerrado"];
   if (!ESTAGIOS_VALIDOS.includes(estagio)) return { ok: false, error: "Etapa inválida." };
   const sb = getAdminClient();
@@ -104,7 +104,7 @@ export async function moverFichaEstagio(email: string, estagio: string) {
 // Fase 2, combinada separadamente antes de codar.
 
 export async function solicitarComplementacao(email: string, nome: string | null) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("documentos.analisar");
   const sb = getAdminClient();
   const primeiroNome = nome?.split(" ")[0] || "";
 
@@ -199,14 +199,14 @@ export async function buscarAptidaoAprovacao(email: string): Promise<
   { ok: true; apta: boolean; pendencias: ResultadoAptidaoAprovacao["pendencias"] }
   | { ok: false; error: string }
 > {
-  await exigirAdmin();
+  await exigirPermissao("documentos.visualizar");
   const avaliacao = await avaliarAptidaoNoBanco(getAdminClient(), email);
   if (!avaliacao.ok) return avaliacao;
   return { ok: true, ...avaliacao.resultado };
 }
 
 export async function aprovarSolicitacao(email: string, nome: string | null) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("implantacao.aprovar");
   const sb = getAdminClient();
 
   const avaliacao = await avaliarAptidaoNoBanco(sb, email);
@@ -287,7 +287,7 @@ export async function aprovarSolicitacao(email: string, nome: string | null) {
 }
 
 export async function encerrarSolicitacao(email: string, nome: string | null) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("jornada.operar");
   const sb = getAdminClient();
   const primeiroNome = nome?.split(" ")[0] || "";
   const html = paragrafos([
@@ -315,7 +315,7 @@ export async function encerrarSolicitacao(email: string, nome: string | null) {
 // de teste (ambiente único, não existe banco de dev separado do de
 // produção). A confirmação de verdade acontece na UI antes de chamar isso.
 export async function excluirFicha(email: string) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("dados.excluir");
   const sb = getAdminClient();
 
   const { data: documentos } = await sb.from("ink_implantacao_documentos").select("url").eq("email", email);
@@ -338,7 +338,7 @@ export async function excluirFicha(email: string) {
 // CRM de cada estúdio), pra você conseguir diagnosticar se a falha é de um
 // cliente específico sem depender de nenhum botão dentro do CRM dele.
 export async function testarEnvioTenant(clienteId: string) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("mensagens.testar");
   const sb = getAdminClient();
   const { data: cliente, error: errCliente } = await sb
     .from("ink_clientes")
@@ -380,7 +380,7 @@ function maskCPF(cpf: string | null) {
 }
 
 export async function buscarImplantacao(email: string) {
-  await exigirAdmin();
+  await exigirPermissao("documentos.visualizar");
   const sb = getAdminClient();
   const { data: dados } = await sb.from("ink_implantacao_dados").select("*").eq("email", email).maybeSingle();
   if (!dados) return null;
@@ -411,7 +411,7 @@ export async function buscarImplantacao(email: string) {
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function salvarAuthUserId(email: string, authUserId: string) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("implantacao.vincular_auth");
   const valor = authUserId.trim();
   if (!UUID_REGEX.test(valor)) {
     return { ok: false, error: "UUID inválido -- confira o valor copiado do Supabase Auth." };
@@ -435,7 +435,7 @@ export async function salvarAuthUserId(email: string, authUserId: string) {
 }
 
 export async function revelarCPF(email: string) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("dados_sensiveis.visualizar");
   const sb = getAdminClient();
   const { data, error } = await sb.from("ink_implantacao_dados").select("cpf").eq("email", email).maybeSingle();
   if (error || !data) return { ok: false, error: "Não encontrado." };
@@ -444,7 +444,7 @@ export async function revelarCPF(email: string) {
 }
 
 export async function gerarUrlArquivo(caminho: string) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("documentos.visualizar");
   const sb = getAdminClient();
   const { data, error } = await sb.storage.from("implantacao-docs").createSignedUrl(caminho, 300);
   if (error || !data) return { ok: false, error: error?.message || "Não foi possível gerar o link." };
@@ -460,7 +460,7 @@ export async function atualizarStatusItem(
   status: "pendente" | "recebido" | "aprovado" | "solicitar_novo" | "rejeitado",
   observacao?: string
 ) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("documentos.analisar");
   const sb = getAdminClient();
   const { data: item, error: errItem } = await sb.from("ink_implantacao_itens").select("*").eq("id", itemId).maybeSingle();
   if (errItem || !item) return { ok: false, error: "Item não encontrado." };
@@ -537,7 +537,7 @@ export async function atualizarStatusItem(
 }
 
 export async function reenviarEmailDocumento(itemId: string) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("documentos.analisar");
   const sb = getAdminClient();
   const { data: item, error: erroItem } = await sb
     .from("ink_implantacao_itens")

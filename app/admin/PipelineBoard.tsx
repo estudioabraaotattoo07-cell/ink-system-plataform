@@ -2,6 +2,7 @@ import FichaCard, { type Ficha } from "./FichaCard";
 import { type Lead } from "./LeadCard";
 import { ESTAGIOS } from "./pipelineStages";
 import { PLANOS_ATIVOS } from "@/lib/planos";
+import type { PermissoesInterfaceAdmin } from "@/lib/admin/permissoes";
 
 // Etapa mais "avançada" primeiro -- assim, se a pessoa mandar uma nova
 // solicitação depois de já ter avançado no pipeline, ela não volta pra Lead
@@ -83,7 +84,7 @@ function construirColunas(fichas: Ficha[]): Coluna[] {
   return [...colunasEntrada, ...colunasPipeline];
 }
 
-export default function PipelineBoard({ leads }: { leads: Lead[] }) {
+export default function PipelineBoard({ leads, permissoes }: { leads: Lead[]; permissoes: PermissoesInterfaceAdmin }) {
   if (leads.length === 0) {
     return <div className="text-sm text-neutral-500">Nenhuma solicitação recebida ainda.</div>;
   }
@@ -127,7 +128,7 @@ export default function PipelineBoard({ leads }: { leads: Lead[] }) {
               {cards.length === 0 ? (
                 <div style={{ textAlign: "center", color: "#706860", fontSize: 11, padding: "14px 6px", fontStyle: "italic" }}>—</div>
               ) : (
-                cards.map((f) => <FichaCard key={f.email} ficha={f} />)
+                cards.map((f) => <FichaCard key={f.email} ficha={f} permissoes={permissoes} />)
               )}
             </div>
           </div>

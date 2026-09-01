@@ -22,7 +22,7 @@ export type Lead = {
 
 // Um item de histórico dentro da ficha do cliente -- representa UMA
 // solicitação (um envio de formulário). A ficha inteira pode ter várias.
-export default function LeadCard({ lead }: { lead: Lead }) {
+export default function LeadCard({ lead, podeResponder = true }: { lead: Lead; podeResponder?: boolean }) {
   const [resposta, setResposta] = useState("");
   const [pending, startTransition] = useTransition();
   const [erro, setErro] = useState("");
@@ -56,7 +56,7 @@ export default function LeadCard({ lead }: { lead: Lead }) {
         <div className="text-sm text-green-400 mt-2 bg-green-950/30 border border-green-900 rounded-lg px-3 py-2" style={{ fontSize: 11 }}>
           ✓ Respondido: {lead.resposta_admin}
         </div>
-      ) : (
+      ) : podeResponder ? (
         <div className="mt-2">
           <textarea
             value={resposta}
@@ -77,7 +77,7 @@ export default function LeadCard({ lead }: { lead: Lead }) {
             {erro && <span className="text-xs text-red-400">{erro}</span>}
           </div>
         </div>
-      )}
+      ) : <div className="mt-2 text-xs text-neutral-500">Resposta disponível somente para a operação administrativa.</div>}
     </div>
   );
 }

@@ -2,7 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import ChavesForm from "./ChavesForm";
 import LicencaRow from "./LicencaRow";
 import AdminTabs from "../AdminTabs";
-import { exigirAdmin } from "@/lib/admin/autorizacao";
+import { exigirPermissao } from "@/lib/admin/autorizacao";
+import { temPermissaoAdmin } from "@/lib/admin/permissoes";
 import { LABORATORIO_AUTH_USER_ID } from "@/lib/admin/laboratorio";
 
 export const dynamic = "force-dynamic";
@@ -14,15 +15,14 @@ function getAdminClient() {
 const STUDIO_USER_ID = process.env.STUDIO_USER_ID || "2d366d35-1cae-40d5-ba92-06fe2ab8a763";
 
 export default async function LicencasPage() {
-  await exigirAdmin();
+  const admin = await exigirPermissao("licencas.visualizar");
   const sb = getAdminClient();
+  const podeVerInfra = temPermissaoAdmin(admin.papel, "infraestrutura.visualizar");
+  const podeAlterarLicenca = temPermissaoAdmin(admin.papel, "licencas.alterar");
 
-  const { data: cfg } = await sb
-    .from("configuracoes")
-    .select("*")
-    .eq("user_id", STUDIO_USER_ID)
-    .limit(1)
-    .maybeSingle();
+  const { data: cfg } = podeVerInfra
+    ? await sb.from("configuracoes").select("*").eq("user_id", STUDIO_USER_ID).limit(1).maybeSingle()
+    : { data: null };
 
   const { data: licencas, error: erroLicencas } = await sb
     .from("licencas")
@@ -48,7 +48,13 @@ export default async function LicencasPage() {
       </div>
       <AdminTabs active="licencas" />
 
-      <ChavesForm cfg={cfg || null} />
+      {podeVerInfra ? (
+        <ChavesForm cfg={cfg || null} />
+      ) : (
+        <div role="status" className="rounded-xl border border-amber-900/40 bg-amber-950/15 px-4 py-3 text-sm text-amber-200/80">
+          Infraestrutura e credenciais são restritas ao proprietário. Esta visão contém somente o estado operacional das licenças.
+        </div>
+      )}
 
       <div className="mt-10">
         <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "#C9A84C", marginBottom: 10 }}>
@@ -75,7 +81,7 @@ export default async function LicencasPage() {
               </thead>
               <tbody>
                 {(licencas ?? []).map((lic) => (
-                  <LicencaRow key={lic.id} lic={lic} />
+                  <LicencaRow key={lic.id} lic={lic} podeAlterar={podeAlterarLicenca} />
                 ))}
               </tbody>
             </table>

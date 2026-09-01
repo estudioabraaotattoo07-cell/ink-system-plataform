@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { buscarImplantacao, revelarCPF, gerarUrlArquivo, atualizarStatusItem, reenviarEmailDocumento, salvarAuthUserId } from "./actions";
 import { tipoDeItem, STATUS_LABEL, type StatusItem } from "@/lib/implantacaoItens";
 import { criarControleStatusDocumental } from "@/lib/admin/statusDocumental";
+import type { PermissoesInterfaceAdmin } from "@/lib/admin/permissoes";
 import { descricaoEventoImplantacao, estadosComunicacaoReenvio } from "@/lib/implantacao/comunicacaoReenvio";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -21,7 +22,7 @@ function Campo({ label, valor }: { label: string; valor: React.ReactNode }) {
   );
 }
 
-export default function ImplantacaoResumo({ email, estagioFicha, onImplantacaoAtualizada }: { email: string; estagioFicha: string; onImplantacaoAtualizada?: () => void | Promise<void> }) {
+export default function ImplantacaoResumo({ email, estagioFicha, permissoes, onImplantacaoAtualizada }: { email: string; estagioFicha: string; permissoes: PermissoesInterfaceAdmin; onImplantacaoAtualizada?: () => void | Promise<void> }) {
   const [carregado, setCarregado] = useState(false);
   const [dados, setDados] = useState<Dados | null>(null);
   const [itens, setItens] = useState<ItemImplantacao[]>([]);
@@ -209,7 +210,7 @@ export default function ImplantacaoResumo({ email, estagioFicha, onImplantacaoAt
         <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#6B5E54", marginBottom: 2 }}>
           Auth User ID (Supabase Auth)
         </div>
-        {authUserIdEditando ? (
+        {permissoes.vincularAuth && authUserIdEditando ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <input
               value={authUserIdInput}
@@ -240,12 +241,12 @@ export default function ImplantacaoResumo({ email, estagioFicha, onImplantacaoAt
             <span style={{ fontSize: 12, color: dados.auth_user_id ? "#E8E2D9" : "#A09585", fontFamily: dados.auth_user_id ? "monospace" : "inherit" }}>
               {dados.auth_user_id || "Não definido"}
             </span>
-            <button
+            {permissoes.vincularAuth && <button
               onClick={() => setAuthUserIdEditando(true)}
               style={{ background: "none", border: "none", color: "#C9A84C", fontSize: 11, cursor: "pointer" }}
             >
               {dados.auth_user_id ? "Editar" : "Definir"}
-            </button>
+            </button>}
           </div>
         )}
       </div>
@@ -261,7 +262,7 @@ export default function ImplantacaoResumo({ email, estagioFicha, onImplantacaoAt
             dados.cpf ? (
               <span>
                 {cpfRevelado || dados.cpf}
-                {!cpfRevelado && (
+                {permissoes.verDadosSensiveis && !cpfRevelado && (
                   <button onClick={revelar} style={{ marginLeft: 8, background: "none", border: "none", color: "#C9A84C", fontSize: 11, cursor: "pointer" }}>
                     Revelar
                   </button>
@@ -315,7 +316,7 @@ export default function ImplantacaoResumo({ email, estagioFicha, onImplantacaoAt
                   {item.observacao_admin && item.status === "solicitar_novo" && (
                     <div style={{ fontSize: 10, color: "#E0A85A", marginTop: 4, fontStyle: "italic" }}>Motivo enviado: {item.observacao_admin}</div>
                   )}
-                  {comunicacaoPendente && (
+                  {permissoes.analisarDocumentos && comunicacaoPendente && (
                     <div style={{ marginTop: 6, padding: "6px 8px", border: "1px solid rgba(224,168,90,0.35)", borderRadius: 6, background: "rgba(224,168,90,0.08)" }}>
                       <div role="status" style={{ color: "#E0A85A", fontSize: 10, marginBottom: 5 }}>
                         Pedido salvo — e-mail pendente de envio.
@@ -325,7 +326,7 @@ export default function ImplantacaoResumo({ email, estagioFicha, onImplantacaoAt
                       </button>
                     </div>
                   )}
-                  <div style={{ marginTop: 6 }}>
+                  {permissoes.analisarDocumentos && <div style={{ marginTop: 6 }}>
                     {pedindoMotivo === item.id ? (
                       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                         <textarea
@@ -362,7 +363,7 @@ export default function ImplantacaoResumo({ email, estagioFicha, onImplantacaoAt
                         {errosStatus[item.id]}
                       </div>
                     )}
-                  </div>
+                  </div>}
                 </div>
               );
             })}

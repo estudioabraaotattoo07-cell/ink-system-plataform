@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import AdminTabs from "../AdminTabs";
-import { exigirAdmin } from "@/lib/admin/autorizacao";
+import { exigirPermissao } from "@/lib/admin/autorizacao";
 import { LABORATORIO_AUTH_USER_ID } from "@/lib/admin/laboratorio";
 import {
   fluxosPorPublico,
@@ -32,7 +32,7 @@ function dataHora(valor: string | null) {
 }
 
 export default async function RelacionamentoAdminPage() {
-  await exigirAdmin();
+  await exigirPermissao("relacionamento.visualizar");
   const sb = getAdminClient();
 
   const { data: contaLaboratorio } = await sb

@@ -2,7 +2,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
-import { exigirAdmin, registrarAuditoriaAdmin } from "@/lib/admin/autorizacao";
+import { exigirPermissao, registrarAuditoriaAdmin } from "@/lib/admin/autorizacao";
 
 function getAdminClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
@@ -18,7 +18,7 @@ export async function marcarCicloComoPago(params: {
   qtdArtistasExtra: number;
   valorArtistasExtra: number;
 }) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("financeiro.operar");
   const sb = getAdminClient();
   const valorTotal = params.valorPlano + params.valorArtistasExtra;
   const { error } = await sb.from("financeiro_ciclos").upsert(
@@ -42,7 +42,7 @@ export async function marcarCicloComoPago(params: {
 
 // Desfaz uma marcação de pago (engano) -- volta o ciclo pra "previsto".
 export async function reverterPagamento(inkClienteId: string, ciclo: string) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("financeiro.operar");
   const sb = getAdminClient();
   const { error } = await sb
     .from("financeiro_ciclos")
@@ -56,7 +56,7 @@ export async function reverterPagamento(inkClienteId: string, ciclo: string) {
 }
 
 export async function salvarCustoFixo(nome: string, valorMensal: number) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("financeiro.operar");
   if (!nome.trim() || valorMensal <= 0) return { ok: false, error: "Preencha nome e valor." };
   const sb = getAdminClient();
   const { error } = await sb.from("financeiro_custos_fixos").insert({ nome: nome.trim(), valor_mensal: valorMensal, ativo: true });
@@ -67,7 +67,7 @@ export async function salvarCustoFixo(nome: string, valorMensal: number) {
 }
 
 export async function removerCustoFixo(id: string) {
-  const admin = await exigirAdmin();
+  const admin = await exigirPermissao("financeiro.operar");
   const sb = getAdminClient();
   const { error } = await sb.from("financeiro_custos_fixos").update({ ativo: false }).eq("id", id);
   if (error) return { ok: false, error: error.message };

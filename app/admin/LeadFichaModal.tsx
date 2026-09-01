@@ -7,6 +7,7 @@ import { moverFichaEstagio, excluirFicha, aprovarSolicitacao, solicitarComplemen
 import { ESTAGIOS } from "./pipelineStages";
 import { type Ficha } from "./FichaCard";
 import ImplantacaoResumo from "./ImplantacaoResumo";
+import type { PermissoesInterfaceAdmin } from "@/lib/admin/permissoes";
 
 const btnDecisao = {
   approvar: { background: "rgba(39,174,96,.12)", border: "1px solid rgba(39,174,96,.4)", color: "#27AE60" },
@@ -14,7 +15,7 @@ const btnDecisao = {
   encerrar: { background: "rgba(231,76,60,.08)", border: "1px solid rgba(231,76,60,.35)", color: "#E74C3C" },
 };
 
-export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClose: () => void }) {
+export default function LeadFichaModal({ ficha, permissoes, onClose }: { ficha: Ficha; permissoes: PermissoesInterfaceAdmin; onClose: () => void }) {
   const [movendo, startMover] = useTransition();
   const [excluindo, startExcluir] = useTransition();
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
@@ -122,7 +123,7 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
           </button>
         </div>
 
-        <select
+        {permissoes.operarJornada && <select
           value={ficha.estagio}
           onChange={(e) => mover(e.target.value)}
           disabled={movendo}
@@ -141,19 +142,19 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
           {ESTAGIOS.map((e) => (
             <option key={e.id} value={e.id}>{e.emoji} Mover para: {e.label}</option>
           ))}
-        </select>
+        </select>}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
+        {(permissoes.operarJornada || permissoes.aprovarImplantacao) && <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button onClick={() => decidir("aprovar")} disabled={decidindo || aptidao.carregando || !aptidao.apta} aria-describedby="pendencias-aprovacao" style={{ ...btnDecisao.approvar, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 600, cursor: decidindo || aptidao.carregando || !aptidao.apta ? "not-allowed" : "pointer", opacity: aptidao.carregando || !aptidao.apta ? 0.55 : 1 }}>
+            {permissoes.aprovarImplantacao && <button onClick={() => decidir("aprovar")} disabled={decidindo || aptidao.carregando || !aptidao.apta} aria-describedby="pendencias-aprovacao" style={{ ...btnDecisao.approvar, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 600, cursor: decidindo || aptidao.carregando || !aptidao.apta ? "not-allowed" : "pointer", opacity: aptidao.carregando || !aptidao.apta ? 0.55 : 1 }}>
               Aprovar solicitação
-            </button>
-            <button onClick={() => decidir("complementar")} disabled={decidindo} style={{ ...btnDecisao.complementar, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 600, cursor: decidindo ? "not-allowed" : "pointer" }}>
+            </button>}
+            {permissoes.operarJornada && <button onClick={() => decidir("complementar")} disabled={decidindo} style={{ ...btnDecisao.complementar, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 600, cursor: decidindo ? "not-allowed" : "pointer" }}>
               Solicitar complementação
-            </button>
-            <button onClick={() => decidir("encerrar")} disabled={decidindo} style={{ ...btnDecisao.encerrar, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 600, cursor: decidindo ? "not-allowed" : "pointer" }}>
+            </button>}
+            {permissoes.operarJornada && <button onClick={() => decidir("encerrar")} disabled={decidindo} style={{ ...btnDecisao.encerrar, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 600, cursor: decidindo ? "not-allowed" : "pointer" }}>
               Encerrar solicitação
-            </button>
+            </button>}
           </div>
           {!aptidao.apta && (
             <div id="pendencias-aprovacao" role="status" style={{ border: "1px solid rgba(224,168,90,.3)", background: "rgba(224,168,90,.07)", borderRadius: 8, padding: "9px 11px", color: "#E0A85A", fontSize: 11 }}>
@@ -167,7 +168,7 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
               {acaoStatus.ok ? "✓" : "✗"} {acaoStatus.msg}
             </div>
           )}
-        </div>
+        </div>}
 
         {(() => {
           const duvida = [...ficha.solicitacoes].reverse().find((l) => l.mensagem);
@@ -176,12 +177,12 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
               <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#6B5E54", marginBottom: 6 }}>
                 Dúvida do lead
               </div>
-              <LeadCard lead={duvida} />
+              <LeadCard lead={duvida} podeResponder={permissoes.responderLead} />
             </div>
           ) : null;
         })()}
 
-        <ImplantacaoResumo email={ficha.email} estagioFicha={ficha.estagio} onImplantacaoAtualizada={carregarAptidao} />
+        <ImplantacaoResumo email={ficha.email} estagioFicha={ficha.estagio} permissoes={permissoes} onImplantacaoAtualizada={carregarAptidao} />
 
         <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#6B5E54", marginBottom: 6, marginTop: 18 }}>
           Histórico de solicitações ({ficha.solicitacoes.length})
@@ -192,7 +193,7 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
           ))}
         </div>
 
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 18, paddingTop: 16 }}>
+        {permissoes.excluirDados && <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 18, paddingTop: 16 }}>
           {!confirmandoExclusao ? (
             <button
               onClick={() => setConfirmandoExclusao(true)}
@@ -236,7 +237,7 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
               </div>
             </div>
           )}
-        </div>
+        </div>}
       </div>
     </div>,
     document.body

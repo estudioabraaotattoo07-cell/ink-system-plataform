@@ -5,6 +5,7 @@ import { type Lead } from "./LeadCard";
 import { moverFichaEstagio } from "./actions";
 import { ESTAGIOS } from "./pipelineStages";
 import LeadFichaModal from "./LeadFichaModal";
+import type { PermissoesInterfaceAdmin } from "@/lib/admin/permissoes";
 
 export type Ficha = {
   email: string;
@@ -22,7 +23,7 @@ export type Ficha = {
 // solicitações da mesma pessoa (por e-mail) num histórico só, igual o CRM
 // faz com o histórico de um cliente. A etapa (Lead/Contato Feito/...) é da
 // pessoa inteira, não de uma solicitação isolada.
-export default function FichaCard({ ficha }: { ficha: Ficha }) {
+export default function FichaCard({ ficha, permissoes }: { ficha: Ficha; permissoes: PermissoesInterfaceAdmin }) {
   const [modalAberto, setModalAberto] = useState(false);
   const [movendo, startMover] = useTransition();
 
@@ -94,7 +95,7 @@ export default function FichaCard({ ficha }: { ficha: Ficha }) {
         </div>
       </div>
 
-      {ficha.estagio === "lead" && (
+      {permissoes.operarJornada && ficha.estagio === "lead" && (
         <button
           onClick={(e) => { e.stopPropagation(); mover("em_analise"); }}
           disabled={movendo}
@@ -104,7 +105,7 @@ export default function FichaCard({ ficha }: { ficha: Ficha }) {
         </button>
       )}
 
-      <select
+      {permissoes.operarJornada && <select
         value={ficha.estagio}
         onClick={(e) => e.stopPropagation()}
         onChange={(e) => mover(e.target.value)}
@@ -114,9 +115,9 @@ export default function FichaCard({ ficha }: { ficha: Ficha }) {
         {ESTAGIOS.map((e) => (
           <option key={e.id} value={e.id}>{e.emoji} Mover para: {e.label}</option>
         ))}
-      </select>
+      </select>}
 
-      {modalAberto && <LeadFichaModal ficha={ficha} onClose={() => setModalAberto(false)} />}
+      {modalAberto && <LeadFichaModal ficha={ficha} permissoes={permissoes} onClose={() => setModalAberto(false)} />}
     </div>
   );
 }
