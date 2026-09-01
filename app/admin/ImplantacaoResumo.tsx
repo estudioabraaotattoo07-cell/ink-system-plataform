@@ -21,7 +21,7 @@ function Campo({ label, valor }: { label: string; valor: React.ReactNode }) {
   );
 }
 
-export default function ImplantacaoResumo({ email, estagioFicha }: { email: string; estagioFicha: string }) {
+export default function ImplantacaoResumo({ email, estagioFicha, onImplantacaoAtualizada }: { email: string; estagioFicha: string; onImplantacaoAtualizada?: () => void | Promise<void> }) {
   const [carregado, setCarregado] = useState(false);
   const [dados, setDados] = useState<Dados | null>(null);
   const [itens, setItens] = useState<ItemImplantacao[]>([]);
@@ -90,7 +90,8 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
       setMotivo("");
       return;
     }
-    await persistirStatus(itemId, status);
+    const resultado = await persistirStatus(itemId, status);
+    if (resultado.ok) await onImplantacaoAtualizada?.();
   };
 
   const confirmarSolicitarNovo = async (itemId: string) => {
@@ -103,6 +104,7 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
       }
       setPedindoMotivo(null);
       setMotivo("");
+      await onImplantacaoAtualizada?.();
     }
   };
 
@@ -161,6 +163,7 @@ export default function ImplantacaoResumo({ email, estagioFicha }: { email: stri
       setAuthUserIdInput(recarregado.dados.auth_user_id || "");
     }
     setAuthUserIdEditando(false);
+    await onImplantacaoAtualizada?.();
   };
 
   const cancelarEdicaoAuthUserId = () => {

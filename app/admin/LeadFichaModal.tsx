@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import LeadCard, { type Lead } from "./LeadCard";
-import { moverFichaEstagio, excluirFicha, aprovarSolicitacao, solicitarComplementacao, encerrarSolicitacao } from "./actions";
+import { moverFichaEstagio, excluirFicha, aprovarSolicitacao, solicitarComplementacao, encerrarSolicitacao, buscarAptidaoAprovacao } from "./actions";
 import { ESTAGIOS } from "./pipelineStages";
 import { type Ficha } from "./FichaCard";
 import ImplantacaoResumo from "./ImplantacaoResumo";
@@ -20,9 +20,32 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const [decidindo, startDecisao] = useTransition();
   const [acaoStatus, setAcaoStatus] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [aptidao, setAptidao] = useState<{ carregando: boolean; apta: boolean; pendencias: string[] }>({ carregando: true, apta: false, pendencias: [] });
+
+  const carregarAptidao = useCallback(async () => {
+    setAptidao((atual) => ({ ...atual, carregando: true }));
+    const resultado = await buscarAptidaoAprovacao(ficha.email);
+    setAptidao(resultado.ok
+      ? { carregando: false, apta: resultado.apta, pendencias: resultado.pendencias.map((p) => p.mensagem) }
+      : { carregando: false, apta: false, pendencias: [resultado.error || "Não foi possível validar a implantação."] });
+  }, [ficha.email]);
+
+  useEffect(() => {
+    let ativo = true;
+    buscarAptidaoAprovacao(ficha.email).then((resultado) => {
+      if (!ativo) return;
+      setAptidao(resultado.ok
+        ? { carregando: false, apta: resultado.apta, pendencias: resultado.pendencias.map((p) => p.mensagem) }
+        : { carregando: false, apta: false, pendencias: [resultado.error || "Não foi possível validar a implantação."] });
+    });
+    return () => { ativo = false; };
+  }, [ficha.email]);
 
   const mover = (novoEstagio: string) => {
-    startMover(async () => { await moverFichaEstagio(ficha.email, novoEstagio); });
+    startMover(async () => {
+      const resultado = await moverFichaEstagio(ficha.email, novoEstagio);
+      if (resultado.ok) await carregarAptidao();
+    });
   };
 
   const excluir = () => {
@@ -122,7 +145,7 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
 
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button onClick={() => decidir("aprovar")} disabled={decidindo} style={{ ...btnDecisao.approvar, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 600, cursor: decidindo ? "not-allowed" : "pointer" }}>
+            <button onClick={() => decidir("aprovar")} disabled={decidindo || aptidao.carregando || !aptidao.apta} aria-describedby="pendencias-aprovacao" style={{ ...btnDecisao.approvar, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 600, cursor: decidindo || aptidao.carregando || !aptidao.apta ? "not-allowed" : "pointer", opacity: aptidao.carregando || !aptidao.apta ? 0.55 : 1 }}>
               Aprovar solicitação
             </button>
             <button onClick={() => decidir("complementar")} disabled={decidindo} style={{ ...btnDecisao.complementar, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 600, cursor: decidindo ? "not-allowed" : "pointer" }}>
@@ -132,6 +155,12 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
               Encerrar solicitação
             </button>
           </div>
+          {!aptidao.apta && (
+            <div id="pendencias-aprovacao" role="status" style={{ border: "1px solid rgba(224,168,90,.3)", background: "rgba(224,168,90,.07)", borderRadius: 8, padding: "9px 11px", color: "#E0A85A", fontSize: 11 }}>
+              <div style={{ fontWeight: 700, marginBottom: 4 }}>{aptidao.carregando ? "Validando requisitos..." : "Aprovação indisponível. Falta:"}</div>
+              {!aptidao.carregando && <ul style={{ margin: 0, paddingLeft: 17 }}>{aptidao.pendencias.map((p) => <li key={p}>{p}</li>)}</ul>}
+            </div>
+          )}
           {decidindo && <div style={{ fontSize: 11, color: "#A09585" }}>Enviando...</div>}
           {acaoStatus && (
             <div style={{ fontSize: 11, color: acaoStatus.ok ? "#27AE60" : "#E74C3C" }}>
@@ -152,7 +181,7 @@ export default function LeadFichaModal({ ficha, onClose }: { ficha: Ficha; onClo
           ) : null;
         })()}
 
-        <ImplantacaoResumo email={ficha.email} estagioFicha={ficha.estagio} />
+        <ImplantacaoResumo email={ficha.email} estagioFicha={ficha.estagio} onImplantacaoAtualizada={carregarAptidao} />
 
         <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#6B5E54", marginBottom: 6, marginTop: 18 }}>
           Histórico de solicitações ({ficha.solicitacoes.length})

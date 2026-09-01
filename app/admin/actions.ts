@@ -2,11 +2,12 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
-import { tipoDeItem } from "@/lib/implantacaoItens";
+import { tipoDeItem, type StatusItem } from "@/lib/implantacaoItens";
 import { exigirAdmin, registrarAuditoriaAdmin } from "@/lib/admin/autorizacao";
 import { gerarTokenImplantacao, hashTokenImplantacao, tokenImplantacaoExpiraEm } from "@/lib/implantacao/token";
 import { montarUrlComplementacao, rotacionarTokenReenvio } from "@/lib/implantacao/reenvioDocumental";
 import { eventoComunicacaoReenvio } from "@/lib/implantacao/comunicacaoReenvio";
+import { avaliarAptidaoAprovacao, type ResultadoAptidaoAprovacao } from "@/lib/implantacao/aptidaoAprovacao";
 
 function getAdminClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
@@ -149,20 +150,71 @@ async function registrarHistoricoImplantacao(sb: ReturnType<typeof getAdminClien
   await sb.from("ink_implantacao_historico").insert({ implantacao_id: implantacaoId, evento });
 }
 
+async function avaliarAptidaoNoBanco(
+  sb: ReturnType<typeof getAdminClient>,
+  email: string
+): Promise<{ ok: true; implantacaoId: string; authUserId: string; nomeFantasia: string; resultado: ResultadoAptidaoAprovacao } | { ok: false; error: string }> {
+  const { data: implantacao, error: erroImplantacao } = await sb
+    .from("ink_implantacao_dados")
+    .select("id, email, concluido, etapa_atual, politica_aceita_em, termos_aceito_em, conta_id, auth_user_id, nome_fantasia, tipo_pessoa")
+    .eq("email", email)
+    .maybeSingle();
+  if (erroImplantacao) return { ok: false, error: "Falha ao buscar dados da implantação: " + erroImplantacao.message };
+  if (!implantacao) return { ok: false, error: "Ficha de implantação não encontrada para este e-mail." };
+
+  const [{ data: itens, error: erroItens }, { data: leads, error: erroLeads }] = await Promise.all([
+    sb.from("ink_implantacao_itens").select("id, tipo, status").eq("implantacao_id", implantacao.id),
+    sb.from("ink_leads").select("estagio").eq("email", email),
+  ]);
+  if (erroItens || erroLeads) return { ok: false, error: "Não foi possível validar os requisitos da implantação." };
+
+  const { data: conta, error: erroConta } = implantacao.conta_id
+    ? await sb.from("ink_contas_comerciais").select("id, email_normalizado, auth_user_id").eq("id", implantacao.conta_id).maybeSingle()
+    : { data: null, error: null };
+  if (erroConta) return { ok: false, error: "Não foi possível validar a conta comercial vinculada." };
+
+  let auth: { id: string; email: string | null } | null = null;
+  if (implantacao.auth_user_id) {
+    const { data, error } = await sb.auth.admin.getUserById(implantacao.auth_user_id);
+    if (!error && data.user) auth = { id: data.user.id, email: data.user.email ?? null };
+  }
+
+  const resultado = avaliarAptidaoAprovacao({
+    implantacao,
+    itens: (itens ?? []).map((item) => ({ id: item.id, tipo: item.tipo, status: item.status as StatusItem })),
+    estagios: (leads ?? []).map((lead) => lead.estagio),
+    conta,
+    auth,
+  });
+  return {
+    ok: true,
+    implantacaoId: implantacao.id,
+    authUserId: implantacao.auth_user_id ?? "",
+    nomeFantasia: implantacao.nome_fantasia ?? "",
+    resultado,
+  };
+}
+
+export async function buscarAptidaoAprovacao(email: string): Promise<
+  { ok: true; apta: boolean; pendencias: ResultadoAptidaoAprovacao["pendencias"] }
+  | { ok: false; error: string }
+> {
+  await exigirAdmin();
+  const avaliacao = await avaliarAptidaoNoBanco(getAdminClient(), email);
+  if (!avaliacao.ok) return avaliacao;
+  return { ok: true, ...avaliacao.resultado };
+}
+
 export async function aprovarSolicitacao(email: string, nome: string | null) {
   const admin = await exigirAdmin();
   const sb = getAdminClient();
 
-  const { data: implantacao, error: erroBusca } = await sb
-    .from("ink_implantacao_dados")
-    .select("id, auth_user_id, nome_fantasia")
-    .eq("email", email)
-    .maybeSingle();
-
-  if (erroBusca) return { ok: false, error: "Falha ao buscar dados da implantação: " + erroBusca.message };
-  if (!implantacao) return { ok: false, error: "Ficha de implantação não encontrada para este e-mail." };
-  if (!implantacao.auth_user_id) return { ok: false, error: "Cole o Auth User ID na ficha antes de aprovar." };
-  if (!implantacao.nome_fantasia) return { ok: false, error: "Falta o nome fantasia do estúdio na ficha antes de aprovar." };
+  const avaliacao = await avaliarAptidaoNoBanco(sb, email);
+  if (!avaliacao.ok) return avaliacao;
+  if (!avaliacao.resultado.apta) {
+    return { ok: false, error: "A implantação ainda possui pendências e não pode ser aprovada.", pendencias: avaliacao.resultado.pendencias };
+  }
+  const implantacao = { id: avaliacao.implantacaoId, auth_user_id: avaliacao.authUserId, nome_fantasia: avaliacao.nomeFantasia };
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 15000);
