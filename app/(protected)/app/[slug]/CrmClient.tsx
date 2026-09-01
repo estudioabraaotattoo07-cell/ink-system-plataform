@@ -9723,7 +9723,7 @@ export default function CrmClient({
                   <div className="stit">Fotos de Referência</div>
                   <div style={{ background: "var(--dk3)", border: "1px solid var(--br)", borderRadius: 7, padding: "12px 14px" }}>
                     <div style={{ fontSize: 12, color: "var(--tx2)", marginBottom: 10 }}>
-                      {"Fotos enviadas pelo cliente via " + (auraName || "chat do site") + " ou adicionadas manualmente."}
+                      {"Fotos enviadas pelo cliente pelo site ou adicionadas manualmente."}
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                       {((sc as any).referencias || []).map((url: string, i: number) => (
@@ -9765,9 +9765,21 @@ export default function CrmClient({
                             reader.readAsDataURL(f);
                           });
                           const { base64 } = await compress(file, 800, 0.75);
+                          // Bloco de Continuidade Autorizada (2026-09-01):
+                          // api/upload.js (inq-saas) agora exige o JWT da
+                          // sessão real pra autorizar o vínculo com
+                          // clienteId (checagem de dono no servidor) --
+                          // usa o cliente Supabase real do navegador
+                          // (createBrowserSupabaseClient), nunca o cliente
+                          // placeholder/proxy usado pro resto deste CRM.
+                          const { data: sessaoUpload } = await createBrowserSupabaseClient().auth.getSession();
+                          const tokenUpload = sessaoUpload.session?.access_token;
                           const resp = await fetch("https://inq-saas.vercel.app/api/upload", {
                             method: "POST",
-                            headers: { "Content-Type": "application/json" },
+                            headers: {
+                              "Content-Type": "application/json",
+                              ...(tokenUpload ? { Authorization: "Bearer " + tokenUpload } : {}),
+                            },
                             body: JSON.stringify({ base64, mimeType: "image/jpeg", clienteId: sc.id })
                           });
                           const d = await resp.json();
