@@ -13,6 +13,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { avaliarAcesso, decidirRespostaAcesso, type ClienteSupabaseMinimo } from "@/lib/acesso/avaliarAcesso";
 import { rewriteUserIdParam, forceUserIdOnBody } from "@/lib/acesso/isolamentoTenant";
+import { autorizarRequisicaoProxy } from "@/lib/acesso/proxyAutorizacao";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY!;
@@ -56,6 +57,18 @@ async function proxy(req: NextRequest, method: string, pathSegs: string[]) {
   const table = pathSegs.join("/");
   const url = new URL(req.url);
   const searchParams = url.searchParams;
+
+  // Hardening: allowlist de tabela + matriz de método HTTP por tabela +
+  // select= plano (sem resource embedding) -- as três únicas coisas que
+  // este proxy ainda deixava passar sem restrição além do bloqueio de
+  // rpc/* e do isolamento por user_id. Roda ANTES de qualquer coisa que
+  // toque o corpo/query enviados upstream -- nenhuma entrada rejeitada
+  // aqui chega a fazer requisição ao Supabase.
+  const autorizacao = autorizarRequisicaoProxy(table, method, searchParams);
+  if (!autorizacao.autorizado) {
+    return NextResponse.json({ error: autorizacao.error }, { status: autorizacao.status });
+  }
+
   rewriteUserIdParam(searchParams, tenant.userId);
 
   let body: unknown = undefined;
