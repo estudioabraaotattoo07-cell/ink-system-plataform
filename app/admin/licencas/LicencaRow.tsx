@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { atualizarLicencaTenant } from "./actions";
+import { criarControleAlteracaoLicenca } from "@/lib/admin/confiabilidadeLicencas";
+
+const controleAlteracao = criarControleAlteracaoLicenca();
 
 type Licenca = {
   id: string;
@@ -15,17 +18,20 @@ type Licenca = {
 export default function LicencaRow({ lic }: { lic: Licenca }) {
   const [status, setStatus] = useState(lic.status);
   const [vencimento, setVencimento] = useState(lic.data_vencimento || "");
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
+  const [erro, setErro] = useState("");
+
+  const executarAlteracao = (fields: { status?: string; data_vencimento?: string }) => {
+    setErro("");
+    void controleAlteracao.executar({ licencaId: lic.id, executarNoServidor: () => atualizarLicencaTenant(lic.id, fields), aoProcessar: setPending, aoConfirmar: (confirmada) => { setStatus(confirmada.status); setVencimento(confirmada.data_vencimento || ""); }, aoFalhar: setErro });
+  };
 
   const salvarStatus = (novoStatus: string) => {
-    setStatus(novoStatus);
-    startTransition(() => atualizarLicencaTenant(lic.id, { status: novoStatus }));
+    executarAlteracao({ status: novoStatus });
   };
 
   const salvarVencimento = (novaData: string) => {
-    setVencimento(novaData);
-    setStatus("ativo");
-    startTransition(() => atualizarLicencaTenant(lic.id, { data_vencimento: novaData }));
+    executarAlteracao({ data_vencimento: novaData });
   };
 
   return (
@@ -53,6 +59,8 @@ export default function LicencaRow({ lic }: { lic: Licenca }) {
           onChange={(e) => salvarVencimento(e.target.value)}
           style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, padding: "4px 8px", fontSize: 12, color: "#e5e5e5" }}
         />
+        <div className="mt-1 text-[10px] text-neutral-600">Vencimento da licença operacional</div>
+        {erro && <div role="alert" className="mt-1 text-xs text-red-400 whitespace-normal">{erro}</div>}
       </td>
     </tr>
   );

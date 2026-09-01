@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { upsertVercelEnv, redeployInqSaas } from "./vercel";
 import { exigirAdmin, registrarAuditoriaAdmin } from "@/lib/admin/autorizacao";
+import { validarAlteracaoLicenca, type ResultadoLicenca } from "@/lib/admin/confiabilidadeLicencas";
 
 function getAdminClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
@@ -62,15 +63,21 @@ export async function salvarChavesInfra(fields: ChavesInfra) {
     updated_at: new Date().toISOString(),
   };
 
-  const { data: existing } = await sb.from("configuracoes").select("id").eq("user_id", STUDIO_USER_ID).limit(1).maybeSingle();
+  const { data: existing, error: erroBusca } = await sb.from("configuracoes").select("id").eq("user_id", STUDIO_USER_ID).limit(1).maybeSingle();
+  if (erroBusca) return { ok: false, error: "Não foi possível verificar a configuração atual." };
+  let persistida: { id: string } | null = null;
   if (existing?.id) {
-    await sb.from("configuracoes").update(dbFields).eq("id", existing.id);
+    const { data, error } = await sb.from("configuracoes").update(dbFields).eq("id", existing.id).select("id").maybeSingle();
+    if (error) return { ok: false, error: "Não foi possível salvar as chaves." };
+    persistida = data;
   } else {
-    await sb.from("configuracoes").insert({ user_id: STUDIO_USER_ID, ...dbFields });
+    const { data, error } = await sb.from("configuracoes").insert({ user_id: STUDIO_USER_ID, ...dbFields }).select("id").maybeSingle();
+    if (error) return { ok: false, error: "Não foi possível salvar as chaves." };
+    persistida = data;
   }
-
-  revalidatePath("/admin/licencas");
+  if (!persistida?.id) return { ok: false, error: "A configuração não foi alterada." };
   await registrarAuditoriaAdmin({ admin, acao: "salvar_chaves_infra", recurso: "configuracoes" });
+  revalidatePath("/admin/licencas");
   return { ok: true };
 }
 
@@ -103,13 +110,15 @@ export async function redeployAposChaves(vercelToken: string) {
   return resultado;
 }
 
-export async function atualizarLicencaTenant(id: string, fields: { status?: string; data_vencimento?: string }) {
+export async function atualizarLicencaTenant(id: string, fields: { status?: string; data_vencimento?: string }): Promise<ResultadoLicenca> {
   const admin = await exigirAdmin();
   const sb = getAdminClient();
-  const payload: Record<string, any> = { ...fields };
-  if (fields.data_vencimento) payload.status = "ativo";
-  await sb.from("licencas").update(payload).eq("id", id);
+  const validacao = validarAlteracaoLicenca(id, fields);
+  if (!validacao.ok) return validacao;
+  const { data: licenca, error } = await sb.from("licencas").update(validacao.payload).eq("id", id).select("id, status, data_vencimento").maybeSingle();
+  if (error) return { ok: false, error: "Não foi possível atualizar a licença." };
+  if (!licenca) return { ok: false, error: "Licença não encontrada ou não alterada." };
   await registrarAuditoriaAdmin({ admin, acao: "atualizar_licenca", recurso: "licencas", recursoId: id, detalhes: fields });
   revalidatePath("/admin/licencas");
-  return { ok: true };
+  return { ok: true, licenca };
 }

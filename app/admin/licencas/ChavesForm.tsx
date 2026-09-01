@@ -1,9 +1,31 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { salvarChavesInfra, aplicarChavesNoVercel, redeployAposChaves } from "./actions";
+import { criarControleExclusivo } from "@/lib/admin/confiabilidadeLicencas";
 
-type Cfg = Record<string, any> | null;
+const controleSalvar = criarControleExclusivo();
+
+type Cfg = {
+  aura_api_key?: string | null;
+  resend_api_key?: string | null;
+  email_remetente?: string | null;
+  nome_remetente?: string | null;
+  zenvia_api_key?: string | null;
+  zenvia_numero?: string | null;
+  vercel_token?: string | null;
+  github_token?: string | null;
+  github_repo?: string | null;
+  anthropic_saldo?: string | number | null;
+  anthropic_gasto?: string | number | null;
+  anthropic_limite?: string | number | null;
+  resend_limite?: string | number | null;
+  resend_bounce?: string | number | null;
+  zenvia_gasto?: string | number | null;
+  zenvia_limite?: string | number | null;
+  zenvia_interactions?: string | number | null;
+  zenvia_interactions_limite?: string | number | null;
+} | null;
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
@@ -43,7 +65,7 @@ export default function ChavesForm({ cfg }: { cfg: Cfg }) {
   const [githubToken, setGithubToken] = useState(cfg?.github_token || "");
   const [githubRepo, setGithubRepo] = useState(cfg?.github_repo || "");
   const [anthropicSaldo, setAnthropicSaldo] = useState(String(cfg?.anthropic_saldo ?? ""));
-  const [anthropicGasto, setAnthropicGasto] = useState(String(cfg?.anthropic_gasto ?? ""));
+  const [anthropicGasto] = useState(String(cfg?.anthropic_gasto ?? ""));
   const [anthropicLimite, setAnthropicLimite] = useState(String(cfg?.anthropic_limite ?? ""));
   const [resendLimite, setResendLimite] = useState(String(cfg?.resend_limite ?? "3000"));
   const [resendBounce, setResendBounce] = useState(String(cfg?.resend_bounce ?? ""));
@@ -52,7 +74,7 @@ export default function ChavesForm({ cfg }: { cfg: Cfg }) {
   const [zenviaInteractions, setZenviaInteractions] = useState(String(cfg?.zenvia_interactions ?? ""));
   const [zenviaInteractionsLimite, setZenviaInteractionsLimite] = useState(String(cfg?.zenvia_interactions_limite ?? ""));
 
-  const [pending, startTransition] = useTransition();
+  const [operacao, setOperacao] = useState<"salvar" | "vercel" | "redeploy" | null>(null);
   const [mensagem, setMensagem] = useState<string | null>(null);
 
   const camposAtuais = {
@@ -63,30 +85,29 @@ export default function ChavesForm({ cfg }: { cfg: Cfg }) {
 
   const salvar = () => {
     setMensagem(null);
-    startTransition(async () => {
-      await salvarChavesInfra(camposAtuais);
-      setMensagem("Chaves salvas no banco.");
-    });
+    void controleSalvar.executar(async () => { setOperacao("salvar"); try { const r = await salvarChavesInfra(camposAtuais); setMensagem(r.ok ? "Chaves salvas no banco." : "Erro ao salvar: " + r.error); } catch { setMensagem("Erro ao salvar: não foi possível concluir a operação."); } finally { setOperacao(null); } });
   };
 
   const aplicarNoVercel = () => {
     setMensagem(null);
-    startTransition(async () => {
+    setOperacao("vercel"); void (async () => {
       const r = await aplicarChavesNoVercel(vercelToken, { resendApiKey, emailRemetente, zenviaApiKey });
       if (!r.ok) {
         setMensagem("Erro ao aplicar no Vercel: " + (r.error || r.resultados?.find((x) => !x.ok)?.error || "falha desconhecida"));
       } else {
         setMensagem("Variáveis atualizadas no Vercel. Clique em \"Reimplantar\" pra elas entrarem em vigor.");
       }
-    });
+      setOperacao(null);
+    })();
   };
 
   const reimplantar = () => {
     setMensagem(null);
-    startTransition(async () => {
+    setOperacao("redeploy"); void (async () => {
       const r = await redeployAposChaves(vercelToken);
       setMensagem(r.ok ? "Reimplantação disparada — leva 1-2 minutos pra ficar pronta." : "Erro ao reimplantar: " + r.error);
-    });
+      setOperacao(null);
+    })();
   };
 
   return (
@@ -136,22 +157,22 @@ export default function ChavesForm({ cfg }: { cfg: Cfg }) {
       <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-white/10">
         <button
           onClick={salvar}
-          disabled={pending}
-          style={{ background: "#C9A84C", color: "#17140A", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 700, cursor: pending ? "not-allowed" : "pointer", opacity: pending ? 0.6 : 1 }}
+          disabled={operacao !== null}
+          style={{ background: "#C9A84C", color: "#17140A", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 700, cursor: operacao ? "not-allowed" : "pointer", opacity: operacao ? 0.6 : 1 }}
         >
-          {pending ? "..." : "Salvar Chaves"}
+          {operacao === "salvar" ? "Salvando..." : "Salvar Chaves"}
         </button>
         <button
           onClick={aplicarNoVercel}
-          disabled={pending}
-          style={{ background: "rgba(91,141,239,.15)", color: "#5B8DEF", border: "1px solid rgba(91,141,239,.4)", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 700, cursor: pending ? "not-allowed" : "pointer", opacity: pending ? 0.6 : 1 }}
+          disabled={operacao !== null}
+          style={{ background: "rgba(91,141,239,.15)", color: "#5B8DEF", border: "1px solid rgba(91,141,239,.4)", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 700, cursor: operacao ? "not-allowed" : "pointer", opacity: operacao ? 0.6 : 1 }}
         >
           Aplicar no Vercel (Resend/Zenvia)
         </button>
         <button
           onClick={reimplantar}
-          disabled={pending}
-          style={{ background: "rgba(230,168,56,.15)", color: "#E8A838", border: "1px solid rgba(230,168,56,.4)", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 700, cursor: pending ? "not-allowed" : "pointer", opacity: pending ? 0.6 : 1 }}
+          disabled={operacao !== null}
+          style={{ background: "rgba(230,168,56,.15)", color: "#E8A838", border: "1px solid rgba(230,168,56,.4)", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 700, cursor: operacao ? "not-allowed" : "pointer", opacity: operacao ? 0.6 : 1 }}
         >
           Reimplantar inq-saas
         </button>
