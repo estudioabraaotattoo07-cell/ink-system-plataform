@@ -93,5 +93,6 @@ test("UI aguarda retorno, mostra erro e nao contem atualizacao otimista antiga",
   assert.match(linha, /aoConfirmar:[\s\S]*setStatus\(confirmada\.status\)/);
   assert.match(linha, /role="alert"/);
   assert.match(chaves, /resultado|const r = await salvarChavesInfra/);
-  assert.match(chaves, /r\.ok \? "Chaves salvas no banco\." : "Erro ao salvar:/);
+  assert.match(chaves, /if \(r\.ok && r\.configuracao\)[\s\S]*setMensagem\("Chaves salvas no banco\."\)/);
+  assert.match(chaves, /else setMensagem\("Erro ao salvar: " \+ r\.error\)/);
 });

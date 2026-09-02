@@ -5,6 +5,7 @@ import AdminTabs from "../AdminTabs";
 import { exigirPermissao } from "@/lib/admin/autorizacao";
 import { temPermissaoAdmin } from "@/lib/admin/permissoes";
 import { LABORATORIO_AUTH_USER_ID } from "@/lib/admin/laboratorio";
+import { obterConfiguracaoInfraSegura } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -12,21 +13,17 @@ function getAdminClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
 }
 
-const STUDIO_USER_ID = process.env.STUDIO_USER_ID || "2d366d35-1cae-40d5-ba92-06fe2ab8a763";
-
 export default async function LicencasPage() {
   const admin = await exigirPermissao("licencas.visualizar");
   const sb = getAdminClient();
   const podeVerInfra = temPermissaoAdmin(admin.papel, "infraestrutura.visualizar");
   const podeAlterarLicenca = temPermissaoAdmin(admin.papel, "licencas.alterar");
 
-  const { data: cfg } = podeVerInfra
-    ? await sb.from("configuracoes").select("*").eq("user_id", STUDIO_USER_ID).limit(1).maybeSingle()
-    : { data: null };
+  const cfg = podeVerInfra ? await obterConfiguracaoInfraSegura() : null;
 
   const { data: licencas, error: erroLicencas } = await sb
     .from("licencas")
-    .select("*")
+    .select("id, email, plano, status, data_inicio, data_vencimento")
     .neq("user_id", LABORATORIO_AUTH_USER_ID)
     .order("created_at", { ascending: false });
 
@@ -48,8 +45,8 @@ export default async function LicencasPage() {
       </div>
       <AdminTabs active="licencas" />
 
-      {podeVerInfra ? (
-        <ChavesForm cfg={cfg || null} />
+      {podeVerInfra && cfg ? (
+        <ChavesForm configuracao={cfg} />
       ) : (
         <div role="status" className="rounded-xl border border-amber-900/40 bg-amber-950/15 px-4 py-3 text-sm text-amber-200/80">
           Infraestrutura e credenciais são restritas ao proprietário. Esta visão contém somente o estado operacional das licenças.

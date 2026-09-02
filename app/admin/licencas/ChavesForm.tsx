@@ -3,29 +3,9 @@
 import { useState } from "react";
 import { salvarChavesInfra, aplicarChavesNoVercel, redeployAposChaves } from "./actions";
 import { criarControleExclusivo } from "@/lib/admin/confiabilidadeLicencas";
+import type { ConfiguracaoInfraSegura, MetadataSecretsInfra } from "@/lib/admin/secretsAdmin";
 
 const controleSalvar = criarControleExclusivo();
-
-type Cfg = {
-  aura_api_key?: string | null;
-  resend_api_key?: string | null;
-  email_remetente?: string | null;
-  nome_remetente?: string | null;
-  zenvia_api_key?: string | null;
-  zenvia_numero?: string | null;
-  vercel_token?: string | null;
-  github_token?: string | null;
-  github_repo?: string | null;
-  anthropic_saldo?: string | number | null;
-  anthropic_gasto?: string | number | null;
-  anthropic_limite?: string | number | null;
-  resend_limite?: string | number | null;
-  resend_bounce?: string | number | null;
-  zenvia_gasto?: string | number | null;
-  zenvia_limite?: string | number | null;
-  zenvia_interactions?: string | number | null;
-  zenvia_interactions_limite?: string | number | null;
-} | null;
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
@@ -54,25 +34,43 @@ function Campo({ label, value, onChange, type = "text" }: { label: string; value
   );
 }
 
-export default function ChavesForm({ cfg }: { cfg: Cfg }) {
-  const [auraApiKey, setAuraApiKey] = useState(cfg?.aura_api_key || "");
-  const [resendApiKey, setResendApiKey] = useState(cfg?.resend_api_key || "");
-  const [emailRemetente, setEmailRemetente] = useState(cfg?.email_remetente || "");
-  const [nomeRemetente, setNomeRemetente] = useState(cfg?.nome_remetente || "");
-  const [zenviaApiKey, setZenviaApiKey] = useState(cfg?.zenvia_api_key || "");
-  const [zenviaNumero, setZenviaNumero] = useState(cfg?.zenvia_numero || "");
-  const [vercelToken, setVercelToken] = useState(cfg?.vercel_token || "");
-  const [githubToken, setGithubToken] = useState(cfg?.github_token || "");
-  const [githubRepo, setGithubRepo] = useState(cfg?.github_repo || "");
-  const [anthropicSaldo, setAnthropicSaldo] = useState(String(cfg?.anthropic_saldo ?? ""));
-  const [anthropicGasto] = useState(String(cfg?.anthropic_gasto ?? ""));
-  const [anthropicLimite, setAnthropicLimite] = useState(String(cfg?.anthropic_limite ?? ""));
-  const [resendLimite, setResendLimite] = useState(String(cfg?.resend_limite ?? "3000"));
-  const [resendBounce, setResendBounce] = useState(String(cfg?.resend_bounce ?? ""));
-  const [zenviaGasto, setZenviaGasto] = useState(String(cfg?.zenvia_gasto ?? ""));
-  const [zenviaLimite, setZenviaLimite] = useState(String(cfg?.zenvia_limite ?? ""));
-  const [zenviaInteractions, setZenviaInteractions] = useState(String(cfg?.zenvia_interactions ?? ""));
-  const [zenviaInteractionsLimite, setZenviaInteractionsLimite] = useState(String(cfg?.zenvia_interactions_limite ?? ""));
+function CampoSecret({ label, value, onChange, configurado }: { label: string; value: string; onChange: (v: string) => void; configurado: boolean }) {
+  return (
+    <div>
+      <Campo label={label} value={value} onChange={onChange} type="password" />
+      <div className={`mt-1 text-[11px] ${configurado ? "text-emerald-400" : "text-neutral-500"}`}>
+        {configurado ? "Configurado — preencha somente para substituir" : "Não configurado"}
+      </div>
+    </div>
+  );
+}
+
+export default function ChavesForm({ configuracao }: { configuracao: ConfiguracaoInfraSegura }) {
+  const [configurados, setConfigurados] = useState<MetadataSecretsInfra>({
+    auraApiKey: configuracao.auraApiKey,
+    resendApiKey: configuracao.resendApiKey,
+    zenviaApiKey: configuracao.zenviaApiKey,
+    vercelToken: configuracao.vercelToken,
+    githubToken: configuracao.githubToken,
+  });
+  const [auraApiKey, setAuraApiKey] = useState("");
+  const [resendApiKey, setResendApiKey] = useState("");
+  const [emailRemetente, setEmailRemetente] = useState(configuracao.emailRemetente);
+  const [nomeRemetente, setNomeRemetente] = useState(configuracao.nomeRemetente);
+  const [zenviaApiKey, setZenviaApiKey] = useState("");
+  const [zenviaNumero, setZenviaNumero] = useState(configuracao.zenviaNumero);
+  const [vercelToken, setVercelToken] = useState("");
+  const [githubToken, setGithubToken] = useState("");
+  const [githubRepo, setGithubRepo] = useState(configuracao.githubRepo);
+  const [anthropicSaldo, setAnthropicSaldo] = useState(configuracao.anthropicSaldo);
+  const [anthropicGasto] = useState(configuracao.anthropicGasto);
+  const [anthropicLimite, setAnthropicLimite] = useState(configuracao.anthropicLimite);
+  const [resendLimite, setResendLimite] = useState(configuracao.resendLimite);
+  const [resendBounce, setResendBounce] = useState(configuracao.resendBounce);
+  const [zenviaGasto, setZenviaGasto] = useState(configuracao.zenviaGasto);
+  const [zenviaLimite, setZenviaLimite] = useState(configuracao.zenviaLimite);
+  const [zenviaInteractions, setZenviaInteractions] = useState(configuracao.zenviaInteractions);
+  const [zenviaInteractionsLimite, setZenviaInteractionsLimite] = useState(configuracao.zenviaInteractionsLimite);
 
   const [operacao, setOperacao] = useState<"salvar" | "vercel" | "redeploy" | null>(null);
   const [mensagem, setMensagem] = useState<string | null>(null);
@@ -82,16 +80,42 @@ export default function ChavesForm({ cfg }: { cfg: Cfg }) {
     vercelToken, githubToken, githubRepo, anthropicSaldo, anthropicGasto, anthropicLimite,
     resendLimite, resendBounce, zenviaGasto, zenviaLimite, zenviaInteractions, zenviaInteractionsLimite,
   };
+  const haCredencialNaoSalva = [auraApiKey, resendApiKey, zenviaApiKey, vercelToken, githubToken]
+    .some((valor) => valor.trim().length > 0);
 
   const salvar = () => {
     setMensagem(null);
-    void controleSalvar.executar(async () => { setOperacao("salvar"); try { const r = await salvarChavesInfra(camposAtuais); setMensagem(r.ok ? "Chaves salvas no banco." : "Erro ao salvar: " + r.error); } catch { setMensagem("Erro ao salvar: não foi possível concluir a operação."); } finally { setOperacao(null); } });
+    void controleSalvar.executar(async () => {
+      setOperacao("salvar");
+      try {
+        const r = await salvarChavesInfra(camposAtuais);
+        if (r.ok && r.configuracao) {
+          setConfigurados({
+            auraApiKey: r.configuracao.auraApiKey,
+            resendApiKey: r.configuracao.resendApiKey,
+            zenviaApiKey: r.configuracao.zenviaApiKey,
+            vercelToken: r.configuracao.vercelToken,
+            githubToken: r.configuracao.githubToken,
+          });
+          setAuraApiKey(""); setResendApiKey(""); setZenviaApiKey(""); setVercelToken(""); setGithubToken("");
+          setMensagem("Chaves salvas no banco.");
+        } else setMensagem("Erro ao salvar: " + r.error);
+      } catch {
+        setMensagem("Erro ao salvar: não foi possível concluir a operação.");
+      } finally {
+        setOperacao(null);
+      }
+    });
   };
 
   const aplicarNoVercel = () => {
     setMensagem(null);
+    if (haCredencialNaoSalva) {
+      setMensagem("Salve as novas credenciais antes de aplicá-las no Vercel.");
+      return;
+    }
     setOperacao("vercel"); void (async () => {
-      const r = await aplicarChavesNoVercel(vercelToken, { resendApiKey, emailRemetente, zenviaApiKey });
+      const r = await aplicarChavesNoVercel();
       if (!r.ok) {
         setMensagem("Erro ao aplicar no Vercel: " + (r.error || r.resultados?.find((x) => !x.ok)?.error || "falha desconhecida"));
       } else {
@@ -103,8 +127,12 @@ export default function ChavesForm({ cfg }: { cfg: Cfg }) {
 
   const reimplantar = () => {
     setMensagem(null);
+    if (haCredencialNaoSalva) {
+      setMensagem("Salve as novas credenciais antes de reimplantar.");
+      return;
+    }
     setOperacao("redeploy"); void (async () => {
-      const r = await redeployAposChaves(vercelToken);
+      const r = await redeployAposChaves();
       setMensagem(r.ok ? "Reimplantação disparada — leva 1-2 minutos pra ficar pronta." : "Erro ao reimplantar: " + r.error);
       setOperacao(null);
     })();
@@ -115,14 +143,14 @@ export default function ChavesForm({ cfg }: { cfg: Cfg }) {
       <div style={{ fontSize: 13, fontWeight: 700, color: "#C9A84C", marginBottom: 4 }}>Anthropic — IA (Aura)</div>
       <div className="text-xs text-neutral-500 mb-3">Ainda sem fallback de servidor — decisão pendente de conversa separada.</div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
-        <div className="md:col-span-2"><Campo label="Chave API Anthropic" value={auraApiKey} onChange={setAuraApiKey} type="password" /></div>
+        <div className="md:col-span-2"><CampoSecret label="Chave API Anthropic" value={auraApiKey} onChange={setAuraApiKey} configurado={configurados.auraApiKey} /></div>
         <Campo label="Saldo restante (US$)" value={anthropicSaldo} onChange={setAnthropicSaldo} />
         <Campo label="Limite (US$)" value={anthropicLimite} onChange={setAnthropicLimite} />
       </div>
 
       <div style={{ fontSize: 13, fontWeight: 700, color: "#C9A84C", marginBottom: 4 }}>Resend — E-mail</div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
-        <Campo label="Resend API Key" value={resendApiKey} onChange={setResendApiKey} type="password" />
+        <CampoSecret label="Resend API Key" value={resendApiKey} onChange={setResendApiKey} configurado={configurados.resendApiKey} />
         <Campo label="Email Remetente (reserva)" value={emailRemetente} onChange={setEmailRemetente} />
         <Campo label="Nome Remetente (reserva)" value={nomeRemetente} onChange={setNomeRemetente} />
       </div>
@@ -133,7 +161,7 @@ export default function ChavesForm({ cfg }: { cfg: Cfg }) {
 
       <div style={{ fontSize: 13, fontWeight: 700, color: "#C9A84C", marginBottom: 4 }}>Zenvia — SMS / WhatsApp</div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
-        <Campo label="Zenvia API Key" value={zenviaApiKey} onChange={setZenviaApiKey} type="password" />
+        <CampoSecret label="Zenvia API Key" value={zenviaApiKey} onChange={setZenviaApiKey} configurado={configurados.zenviaApiKey} />
         <Campo label="Número de Envio" value={zenviaNumero} onChange={setZenviaNumero} />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
@@ -145,12 +173,12 @@ export default function ChavesForm({ cfg }: { cfg: Cfg }) {
 
       <div style={{ fontSize: 13, fontWeight: 700, color: "#C9A84C", marginBottom: 4 }}>Vercel — Deploy</div>
       <div className="grid grid-cols-1 mb-6">
-        <Campo label="Vercel Token" value={vercelToken} onChange={setVercelToken} type="password" />
+        <CampoSecret label="Vercel Token" value={vercelToken} onChange={setVercelToken} configurado={configurados.vercelToken} />
       </div>
 
       <div style={{ fontSize: 13, fontWeight: 700, color: "#C9A84C", marginBottom: 4 }}>GitHub — Actions</div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-        <Campo label="GitHub Token" value={githubToken} onChange={setGithubToken} type="password" />
+        <CampoSecret label="GitHub Token" value={githubToken} onChange={setGithubToken} configurado={configurados.githubToken} />
         <Campo label="Repositório (dono/repo)" value={githubRepo} onChange={setGithubRepo} />
       </div>
 

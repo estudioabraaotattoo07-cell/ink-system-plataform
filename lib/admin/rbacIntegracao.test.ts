@@ -35,7 +35,7 @@ test("UI de licenças não consulta nem apresenta infraestrutura sem permissão"
   const pagina = ler("app/admin/licencas/page.tsx");
   const linha = ler("app/admin/licencas/LicencaRow.tsx");
   assert.match(pagina, /podeVerInfra \?/);
-  assert.match(pagina, /podeVerInfra \? \(/);
+  assert.match(pagina, /podeVerInfra && cfg \? \(/);
   assert.match(pagina, /podeAlterar=\{podeAlterarLicenca\}/);
   assert.match(linha, /podeAlterar \? <input/);
   assert.match(linha, /!podeAlterar \?/);
