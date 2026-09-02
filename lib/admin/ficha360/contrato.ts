@@ -2,11 +2,13 @@
 import { etapaJornadaValida, normalizarEmail, type EtapaJornadaComprador } from "../../comercial/cicloComprador.ts";
 // @ts-expect-error TS5097 — node:test executa este módulo puro diretamente.
 import { papelAdminValido, permissoesDoPapel, temPermissaoAdmin, type PapelAdmin, type PermissaoAdmin } from "../permissoes.ts";
-import type { AlertaFicha360, Ficha360Segura, OrigemVinculo360, ResultadoFicha360 } from "./types";
+import type { AlertaFicha360, BloqueioOperacional360, Ficha360Segura, OrigemVinculo360, ProximoPasso360, ResultadoFicha360 } from "./types";
+// @ts-expect-error TS5097 — node:test executa este módulo puro diretamente.
+import { calcularTrial } from "./temporal.ts";
 
 type ContaFonte = { id: string; auth_user_id: string | null; ink_cliente_id: string | null; nome: string | null; email: string; email_normalizado: string; whatsapp: string | null; etapa: string; origem: string | null; criado_em: string; atualizado_em: string };
 type JornadaFonte = { email_confirmado_em: string | null; primeiro_acesso_em: string | null; ultimo_acesso_em: string | null; teste_iniciado_em: string | null; teste_termina_em: string | null; teste_encerrado_em: string | null; onboarding_concluido_em: string | null; limite_email_teste: number; emails_teste_usados: number; assinatura_iniciada_em: string | null };
-type ImplantacaoFonte = { id: string; conta_id: string | null; auth_user_id: string | null; email: string; concluido: boolean; etapa_atual: number | null; nome_fantasia: string | null; politica_aceita_em: string | null; termos_aceito_em: string | null };
+type ImplantacaoFonte = { id: string; conta_id: string | null; auth_user_id: string | null; email: string; concluido: boolean; etapa_atual: number | null; nome_fantasia: string | null; tipo_pessoa: string | null; politica_aceita_em: string | null; termos_aceito_em: string | null };
 type ClienteFonte = { id: string; conta_id: string | null; auth_user_id: string | null; email: string; status: string };
 type LicencaFonte = { id: string; conta_id: string | null; user_id: string | null; email: string; plano: string | null; status: string; data_vencimento: string | null };
 type LeadFonte = { id: string; conta_id: string | null; email: string };
@@ -17,7 +19,7 @@ export type FontesFicha360 = {
   eventos: { criado_em: string }[]; mensagens: { status: string; criado_em: string; agendado_em: string | null }[]; avaliacoes: { solicita_suporte: boolean }[];
   implantacoesFortes: ImplantacaoFonte[]; implantacoesLegadas: ImplantacaoFonte[]; clientesFortes: ClienteFonte[]; clientesLegados: ClienteFonte[];
   licencasFortes: LicencaFonte[]; licencasLegadas: LicencaFonte[]; leadsFortes: LeadFonte[]; leadsLegados: LeadFonte[];
-  itensImplantacao: { id: string; status: string }[];
+  itensImplantacao: { id: string; tipo: string; status: string }[];
   consumo: { emails_enviados: number; sms_enviados: number; emails_comprados: number; sms_comprados: number }[];
   falhasRecentes: number; financeiro: { ciclo: string; status: string; data_pagamento: string | null } | null;
 };
@@ -29,16 +31,41 @@ function selecionarVinculo<T>(fortes: T[], legados: T[], entidade: AlertaFicha36
   return legados.length === 1 ? { valor: legados[0], origem: "fallback_email" } : { valor: null, origem: "ausente" };
 }
 
-function proximoPasso(etapa: EtapaJornadaComprador) {
-  const passos: Record<EtapaJornadaComprador, string> = {
-    cadastro_iniciado: "Confirmar o e-mail e preparar o primeiro acesso.", aguardando_confirmacao_email: "Confirmar o e-mail.",
-    teste_aguardando_primeiro_acesso: "Realizar o primeiro acesso.", teste_ativo: "Concluir o teste e avaliar a assinatura.",
-    avaliacao_solicitada: "Responder à avaliação e decidir sobre a assinatura.", teste_encerrado: "Escolher entre assinar ou encerrar a jornada.",
-    assinatura_iniciada: "Concluir implantação e documentação.", documentos_pendentes: "Resolver as pendências documentais.",
-    pagamento_pendente: "Confirmar o pagamento.", assinatura_ativa: "Acompanhar uso e relacionamento.", inadimplente: "Regularizar o pagamento.",
-    suspenso: "Resolver o motivo da suspensão.", cancelado: "Nenhuma ação automática pendente.",
-  };
-  return passos[etapa];
+export function avaliarProximoPasso(entrada: {
+  etapa: EtapaJornadaComprador; emailConfirmado: boolean | null; possuiAuth: boolean; onboardingConcluido: boolean;
+  implantacaoExiste: boolean; implantacaoConcluida: boolean | null; documentacaoAprovada: boolean | null;
+  trialStatus: "nao_iniciado" | "ativo" | "encerrado" | "indeterminado"; possuiDivergenciaCritica: boolean;
+}): ProximoPasso360 {
+  if (entrada.possuiDivergenciaCritica) return { tipo: "corrigir_divergencia", motivo: "Existem vínculos de identidade incompatíveis que exigem revisão.", prioridade: "alta", origens: ["alertas", "vinculos"] };
+  if (entrada.emailConfirmado === false) return { tipo: "confirmar_email", motivo: "O e-mail da conta ainda não foi confirmado.", prioridade: "alta", origens: ["jornada"] };
+  if (!entrada.possuiAuth) return { tipo: "realizar_primeiro_acesso", motivo: "A conta Auth ainda não está vinculada.", prioridade: "alta", origens: ["conta", "vinculos"] };
+  if (entrada.trialStatus === "nao_iniciado") return { tipo: "realizar_primeiro_acesso", motivo: "O trial ainda não possui data de início persistida.", prioridade: "alta", origens: ["jornada"] };
+  if (entrada.trialStatus === "ativo" && !entrada.onboardingConcluido) return { tipo: "concluir_onboarding", motivo: "O trial está ativo e o onboarding ainda não foi concluído.", prioridade: "media", origens: ["jornada"] };
+  if (entrada.trialStatus === "ativo") return { tipo: "acompanhar_trial", motivo: "O trial está ativo.", prioridade: "baixa", origens: ["jornada"] };
+  if (entrada.trialStatus === "encerrado" && ["teste_encerrado", "avaliacao_solicitada"].includes(entrada.etapa)) return { tipo: "avaliar_assinatura", motivo: "O trial foi encerrado e a assinatura ainda não foi iniciada.", prioridade: "media", origens: ["jornada", "conta"] };
+  if (["assinatura_iniciada", "documentos_pendentes"].includes(entrada.etapa)) {
+    if (!entrada.implantacaoExiste || entrada.implantacaoConcluida === false) return { tipo: "concluir_implantacao", motivo: "A implantação ainda não foi concluída.", prioridade: "alta", origens: ["implantacao", "conta"] };
+    if (entrada.documentacaoAprovada !== true) return { tipo: "resolver_documentacao", motivo: "A documentação obrigatória ainda não está integralmente aprovada.", prioridade: "alta", origens: ["documentacao", "conta"] };
+  }
+  if (["pagamento_pendente", "assinatura_ativa", "inadimplente", "suspenso"].includes(entrada.etapa)) return { tipo: "acompanhar_assinatura", motivo: "A conta está em etapa posterior ao início da assinatura.", prioridade: entrada.etapa === "assinatura_ativa" ? "baixa" : "media", origens: ["conta"] };
+  if (!entrada.onboardingConcluido) return { tipo: "concluir_onboarding", motivo: "O onboarding ainda não foi concluído.", prioridade: "media", origens: ["jornada"] };
+  return { tipo: "nenhum_passo_identificado", motivo: "Nenhum próximo passo seguro pôde ser derivado dos dados disponíveis.", prioridade: "baixa", origens: ["conta", "jornada"] };
+}
+
+export function avaliarBloqueios(entrada: { etapa: EtapaJornadaComprador; alertas: AlertaFicha360[]; emailConfirmado: boolean | null; possuiAuth: boolean; trialStatus: "nao_iniciado" | "ativo" | "encerrado" | "indeterminado"; implantacaoConcluida: boolean | null; documentacaoAprovada: boolean | null }): BloqueioOperacional360[] {
+  const bloqueios: BloqueioOperacional360[] = [];
+  for (const alerta of entrada.alertas) {
+    if (alerta.severidade !== "informacao") bloqueios.push({ codigo: alerta.codigo, descricao: alerta.mensagem, severidade: alerta.severidade, origem: "alertas", impedeAvanco: alerta.severidade === "critico" });
+  }
+  if (entrada.emailConfirmado === false) bloqueios.push({ codigo: "EMAIL_NAO_CONFIRMADO", descricao: "O e-mail ainda não foi confirmado.", severidade: "critico", origem: "jornada", impedeAvanco: true });
+  if (!entrada.possuiAuth) bloqueios.push({ codigo: "AUTH_AUSENTE", descricao: "A conta Auth ainda não está vinculada.", severidade: "critico", origem: "vinculos", impedeAvanco: true });
+  if (entrada.trialStatus === "encerrado") bloqueios.push({ codigo: "TRIAL_ENCERRADO", descricao: "O período de teste está encerrado.", severidade: "atencao", origem: "jornada", impedeAvanco: false });
+  if (entrada.trialStatus === "indeterminado") bloqueios.push({ codigo: "TRIAL_INDETERMINADO", descricao: "As datas persistidas não permitem determinar o estado do trial.", severidade: "atencao", origem: "jornada", impedeAvanco: false });
+  if (entrada.trialStatus === "encerrado" && entrada.etapa === "teste_ativo") bloqueios.push({ codigo: "TRIAL_ETAPA_DIVERGENTE", descricao: "As datas indicam trial encerrado, mas a etapa comercial ainda está como teste ativo.", severidade: "critico", origem: "jornada", impedeAvanco: true });
+  if (entrada.trialStatus === "ativo" && entrada.etapa === "teste_encerrado") bloqueios.push({ codigo: "TRIAL_ETAPA_DIVERGENTE", descricao: "As datas indicam trial ativo, mas a etapa comercial está como teste encerrado.", severidade: "critico", origem: "jornada", impedeAvanco: true });
+  if (entrada.implantacaoConcluida === false) bloqueios.push({ codigo: "IMPLANTACAO_INCOMPLETA", descricao: "A implantação ainda não foi concluída.", severidade: "atencao", origem: "implantacao", impedeAvanco: true });
+  if (entrada.documentacaoAprovada === false) bloqueios.push({ codigo: "DOCUMENTACAO_PENDENTE", descricao: "Existem itens documentais não aprovados.", severidade: "atencao", origem: "documentacao", impedeAvanco: true });
+  return bloqueios;
 }
 
 const ACOES_FICHA360 = new Set<PermissaoAdmin>([
@@ -47,7 +74,7 @@ const ACOES_FICHA360 = new Set<PermissaoAdmin>([
   "financeiro.visualizar", "financeiro.operar", "licencas.visualizar", "licencas.alterar",
 ]);
 
-export function construirFicha360Segura(fontes: FontesFicha360, papel: unknown): ResultadoFicha360 {
+export function construirFicha360Segura(fontes: FontesFicha360, papel: unknown, agora = new Date()): ResultadoFicha360 {
   if (!papelAdminValido(papel)) return { ok: false, codigo: "ACESSO_NEGADO", error: "Papel administrativo não autorizado." };
   if (!fontes.conta) return { ok: false, codigo: "CONTA_INEXISTENTE", error: "Conta comercial não encontrada." };
   const etapa = fontes.conta.etapa;
@@ -85,20 +112,25 @@ export function construirFicha360Segura(fontes: FontesFicha360, papel: unknown):
   for (const [entidade, email] of [["implantacao", implantacao?.email], ["cliente", cliente?.email], ["licenca", licenca?.email]] as const) if (email && normalizarEmail(email) !== conta.email_normalizado) alertas.push({ codigo: "EMAIL_DIVERGENTE", severidade: "atencao", entidade, mensagem: `O e-mail de ${entidade} diverge do e-mail canônico da conta.` });
   const itensAprovados = fontes.itensImplantacao.filter((item) => item.status === "aprovado").length;
   const itensPendentes = fontes.itensImplantacao.filter((item) => item.status !== "aprovado").length;
-  const documentacaoAprovada = fontes.itensImplantacao.length ? itensPendentes === 0 : null;
-  const bloqueios = alertas.filter((a) => a.severidade !== "informacao").map((a) => a.mensagem);
-  if (!conta.auth_user_id) bloqueios.push("Conta Auth ainda não vinculada.");
-  if (implantacao && !implantacao.concluido) bloqueios.push("Implantação ainda não concluída.");
-  if (documentacaoAprovada === false) bloqueios.push("Existem itens documentais não aprovados.");
+  const tiposObrigatorios = implantacao?.tipo_pessoa === "fisica" ? ["documento_pf"] : implantacao?.tipo_pessoa === "juridica" ? ["cartao_cnpj", "documento_responsavel_pj"] : null;
+  const documentacaoAprovada = !tiposObrigatorios ? null : tiposObrigatorios.every((tipo) => {
+    const itens = fontes.itensImplantacao.filter((item) => item.tipo === tipo);
+    return itens.length === 1 && itens[0].status === "aprovado";
+  });
+  const emailConfirmado = fontes.jornada ? Boolean(fontes.jornada.email_confirmado_em) : null;
+  const trialCalculado = fontes.jornada ? calcularTrial(fontes.jornada.teste_iniciado_em, fontes.jornada.teste_termina_em, fontes.jornada.teste_encerrado_em, agora) : null;
+  const possuiDivergenciaIdentidade = alertas.some((alerta) => ["AUTH_DIVERGENTE", "CLIENTE_INEXISTENTE", "LICENCA_INCOERENTE", "EMAIL_DIVERGENTE", "DUPLICIDADE_LEGADA", "VINCULO_OUTRA_CONTA"].includes(alerta.codigo));
+  const bloqueios = avaliarBloqueios({ etapa, alertas, emailConfirmado, possuiAuth: Boolean(conta.auth_user_id), trialStatus: trialCalculado?.status ?? "indeterminado", implantacaoConcluida: implantacao?.concluido ?? null, documentacaoAprovada });
+  const passo = avaliarProximoPasso({ etapa, emailConfirmado, possuiAuth: Boolean(conta.auth_user_id), onboardingConcluido: Boolean(fontes.jornada?.onboarding_concluido_em), implantacaoExiste: Boolean(implantacao), implantacaoConcluida: implantacao?.concluido ?? null, documentacaoAprovada, trialStatus: trialCalculado?.status ?? "indeterminado", possuiDivergenciaCritica: alertas.some((alerta) => alerta.severidade === "critico") });
   const podeLicenca = temPermissaoAdmin(papel, "licencas.visualizar"); const podeFinanceiro = temPermissaoAdmin(papel, "financeiro.visualizar");
   const consumo = fontes.consumo.reduce((total, atual) => ({ emailsEnviados: total.emailsEnviados + (atual.emails_enviados || 0), smsEnviados: total.smsEnviados + (atual.sms_enviados || 0), emailsComprados: total.emailsComprados + (atual.emails_comprados || 0), smsComprados: total.smsComprados + (atual.sms_comprados || 0), falhasRecentes: fontes.falhasRecentes }), { emailsEnviados: 0, smsEnviados: 0, emailsComprados: 0, smsComprados: 0, falhasRecentes: fontes.falhasRecentes });
   const ficha: Ficha360Segura = {
     papel: papel as PapelAdmin,
     identidade: { contaId: conta.id, nome: conta.nome, email: conta.email, whatsapp: conta.whatsapp, origem: conta.origem, etapa, criadoEm: conta.criado_em, atualizadoEm: conta.atualizado_em },
     vinculos: { authUserId: conta.auth_user_id, clienteId: cliente?.id ?? null, implantacaoId: implantacao?.id ?? null, licencaId: licenca?.id ?? null, fontes: { cliente: clienteVinculo.origem, implantacao: implantacaoVinculo.origem, licenca: licencaVinculo.origem, leads: leadsVinculo.origem } },
-    resumo: { statusAtual: etapa, proximoPasso: proximoPasso(etapa), bloqueios, possuiAuth: Boolean(conta.auth_user_id), implantacaoConcluida: implantacao?.concluido ?? null, documentacaoAprovada, licencaAtiva: podeLicenca && licenca ? licenca.status === "ativo" : null },
-    jornada: fontes.jornada ? { emailConfirmadoEm: fontes.jornada.email_confirmado_em, primeiroAcessoEm: fontes.jornada.primeiro_acesso_em, ultimoAcessoEm: fontes.jornada.ultimo_acesso_em, onboardingConcluidoEm: fontes.jornada.onboarding_concluido_em, assinaturaIniciadaEm: fontes.jornada.assinatura_iniciada_em } : null,
-    trial: fontes.jornada ? { iniciadoEm: fontes.jornada.teste_iniciado_em, terminaEm: fontes.jornada.teste_termina_em, encerradoEm: fontes.jornada.teste_encerrado_em, limiteEmails: fontes.jornada.limite_email_teste, emailsUsados: fontes.jornada.emails_teste_usados } : null,
+    resumo: { statusAtual: etapa, proximoPasso: passo, bloqueios, possuiAuth: Boolean(conta.auth_user_id), emailConfirmado: emailConfirmado === null ? "desconhecido" : emailConfirmado ? "sim" : "nao", implantacaoConcluida: implantacao?.concluido ?? null, documentacaoAprovada, clienteOperacional: Boolean(cliente), licencaAtiva: podeLicenca && licenca ? licenca.status === "ativo" : null, possuiDivergenciaIdentidade },
+    jornada: fontes.jornada ? { etapaConta: etapa, origemConta: conta.origem, contaCriadaEm: conta.criado_em, authVinculado: Boolean(conta.auth_user_id), emailConfirmadoEm: fontes.jornada.email_confirmado_em, primeiroAcessoEm: fontes.jornada.primeiro_acesso_em, ultimoAcessoEm: fontes.jornada.ultimo_acesso_em, onboardingConcluidoEm: fontes.jornada.onboarding_concluido_em, implantacaoConcluida: implantacao?.concluido ?? null, documentacaoAprovada, assinaturaIniciadaEm: fontes.jornada.assinatura_iniciada_em, clienteAtivo: cliente ? cliente.status === "ativo" : null } : null,
+    trial: fontes.jornada && trialCalculado ? { status: trialCalculado.status, iniciadoEm: fontes.jornada.teste_iniciado_em, terminaEm: fontes.jornada.teste_termina_em, encerradoEm: fontes.jornada.teste_encerrado_em, diasRestantes: trialCalculado.diasRestantes, diasDecorridos: trialCalculado.diasDecorridos, vencido: trialCalculado.vencido, onboardingConcluido: Boolean(fontes.jornada.onboarding_concluido_em), limiteEmails: fontes.jornada.limite_email_teste, emailsUsados: fontes.jornada.emails_teste_usados } : null,
     implantacao: implantacao ? { id: implantacao.id, origemVinculo: implantacaoVinculo.origem, concluida: implantacao.concluido, etapaAtual: implantacao.etapa_atual, nomeFantasia: implantacao.nome_fantasia, politicaAceitaEm: implantacao.politica_aceita_em, termosAceitosEm: implantacao.termos_aceito_em, totalItens: fontes.itensImplantacao.length, itensAprovados, itensPendentes } : null,
     documentacao: fontes.identidadeDocumental ? { tipo: fontes.identidadeDocumental.tipo, ultimosQuatro: fontes.identidadeDocumental.ultimos_quatro, comparacaoStatus: fontes.identidadeDocumental.comparacao_status, obrigatoriosAprovados: documentacaoAprovada } : null,
     relacionamento: { totalLeads: leadsVinculo.valor.length, totalEventos: fontes.eventos.length, totalMensagens: fontes.mensagens.length, mensagensFalhas: fontes.mensagens.filter((m) => m.status === "falhou").length, totalAvaliacoes: fontes.avaliacoes.length, solicitaSuporte: fontes.avaliacoes.some((a) => a.solicita_suporte), ultimoEventoEm: fontes.eventos[0]?.criado_em ?? null, ultimaMensagemEm: fontes.mensagens[0]?.agendado_em ?? fontes.mensagens[0]?.criado_em ?? null },

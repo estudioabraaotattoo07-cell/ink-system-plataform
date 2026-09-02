@@ -7,7 +7,7 @@ import type { ResultadoFicha360 } from "./types";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-export async function obterFicha360Segura(contaId: string): Promise<ResultadoFicha360> {
+export async function obterFicha360Segura(contaId: string, agora = new Date()): Promise<ResultadoFicha360> {
   const admin = await exigirPermissao("painel.visualizar");
   if (!UUID.test(contaId)) return { ok: false, codigo: "CONTA_INEXISTENTE", error: "Conta comercial não encontrada." };
   const sb = criarClienteAdministrativo();
@@ -25,8 +25,8 @@ export async function obterFicha360Segura(contaId: string): Promise<ResultadoFic
     sb.from("ink_eventos_comerciais").select("criado_em").eq("conta_id", contaId).order("criado_em", { ascending: false }).limit(100),
     sb.from("ink_mensagens_comerciais").select("status, criado_em, agendado_em").eq("conta_id", contaId).order("criado_em", { ascending: false }).limit(100),
     sb.from("ink_avaliacoes_comerciais").select("solicita_suporte").eq("conta_id", contaId),
-    sb.from("ink_implantacao_dados").select("id, conta_id, auth_user_id, email, concluido, etapa_atual, nome_fantasia, politica_aceita_em, termos_aceito_em").eq("conta_id", contaId),
-    sb.from("ink_implantacao_dados").select("id, conta_id, auth_user_id, email, concluido, etapa_atual, nome_fantasia, politica_aceita_em, termos_aceito_em").is("conta_id", null).ilike("email", email),
+    sb.from("ink_implantacao_dados").select("id, conta_id, auth_user_id, email, concluido, etapa_atual, nome_fantasia, tipo_pessoa, politica_aceita_em, termos_aceito_em").eq("conta_id", contaId),
+    sb.from("ink_implantacao_dados").select("id, conta_id, auth_user_id, email, concluido, etapa_atual, nome_fantasia, tipo_pessoa, politica_aceita_em, termos_aceito_em").is("conta_id", null).ilike("email", email),
     sb.from("ink_clientes").select("id, conta_id, auth_user_id, email, status").eq("conta_id", contaId),
     sb.from("ink_clientes").select("id, conta_id, auth_user_id, email, status").is("conta_id", null).ilike("email", email),
     sb.from("licencas").select("id, conta_id, user_id, email, plano, status, data_vencimento").eq("conta_id", contaId),
@@ -40,7 +40,7 @@ export async function obterFicha360Segura(contaId: string): Promise<ResultadoFic
   const clienteCandidato = clientesFortes.data?.length === 1 ? clientesFortes.data[0] : null;
 
   const [itens, consumo, falhas, financeiro] = await Promise.all([
-    implantacaoCandidata ? sb.from("ink_implantacao_itens").select("id, status").eq("implantacao_id", implantacaoCandidata.id) : Promise.resolve({ data: [], error: null }),
+    implantacaoCandidata ? sb.from("ink_implantacao_itens").select("id, tipo, status").eq("implantacao_id", implantacaoCandidata.id) : Promise.resolve({ data: [], error: null }),
     conta.auth_user_id ? sb.from("mensageria_uso").select("emails_enviados, sms_enviados, emails_comprados, sms_comprados").eq("user_id", conta.auth_user_id) : Promise.resolve({ data: [], error: null }),
     conta.auth_user_id ? sb.from("mensageria_falhas").select("id", { count: "exact", head: true }).eq("user_id", conta.auth_user_id) : Promise.resolve({ data: null, error: null, count: 0 }),
     temPermissaoAdmin(admin.papel, "financeiro.visualizar") && clienteCandidato
@@ -55,5 +55,5 @@ export async function obterFicha360Segura(contaId: string): Promise<ResultadoFic
     licencasFortes: licencasFortes.data ?? [], licencasLegadas: licencasLegadas.data ?? [], leadsFortes: leadsFortes.data ?? [], leadsLegados: leadsLegados.data ?? [],
     itensImplantacao: itens.data ?? [], consumo: consumo.data ?? [], falhasRecentes: falhas.count ?? 0, financeiro: financeiro.data,
   };
-  return construirFicha360Segura(fontes, admin.papel);
+  return construirFicha360Segura(fontes, admin.papel, agora);
 }
