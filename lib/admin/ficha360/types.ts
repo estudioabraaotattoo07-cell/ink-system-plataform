@@ -1,0 +1,27 @@
+import type { PapelAdmin, PermissaoAdmin } from "../permissoes";
+import type { EtapaJornadaComprador } from "../../comercial/cicloComprador";
+
+export type OrigemVinculo360 = "forte_conta_id" | "forte_auth_user_id" | "forte_cliente_id" | "fallback_email" | "ausente";
+export type AlertaFicha360 = {
+  codigo: "CONTA_INEXISTENTE" | "AUTH_DIVERGENTE" | "CLIENTE_INEXISTENTE" | "IMPLANTACAO_SEM_CONTA" | "LEAD_APENAS_EMAIL" | "LICENCA_INCOERENTE" | "EMAIL_DIVERGENTE" | "DUPLICIDADE_LEGADA" | "VINCULO_OUTRA_CONTA";
+  severidade: "informacao" | "atencao" | "critico";
+  entidade: "conta" | "implantacao" | "lead" | "cliente" | "licenca";
+  mensagem: string;
+};
+export type IdentidadeConta360 = { contaId: string; nome: string | null; email: string; whatsapp: string | null; origem: string | null; etapa: EtapaJornadaComprador; criadoEm: string; atualizadoEm: string };
+export type VinculosFicha360 = { authUserId: string | null; clienteId: string | null; implantacaoId: string | null; licencaId: string | null; fontes: { cliente: OrigemVinculo360; implantacao: OrigemVinculo360; licenca: OrigemVinculo360; leads: OrigemVinculo360 } };
+export type ResumoExecutivo360 = { statusAtual: EtapaJornadaComprador; proximoPasso: string; bloqueios: string[]; possuiAuth: boolean; implantacaoConcluida: boolean | null; documentacaoAprovada: boolean | null; licencaAtiva: boolean | null };
+export type JornadaFicha360 = { emailConfirmadoEm: string | null; primeiroAcessoEm: string | null; ultimoAcessoEm: string | null; onboardingConcluidoEm: string | null; assinaturaIniciadaEm: string | null };
+export type TrialFicha360 = { iniciadoEm: string | null; terminaEm: string | null; encerradoEm: string | null; limiteEmails: number; emailsUsados: number };
+export type ImplantacaoResumo360 = { id: string; origemVinculo: OrigemVinculo360; concluida: boolean; etapaAtual: number | null; nomeFantasia: string | null; politicaAceitaEm: string | null; termosAceitosEm: string | null; totalItens: number; itensAprovados: number; itensPendentes: number };
+export type DocumentacaoResumo360 = { tipo: "cpf" | "cnpj" | null; ultimosQuatro: string | null; comparacaoStatus: string | null; obrigatoriosAprovados: boolean | null };
+export type RelacionamentoResumo360 = { totalLeads: number; totalEventos: number; totalMensagens: number; mensagensFalhas: number; totalAvaliacoes: number; solicitaSuporte: boolean; ultimoEventoEm: string | null; ultimaMensagemEm: string | null };
+export type LicencaConsumoResumo360 = { licenca: null | { id: string; plano: string | null; status: string; dataVencimento: string | null; origemVinculo: OrigemVinculo360 }; consumo: null | { emailsEnviados: number; smsEnviados: number; emailsComprados: number; smsComprados: number; falhasRecentes: number } };
+export type FinanceiroResumo360 = { ciclo: string | null; status: string | null; dataPagamento: string | null } | null;
+export type Ficha360Segura = {
+  papel: PapelAdmin; identidade: IdentidadeConta360; vinculos: VinculosFicha360; resumo: ResumoExecutivo360;
+  jornada: JornadaFicha360 | null; trial: TrialFicha360 | null; implantacao: ImplantacaoResumo360 | null; documentacao: DocumentacaoResumo360 | null;
+  relacionamento: RelacionamentoResumo360; licencaConsumo: LicencaConsumoResumo360 | null; financeiro: FinanceiroResumo360;
+  alertas: AlertaFicha360[]; acoesPermitidas: PermissaoAdmin[];
+};
+export type ResultadoFicha360 = { ok: true; ficha: Ficha360Segura } | { ok: false; codigo: "CONTA_INEXISTENTE" | "ACESSO_NEGADO" | "ERRO_LEITURA"; error: string };
