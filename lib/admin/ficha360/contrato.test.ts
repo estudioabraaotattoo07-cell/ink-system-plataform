@@ -17,7 +17,7 @@ function fontes(): FontesFicha360 {
     implantacoesFortes: [{ id: "i1", conta_id: CONTA, auth_user_id: AUTH, email: "pessoa@example.com", concluido: true, etapa_atual: 5, nome_fantasia: "Estúdio", tipo_pessoa: "fisica", politica_aceita_em: "2026-01-02", termos_aceito_em: "2026-01-02" }], implantacoesLegadas: [],
     clientesFortes: [{ id: CLIENTE, conta_id: CONTA, auth_user_id: AUTH, email: "pessoa@example.com", status: "ativo" }], clientesLegados: [],
     licencasFortes: [{ id: "l1", conta_id: CONTA, user_id: AUTH, email: "pessoa@example.com", plano: "1.0", status: "ativo", data_vencimento: "2026-02-01" }], licencasLegadas: [],
-    leadsFortes: [{ id: "lead1", conta_id: CONTA, email: "pessoa@example.com" }], leadsLegados: [], itensImplantacao: [{ id: "item1", tipo: "documento_pf", status: "aprovado" }],
+    leadsFortes: [{ id: "lead1", conta_id: CONTA, email: "pessoa@example.com", estagio: "documentacao_recebida" }], leadsLegados: [], itensImplantacao: [{ id: "item1", tipo: "documento_pf", status: "aprovado", observacao_admin: null, atualizado_em: "2026-01-02", arquivo: { enviado_em: "2026-01-02" } }], historicoImplantacao: [{ evento: "documento documento_pf aprovado", criado_em: "2026-01-03" }], authConta: { id: AUTH, email: "pessoa@example.com" },
     consumo: [{ emails_enviados: 4, sms_enviados: 0, emails_comprados: 0, sms_comprados: 0 }], falhasRecentes: 0,
     financeiro: { ciclo: "2026-01", status: "pago", data_pagamento: "2026-01-03" },
   };
@@ -137,7 +137,7 @@ test("divergência entre etapa e datas do trial é explicitamente bloqueada", ()
 });
 
 test("documento opcional pendente não bloqueia obrigatórios já aprovados", () => {
-  const entrada = fontes(); entrada.itensImplantacao.push({ id: "opcional", tipo: "logo", status: "pendente" });
+  const entrada = fontes(); entrada.itensImplantacao.push({ id: "opcional", tipo: "logo", status: "pendente", observacao_admin: null, atualizado_em: null, arquivo: null });
   const resultado = construirFicha360Segura(entrada, "administrador", new Date("2026-01-05T00:00:00Z"));
   assert.equal(resultado.ok, true); if (!resultado.ok) return;
   assert.equal(resultado.ficha.resumo.documentacaoAprovada, true);

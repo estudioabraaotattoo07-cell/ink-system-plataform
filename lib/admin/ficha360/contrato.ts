@@ -5,13 +5,15 @@ import { papelAdminValido, permissoesDoPapel, temPermissaoAdmin, type PapelAdmin
 import type { AlertaFicha360, BloqueioOperacional360, Ficha360Segura, OrigemVinculo360, ProximoPasso360, ResultadoFicha360 } from "./types";
 // @ts-expect-error TS5097 — node:test executa este módulo puro diretamente.
 import { calcularTrial } from "./temporal.ts";
+// @ts-expect-error TS5097 — node:test executa este módulo puro diretamente.
+import { avaliarAptidaoDiagnostica, projetarDocumentos, resumirHistorico, type HistoricoFonte360, type ItemFonte360 } from "./implantacao.ts";
 
 type ContaFonte = { id: string; auth_user_id: string | null; ink_cliente_id: string | null; nome: string | null; email: string; email_normalizado: string; whatsapp: string | null; etapa: string; origem: string | null; criado_em: string; atualizado_em: string };
 type JornadaFonte = { email_confirmado_em: string | null; primeiro_acesso_em: string | null; ultimo_acesso_em: string | null; teste_iniciado_em: string | null; teste_termina_em: string | null; teste_encerrado_em: string | null; onboarding_concluido_em: string | null; limite_email_teste: number; emails_teste_usados: number; assinatura_iniciada_em: string | null };
 type ImplantacaoFonte = { id: string; conta_id: string | null; auth_user_id: string | null; email: string; concluido: boolean; etapa_atual: number | null; nome_fantasia: string | null; tipo_pessoa: string | null; politica_aceita_em: string | null; termos_aceito_em: string | null };
 type ClienteFonte = { id: string; conta_id: string | null; auth_user_id: string | null; email: string; status: string };
 type LicencaFonte = { id: string; conta_id: string | null; user_id: string | null; email: string; plano: string | null; status: string; data_vencimento: string | null };
-type LeadFonte = { id: string; conta_id: string | null; email: string };
+type LeadFonte = { id: string; conta_id: string | null; email: string; estagio: string | null };
 
 export type FontesFicha360 = {
   conta: ContaFonte | null; jornada: JornadaFonte | null;
@@ -19,7 +21,7 @@ export type FontesFicha360 = {
   eventos: { criado_em: string }[]; mensagens: { status: string; criado_em: string; agendado_em: string | null }[]; avaliacoes: { solicita_suporte: boolean }[];
   implantacoesFortes: ImplantacaoFonte[]; implantacoesLegadas: ImplantacaoFonte[]; clientesFortes: ClienteFonte[]; clientesLegados: ClienteFonte[];
   licencasFortes: LicencaFonte[]; licencasLegadas: LicencaFonte[]; leadsFortes: LeadFonte[]; leadsLegados: LeadFonte[];
-  itensImplantacao: { id: string; tipo: string; status: string }[];
+  itensImplantacao: ItemFonte360[]; historicoImplantacao: HistoricoFonte360[]; authConta: { id: string; email: string | null } | null;
   consumo: { emails_enviados: number; sms_enviados: number; emails_comprados: number; sms_comprados: number }[];
   falhasRecentes: number; financeiro: { ciclo: string; status: string; data_pagamento: string | null } | null;
 };
@@ -34,7 +36,7 @@ function selecionarVinculo<T>(fortes: T[], legados: T[], entidade: AlertaFicha36
 export function avaliarProximoPasso(entrada: {
   etapa: EtapaJornadaComprador; emailConfirmado: boolean | null; possuiAuth: boolean; onboardingConcluido: boolean;
   implantacaoExiste: boolean; implantacaoConcluida: boolean | null; documentacaoAprovada: boolean | null;
-  trialStatus: "nao_iniciado" | "ativo" | "encerrado" | "indeterminado"; possuiDivergenciaCritica: boolean;
+  trialStatus: "nao_iniciado" | "ativo" | "encerrado" | "indeterminado"; possuiDivergenciaCritica: boolean; acaoDocumental?: "enviar" | "analisar" | "complementar" | "aguardar" | "aprovar" | null;
 }): ProximoPasso360 {
   if (entrada.possuiDivergenciaCritica) return { tipo: "corrigir_divergencia", motivo: "Existem vínculos de identidade incompatíveis que exigem revisão.", prioridade: "alta", origens: ["alertas", "vinculos"] };
   if (entrada.emailConfirmado === false) return { tipo: "confirmar_email", motivo: "O e-mail da conta ainda não foi confirmado.", prioridade: "alta", origens: ["jornada"] };
@@ -45,6 +47,11 @@ export function avaliarProximoPasso(entrada: {
   if (entrada.trialStatus === "encerrado" && ["teste_encerrado", "avaliacao_solicitada"].includes(entrada.etapa)) return { tipo: "avaliar_assinatura", motivo: "O trial foi encerrado e a assinatura ainda não foi iniciada.", prioridade: "media", origens: ["jornada", "conta"] };
   if (["assinatura_iniciada", "documentos_pendentes"].includes(entrada.etapa)) {
     if (!entrada.implantacaoExiste || entrada.implantacaoConcluida === false) return { tipo: "concluir_implantacao", motivo: "A implantação ainda não foi concluída.", prioridade: "alta", origens: ["implantacao", "conta"] };
+    if (entrada.acaoDocumental === "enviar") return { tipo: "enviar_documento", motivo: "Há documento obrigatório ausente.", prioridade: "alta", origens: ["documentacao"] };
+    if (entrada.acaoDocumental === "complementar") return { tipo: "enviar_complementacao", motivo: "Há complementação documental solicitada.", prioridade: "alta", origens: ["documentacao"] };
+    if (entrada.acaoDocumental === "analisar") return { tipo: "analisar_documento", motivo: "Há documento recebido aguardando análise administrativa.", prioridade: "media", origens: ["documentacao"] };
+    if (entrada.acaoDocumental === "aguardar") return { tipo: "aguardar_analise", motivo: "A documentação está em processamento e requer acompanhamento.", prioridade: "media", origens: ["documentacao"] };
+    if (entrada.acaoDocumental === "aprovar") return { tipo: "prosseguir_aprovacao", motivo: "Os requisitos diagnósticos disponíveis estão atendidos.", prioridade: "media", origens: ["implantacao", "documentacao"] };
     if (entrada.documentacaoAprovada !== true) return { tipo: "resolver_documentacao", motivo: "A documentação obrigatória ainda não está integralmente aprovada.", prioridade: "alta", origens: ["documentacao", "conta"] };
   }
   if (["pagamento_pendente", "assinatura_ativa", "inadimplente", "suspenso"].includes(entrada.etapa)) return { tipo: "acompanhar_assinatura", motivo: "A conta está em etapa posterior ao início da assinatura.", prioridade: entrada.etapa === "assinatura_ativa" ? "baixa" : "media", origens: ["conta"] };
@@ -117,11 +124,20 @@ export function construirFicha360Segura(fontes: FontesFicha360, papel: unknown, 
     const itens = fontes.itensImplantacao.filter((item) => item.tipo === tipo);
     return itens.length === 1 && itens[0].status === "aprovado";
   });
+  const documentos = projetarDocumentos(implantacao?.tipo_pessoa ?? null, fontes.itensImplantacao);
+  const aptidao = implantacao ? avaliarAptidaoDiagnostica({
+    implantacao: { concluido: implantacao.concluido, etapa_atual: implantacao.etapa_atual, politica_aceita_em: implantacao.politica_aceita_em, termos_aceito_em: implantacao.termos_aceito_em, conta_id: implantacao.conta_id, auth_user_id: implantacao.auth_user_id, nome_fantasia: implantacao.nome_fantasia, tipo_pessoa: implantacao.tipo_pessoa, email: implantacao.email },
+    itens: fontes.itensImplantacao.map(({ id, tipo, status }) => ({ id, tipo, status: (["pendente", "recebido", "aprovado", "solicitar_novo", "rejeitado"].includes(status) ? status : "pendente") as "pendente" | "recebido" | "aprovado" | "solicitar_novo" | "rejeitado" })),
+    estagios: leadsVinculo.valor.map((lead) => lead.estagio).filter((valor): valor is string => Boolean(valor)), conta: { id: conta.id, email_normalizado: conta.email_normalizado, auth_user_id: conta.auth_user_id }, auth: fontes.authConta,
+  }) : { estado: "indeterminado" as const, motivos: ["Implantação não encontrada."], documentosPendentes: [], divergencias: [] };
+  const obrigatorios = documentos.filter((documento) => documento.obrigatorio === true);
+  const quantidadeEsperada = implantacao?.tipo_pessoa === "fisica" ? 1 : implantacao?.tipo_pessoa === "juridica" ? 2 : null;
+  const acaoDocumental = quantidadeEsperada !== null && obrigatorios.length < quantidadeEsperada ? "enviar" : obrigatorios.some((d) => d.status === "solicitar_novo" || d.status === "rejeitado") ? "complementar" : obrigatorios.some((d) => d.status === "recebido") ? "analisar" : obrigatorios.some((d) => d.status === "pendente") ? "aguardar" : aptidao.estado === "sim" ? "aprovar" : null;
   const emailConfirmado = fontes.jornada ? Boolean(fontes.jornada.email_confirmado_em) : null;
   const trialCalculado = fontes.jornada ? calcularTrial(fontes.jornada.teste_iniciado_em, fontes.jornada.teste_termina_em, fontes.jornada.teste_encerrado_em, agora) : null;
   const possuiDivergenciaIdentidade = alertas.some((alerta) => ["AUTH_DIVERGENTE", "CLIENTE_INEXISTENTE", "LICENCA_INCOERENTE", "EMAIL_DIVERGENTE", "DUPLICIDADE_LEGADA", "VINCULO_OUTRA_CONTA"].includes(alerta.codigo));
   const bloqueios = avaliarBloqueios({ etapa, alertas, emailConfirmado, possuiAuth: Boolean(conta.auth_user_id), trialStatus: trialCalculado?.status ?? "indeterminado", implantacaoConcluida: implantacao?.concluido ?? null, documentacaoAprovada });
-  const passo = avaliarProximoPasso({ etapa, emailConfirmado, possuiAuth: Boolean(conta.auth_user_id), onboardingConcluido: Boolean(fontes.jornada?.onboarding_concluido_em), implantacaoExiste: Boolean(implantacao), implantacaoConcluida: implantacao?.concluido ?? null, documentacaoAprovada, trialStatus: trialCalculado?.status ?? "indeterminado", possuiDivergenciaCritica: alertas.some((alerta) => alerta.severidade === "critico") });
+  const passo = avaliarProximoPasso({ etapa, emailConfirmado, possuiAuth: Boolean(conta.auth_user_id), onboardingConcluido: Boolean(fontes.jornada?.onboarding_concluido_em), implantacaoExiste: Boolean(implantacao), implantacaoConcluida: implantacao?.concluido ?? null, documentacaoAprovada, trialStatus: trialCalculado?.status ?? "indeterminado", possuiDivergenciaCritica: alertas.some((alerta) => alerta.severidade === "critico"), acaoDocumental });
   const podeLicenca = temPermissaoAdmin(papel, "licencas.visualizar"); const podeFinanceiro = temPermissaoAdmin(papel, "financeiro.visualizar");
   const consumo = fontes.consumo.reduce((total, atual) => ({ emailsEnviados: total.emailsEnviados + (atual.emails_enviados || 0), smsEnviados: total.smsEnviados + (atual.sms_enviados || 0), emailsComprados: total.emailsComprados + (atual.emails_comprados || 0), smsComprados: total.smsComprados + (atual.sms_comprados || 0), falhasRecentes: fontes.falhasRecentes }), { emailsEnviados: 0, smsEnviados: 0, emailsComprados: 0, smsComprados: 0, falhasRecentes: fontes.falhasRecentes });
   const ficha: Ficha360Segura = {
@@ -131,8 +147,8 @@ export function construirFicha360Segura(fontes: FontesFicha360, papel: unknown, 
     resumo: { statusAtual: etapa, proximoPasso: passo, bloqueios, possuiAuth: Boolean(conta.auth_user_id), emailConfirmado: emailConfirmado === null ? "desconhecido" : emailConfirmado ? "sim" : "nao", implantacaoConcluida: implantacao?.concluido ?? null, documentacaoAprovada, clienteOperacional: Boolean(cliente), licencaAtiva: podeLicenca && licenca ? licenca.status === "ativo" : null, possuiDivergenciaIdentidade },
     jornada: fontes.jornada ? { etapaConta: etapa, origemConta: conta.origem, contaCriadaEm: conta.criado_em, authVinculado: Boolean(conta.auth_user_id), emailConfirmadoEm: fontes.jornada.email_confirmado_em, primeiroAcessoEm: fontes.jornada.primeiro_acesso_em, ultimoAcessoEm: fontes.jornada.ultimo_acesso_em, onboardingConcluidoEm: fontes.jornada.onboarding_concluido_em, implantacaoConcluida: implantacao?.concluido ?? null, documentacaoAprovada, assinaturaIniciadaEm: fontes.jornada.assinatura_iniciada_em, clienteAtivo: cliente ? cliente.status === "ativo" : null } : null,
     trial: fontes.jornada && trialCalculado ? { status: trialCalculado.status, iniciadoEm: fontes.jornada.teste_iniciado_em, terminaEm: fontes.jornada.teste_termina_em, encerradoEm: fontes.jornada.teste_encerrado_em, diasRestantes: trialCalculado.diasRestantes, diasDecorridos: trialCalculado.diasDecorridos, vencido: trialCalculado.vencido, onboardingConcluido: Boolean(fontes.jornada.onboarding_concluido_em), limiteEmails: fontes.jornada.limite_email_teste, emailsUsados: fontes.jornada.emails_teste_usados } : null,
-    implantacao: implantacao ? { id: implantacao.id, origemVinculo: implantacaoVinculo.origem, concluida: implantacao.concluido, etapaAtual: implantacao.etapa_atual, nomeFantasia: implantacao.nome_fantasia, politicaAceitaEm: implantacao.politica_aceita_em, termosAceitosEm: implantacao.termos_aceito_em, totalItens: fontes.itensImplantacao.length, itensAprovados, itensPendentes } : null,
-    documentacao: fontes.identidadeDocumental ? { tipo: fontes.identidadeDocumental.tipo, ultimosQuatro: fontes.identidadeDocumental.ultimos_quatro, comparacaoStatus: fontes.identidadeDocumental.comparacao_status, obrigatoriosAprovados: documentacaoAprovada } : null,
+    implantacao: implantacao ? { id: implantacao.id, origemVinculo: implantacaoVinculo.origem, encontrada: true, concluida: implantacao.concluido, etapaAtual: implantacao.etapa_atual, nomeFantasia: implantacao.nome_fantasia, tipoPessoa: implantacao.tipo_pessoa === "fisica" || implantacao.tipo_pessoa === "juridica" ? implantacao.tipo_pessoa : null, authVinculado: Boolean(implantacao.auth_user_id), authCoerente: implantacao.auth_user_id && conta.auth_user_id ? implantacao.auth_user_id === conta.auth_user_id : null, politicaAceitaEm: implantacao.politica_aceita_em, termosAceitosEm: implantacao.termos_aceito_em, totalItens: fontes.itensImplantacao.length, itensAprovados, itensPendentes, aptidaoParaAprovacao: aptidao, historico: { abrangencia: "resumido_limitado", limite: 20, itens: resumirHistorico(fontes.historicoImplantacao) } } : null,
+    documentacao: { tipo: fontes.identidadeDocumental?.tipo ?? null, ultimosQuatro: fontes.identidadeDocumental?.ultimos_quatro ?? null, comparacaoStatus: fontes.identidadeDocumental?.comparacao_status ?? null, obrigatoriosAprovados: documentacaoAprovada, itens: documentos },
     relacionamento: { totalLeads: leadsVinculo.valor.length, totalEventos: fontes.eventos.length, totalMensagens: fontes.mensagens.length, mensagensFalhas: fontes.mensagens.filter((m) => m.status === "falhou").length, totalAvaliacoes: fontes.avaliacoes.length, solicitaSuporte: fontes.avaliacoes.some((a) => a.solicita_suporte), ultimoEventoEm: fontes.eventos[0]?.criado_em ?? null, ultimaMensagemEm: fontes.mensagens[0]?.agendado_em ?? fontes.mensagens[0]?.criado_em ?? null },
     licencaConsumo: podeLicenca ? { licenca: licenca ? { id: licenca.id, plano: licenca.plano, status: licenca.status, dataVencimento: licenca.data_vencimento, origemVinculo: licencaVinculo.origem } : null, consumo } : null,
     financeiro: podeFinanceiro && fontes.financeiro ? { ciclo: fontes.financeiro.ciclo, status: fontes.financeiro.status, dataPagamento: fontes.financeiro.data_pagamento } : null,

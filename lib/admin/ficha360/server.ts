@@ -31,29 +31,35 @@ export async function obterFicha360Segura(contaId: string, agora = new Date()): 
     sb.from("ink_clientes").select("id, conta_id, auth_user_id, email, status").is("conta_id", null).ilike("email", email),
     sb.from("licencas").select("id, conta_id, user_id, email, plano, status, data_vencimento").eq("conta_id", contaId),
     sb.from("licencas").select("id, conta_id, user_id, email, plano, status, data_vencimento").is("conta_id", null).ilike("email", email),
-    sb.from("ink_leads").select("id, conta_id, email").eq("conta_id", contaId),
-    sb.from("ink_leads").select("id, conta_id, email").is("conta_id", null).ilike("email", email),
+    sb.from("ink_leads").select("id, conta_id, email, estagio").eq("conta_id", contaId),
+    sb.from("ink_leads").select("id, conta_id, email, estagio").is("conta_id", null).ilike("email", email),
   ]);
   const principais = [jornada, identidade, eventos, mensagens, avaliacoes, implantacoesFortes, implantacoesLegadas, clientesFortes, clientesLegados, licencasFortes, licencasLegadas, leadsFortes, leadsLegados];
   if (principais.some((consulta) => consulta.error)) return { ok: false, codigo: "ERRO_LEITURA", error: "Não foi possível montar a ficha da conta." };
   const implantacaoCandidata = implantacoesFortes.data?.length === 1 ? implantacoesFortes.data[0] : !implantacoesFortes.data?.length && implantacoesLegadas.data?.length === 1 ? implantacoesLegadas.data[0] : null;
   const clienteCandidato = clientesFortes.data?.length === 1 ? clientesFortes.data[0] : null;
 
-  const [itens, consumo, falhas, financeiro] = await Promise.all([
-    implantacaoCandidata ? sb.from("ink_implantacao_itens").select("id, tipo, status").eq("implantacao_id", implantacaoCandidata.id) : Promise.resolve({ data: [], error: null }),
+  const [itensBase, historico, consumo, falhas, financeiro, authConta] = await Promise.all([
+    implantacaoCandidata ? sb.from("ink_implantacao_itens").select("id, tipo, status, observacao_admin, atualizado_em").eq("implantacao_id", implantacaoCandidata.id) : Promise.resolve({ data: [], error: null }),
+    implantacaoCandidata ? sb.from("ink_implantacao_historico").select("evento, criado_em").eq("implantacao_id", implantacaoCandidata.id).order("criado_em", { ascending: false }).limit(20) : Promise.resolve({ data: [], error: null }),
     conta.auth_user_id ? sb.from("mensageria_uso").select("emails_enviados, sms_enviados, emails_comprados, sms_comprados").eq("user_id", conta.auth_user_id) : Promise.resolve({ data: [], error: null }),
     conta.auth_user_id ? sb.from("mensageria_falhas").select("id", { count: "exact", head: true }).eq("user_id", conta.auth_user_id) : Promise.resolve({ data: null, error: null, count: 0 }),
     temPermissaoAdmin(admin.papel, "financeiro.visualizar") && clienteCandidato
       ? sb.from("financeiro_ciclos").select("ciclo, status, data_pagamento").eq("ink_cliente_id", clienteCandidato.id).order("ciclo", { ascending: false }).limit(1).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
+    conta.auth_user_id ? sb.auth.admin.getUserById(conta.auth_user_id) : Promise.resolve({ data: { user: null }, error: null }),
   ]);
-  if (itens.error || consumo.error || falhas.error || financeiro.error) return { ok: false, codigo: "ERRO_LEITURA", error: "Não foi possível completar os resumos operacionais da ficha." };
+  if (itensBase.error || historico.error || consumo.error || falhas.error || financeiro.error || authConta.error) return { ok: false, codigo: "ERRO_LEITURA", error: "Não foi possível completar os resumos operacionais da ficha." };
+  const itensData = itensBase.data ?? [];
+  const { data: arquivos, error: erroArquivos } = itensData.length ? await sb.from("ink_implantacao_arquivos").select("item_id, enviado_em").in("item_id", itensData.map((item) => item.id)).eq("substituido", false) : { data: [], error: null };
+  if (erroArquivos) return { ok: false, codigo: "ERRO_LEITURA", error: "Não foi possível completar o resumo documental da ficha." };
+  const itens = itensData.map((item) => ({ ...item, arquivo: arquivos?.find((arquivo) => arquivo.item_id === item.id) ?? null }));
 
   const fontes: FontesFicha360 = {
     conta, jornada: jornada.data, identidadeDocumental: identidade.data, eventos: eventos.data ?? [], mensagens: mensagens.data ?? [], avaliacoes: avaliacoes.data ?? [],
     implantacoesFortes: implantacoesFortes.data ?? [], implantacoesLegadas: implantacoesLegadas.data ?? [], clientesFortes: clientesFortes.data ?? [], clientesLegados: clientesLegados.data ?? [],
     licencasFortes: licencasFortes.data ?? [], licencasLegadas: licencasLegadas.data ?? [], leadsFortes: leadsFortes.data ?? [], leadsLegados: leadsLegados.data ?? [],
-    itensImplantacao: itens.data ?? [], consumo: consumo.data ?? [], falhasRecentes: falhas.count ?? 0, financeiro: financeiro.data,
+    itensImplantacao: itens, historicoImplantacao: historico.data ?? [], authConta: authConta.data.user ? { id: authConta.data.user.id, email: authConta.data.user.email ?? null } : null, consumo: consumo.data ?? [], falhasRecentes: falhas.count ?? 0, financeiro: financeiro.data,
   };
   return construirFicha360Segura(fontes, admin.papel, agora);
 }
