@@ -3,18 +3,18 @@ import type { EtapaJornadaComprador } from "../../comercial/cicloComprador";
 
 export type OrigemVinculo360 = "forte_conta_id" | "forte_auth_user_id" | "forte_cliente_id" | "fallback_email" | "ausente";
 export type EstadoConhecido360 = "sim" | "nao" | "desconhecido";
-export type OrigemDecisao360 = "conta" | "jornada" | "implantacao" | "documentacao" | "vinculos" | "alertas";
+export type OrigemDecisao360 = "conta" | "jornada" | "implantacao" | "documentacao" | "relacionamento" | "mensageria" | "suporte" | "vinculos" | "alertas";
 export type ProximoPasso360 = {
-  tipo: "confirmar_email" | "realizar_primeiro_acesso" | "concluir_onboarding" | "concluir_implantacao" | "enviar_documento" | "analisar_documento" | "enviar_complementacao" | "aguardar_analise" | "prosseguir_aprovacao" | "resolver_documentacao" | "corrigir_divergencia" | "acompanhar_trial" | "avaliar_assinatura" | "acompanhar_assinatura" | "nenhum_passo_identificado";
+  tipo: "confirmar_email" | "realizar_primeiro_acesso" | "concluir_onboarding" | "concluir_implantacao" | "enviar_documento" | "analisar_documento" | "enviar_complementacao" | "aguardar_analise" | "prosseguir_aprovacao" | "resolver_documentacao" | "corrigir_divergencia" | "acompanhar_trial" | "avaliar_assinatura" | "acompanhar_assinatura" | "responder_contato" | "revisar_falha" | "acompanhar_chamado" | "aguardar_retorno" | "nenhum_passo_identificado";
   motivo: string;
   prioridade: "baixa" | "media" | "alta";
   origens: OrigemDecisao360[];
 };
 export type BloqueioOperacional360 = { codigo: string; descricao: string; severidade: "atencao" | "critico"; origem: OrigemDecisao360; impedeAvanco: boolean };
 export type AlertaFicha360 = {
-  codigo: "CONTA_INEXISTENTE" | "AUTH_DIVERGENTE" | "CLIENTE_INEXISTENTE" | "IMPLANTACAO_SEM_CONTA" | "LEAD_APENAS_EMAIL" | "LICENCA_INCOERENTE" | "EMAIL_DIVERGENTE" | "DUPLICIDADE_LEGADA" | "VINCULO_OUTRA_CONTA";
+  codigo: "CONTA_INEXISTENTE" | "AUTH_DIVERGENTE" | "CLIENTE_INEXISTENTE" | "IMPLANTACAO_SEM_CONTA" | "LEAD_APENAS_EMAIL" | "LICENCA_INCOERENTE" | "EMAIL_DIVERGENTE" | "DUPLICIDADE_LEGADA" | "VINCULO_OUTRA_CONTA" | "MENSAGEM_OUTRA_CONTA" | "AVALIACAO_OUTRA_CONTA" | "CHAMADO_CLIENTE_DIVERGENTE" | "FALHA_AUTH_DIVERGENTE" | "FALHA_OPERACIONAL_RECENTE" | "STATUS_MENSAGEM_INDETERMINADO";
   severidade: "informacao" | "atencao" | "critico";
-  entidade: "conta" | "implantacao" | "lead" | "cliente" | "licenca";
+  entidade: "conta" | "implantacao" | "lead" | "cliente" | "licenca" | "mensagem" | "avaliacao" | "chamado" | "falha";
   mensagem: string;
 };
 export type IdentidadeConta360 = { contaId: string; nome: string | null; email: string; whatsapp: string | null; origem: string | null; etapa: EtapaJornadaComprador; criadoEm: string; atualizadoEm: string };
@@ -27,7 +27,18 @@ export type HistoricoImplantacao360 = { tipo: string; ocorridoEm: string; descri
 export type AptidaoAprovacao360 = { estado: "sim" | "nao" | "indeterminado"; motivos: string[]; documentosPendentes: string[]; divergencias: string[] };
 export type ImplantacaoResumo360 = { id: string; origemVinculo: OrigemVinculo360; encontrada: boolean; concluida: boolean; etapaAtual: number | null; nomeFantasia: string | null; tipoPessoa: "fisica" | "juridica" | null; authVinculado: boolean; authCoerente: boolean | null; politicaAceitaEm: string | null; termosAceitosEm: string | null; totalItens: number; itensAprovados: number; itensPendentes: number; aptidaoParaAprovacao: AptidaoAprovacao360; historico: { abrangencia: "resumido_limitado"; limite: number; itens: HistoricoImplantacao360[] } };
 export type DocumentacaoResumo360 = { tipo: "cpf" | "cnpj" | null; ultimosQuatro: string | null; comparacaoStatus: string | null; obrigatoriosAprovados: boolean | null; itens: DocumentoImplantacao360[] };
-export type RelacionamentoResumo360 = { totalLeads: number; totalEventos: number; totalMensagens: number; mensagensFalhas: number; totalAvaliacoes: number; solicitaSuporte: boolean; ultimoEventoEm: string | null; ultimaMensagemEm: string | null };
+export type HistoricoLimitado360<T> = { abrangencia: "resumido_limitado"; limite: number; totalConhecido: number | null; itens: T[] };
+export type MensagemComercial360 = { id: string; categoria: string; nome: string; canal: string; direcao: "saida" | "desconhecida"; status: string; criadoEm: string; processadoEm: string | null; resumoSeguro: string; possuiFalha: boolean; origem: "jornada_comercial" };
+export type AvaliacaoRelacionamento360 = { id: string; nota: number; solicitaSuporte: boolean; criadoEm: string; resumoSeguro: string | null };
+export type ChamadoSuporte360 = { id: string | null; status: string; assunto: null; prioridade: null; abertoEm: null; atualizadoEm: null; fechadoEm: null; origemVinculo: "forte_cliente_id" };
+export type FalhaComunicacao360 = { id: string; canal: string; categoria: "envio"; status: "falhou"; criadoEm: string; mensagemSanitizada: string | null; origemVinculo: "forte_auth_user_id" };
+export type RelacionamentoResumo360 = {
+  totalLeads: number; totalEventos: number; totalMensagens: number; mensagensFalhas: number; totalAvaliacoes: number; solicitaSuporte: boolean;
+  ultimoEventoEm: string | null; ultimaMensagemEm: string | null;
+  mensagens: HistoricoLimitado360<MensagemComercial360>; avaliacoes: HistoricoLimitado360<AvaliacaoRelacionamento360>;
+  chamados: HistoricoLimitado360<ChamadoSuporte360>; falhasOperacionais: HistoricoLimitado360<FalhaComunicacao360>;
+  resumo: { existeInteracaoRecente: EstadoConhecido360; existeMensagemPendente: boolean; existeFalhaRecente: boolean; existeChamadoAberto: boolean; ultimaInteracaoEm: string | null; ultimoCanal: string | null; quantidadeAvaliacoes: number; existePendenciaOperacional: boolean };
+};
 export type LicencaConsumoResumo360 = { licenca: null | { id: string; plano: string | null; status: string; dataVencimento: string | null; origemVinculo: OrigemVinculo360 }; consumo: null | { emailsEnviados: number; smsEnviados: number; emailsComprados: number; smsComprados: number; falhasRecentes: number } };
 export type FinanceiroResumo360 = { ciclo: string | null; status: string | null; dataPagamento: string | null } | null;
 export type Ficha360Segura = {

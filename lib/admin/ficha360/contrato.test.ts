@@ -13,12 +13,13 @@ function fontes(): FontesFicha360 {
     conta: { id: CONTA, auth_user_id: AUTH, ink_cliente_id: CLIENTE, nome: "Pessoa", email: "pessoa@example.com", email_normalizado: "pessoa@example.com", whatsapp: null, etapa: "teste_ativo", origem: "site", criado_em: "2026-01-01", atualizado_em: "2026-01-02" },
     jornada: { email_confirmado_em: "2026-01-01", primeiro_acesso_em: "2026-01-02", ultimo_acesso_em: null, teste_iniciado_em: "2026-01-02", teste_termina_em: "2026-01-09", teste_encerrado_em: null, onboarding_concluido_em: null, limite_email_teste: 30, emails_teste_usados: 4, assinatura_iniciada_em: null },
     identidadeDocumental: { tipo: "cpf", ultimos_quatro: "1234", comparacao_status: "coincidente" },
-    eventos: [{ criado_em: "2026-01-02" }], mensagens: [{ status: "enviado", criado_em: "2026-01-02", agendado_em: null }], avaliacoes: [],
+    eventos: [{ conta_id: CONTA, tipo: "teste_iniciado", criado_em: "2026-01-02" }], mensagens: [{ id: "m1", conta_id: CONTA, codigo: "boas_vindas", nome: "Boas-vindas", grupo: "teste", canal: "email", status: "enviado", criado_em: "2026-01-02", agendado_em: null, processado_em: "2026-01-02" }], avaliacoes: [],
+    totalMensagens: 1, totalAvaliacoes: 0, chamados: [], totalChamados: 0, falhas: [], totalFalhas: 0,
     implantacoesFortes: [{ id: "i1", conta_id: CONTA, auth_user_id: AUTH, email: "pessoa@example.com", concluido: true, etapa_atual: 5, nome_fantasia: "Estúdio", tipo_pessoa: "fisica", politica_aceita_em: "2026-01-02", termos_aceito_em: "2026-01-02" }], implantacoesLegadas: [],
     clientesFortes: [{ id: CLIENTE, conta_id: CONTA, auth_user_id: AUTH, email: "pessoa@example.com", status: "ativo" }], clientesLegados: [],
     licencasFortes: [{ id: "l1", conta_id: CONTA, user_id: AUTH, email: "pessoa@example.com", plano: "1.0", status: "ativo", data_vencimento: "2026-02-01" }], licencasLegadas: [],
     leadsFortes: [{ id: "lead1", conta_id: CONTA, email: "pessoa@example.com", estagio: "documentacao_recebida" }], leadsLegados: [], itensImplantacao: [{ id: "item1", tipo: "documento_pf", status: "aprovado", observacao_admin: null, atualizado_em: "2026-01-02", arquivo: { enviado_em: "2026-01-02" } }], historicoImplantacao: [{ evento: "documento documento_pf aprovado", criado_em: "2026-01-03" }], authConta: { id: AUTH, email: "pessoa@example.com" },
-    consumo: [{ emails_enviados: 4, sms_enviados: 0, emails_comprados: 0, sms_comprados: 0 }], falhasRecentes: 0,
+    consumo: [{ emails_enviados: 4, sms_enviados: 0, emails_comprados: 0, sms_comprados: 0 }],
     financeiro: { ciclo: "2026-01", status: "pago", data_pagamento: "2026-01-03" },
   };
 }
@@ -142,4 +143,16 @@ test("documento opcional pendente não bloqueia obrigatórios já aprovados", ()
   assert.equal(resultado.ok, true); if (!resultado.ok) return;
   assert.equal(resultado.ficha.resumo.documentacaoAprovada, true);
   assert.equal(resultado.ficha.resumo.bloqueios.some((bloqueio) => bloqueio.codigo === "DOCUMENTACAO_PENDENTE"), false);
+});
+
+test("falha recente orienta próximo passo quando não há pendência mais prioritária", () => {
+  const entrada = fontes(); entrada.jornada!.onboarding_concluido_em = "2026-01-03"; entrada.falhas = [{ id: "f1", user_id: AUTH, canal: "email", motivo: "Falha controlada", criado_em: "2026-01-04T00:00:00Z" }]; entrada.totalFalhas = 1;
+  const resultado = construirFicha360Segura(entrada, "administrador", new Date("2026-01-05T00:00:00Z")); assert.equal(resultado.ok, true); if (!resultado.ok) return;
+  assert.equal(resultado.ficha.resumo.proximoPasso.tipo, "revisar_falha"); assert.equal(resultado.ficha.resumo.proximoPasso.origens[0], "mensageria");
+});
+
+test("suporte recebe relacionamento sanitizado e continua sem financeiro", () => {
+  const entrada = fontes(); entrada.chamados = [{ id: "c1", ink_cliente_id: CLIENTE, status: "aberto" }]; entrada.totalChamados = 1;
+  const resultado = construirFicha360Segura(entrada, "suporte", new Date("2026-01-05T00:00:00Z")); assert.equal(resultado.ok, true); if (!resultado.ok) return;
+  assert.equal(resultado.ficha.relacionamento.chamados.itens.length, 1); assert.equal(resultado.ficha.financeiro, null); assert.equal(resultado.ficha.acoesPermitidas.includes("relacionamento.visualizar"), true); assert.doesNotMatch(JSON.stringify(resultado.ficha.relacionamento), /"(?:token|secret|hash|cpf|payload|header|provedor)"\s*:/i);
 });
