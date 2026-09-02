@@ -17,9 +17,9 @@ function fontes(): FontesFicha360 {
     totalMensagens: 1, totalAvaliacoes: 0, chamados: [], totalChamados: 0, falhas: [], totalFalhas: 0,
     implantacoesFortes: [{ id: "i1", conta_id: CONTA, auth_user_id: AUTH, email: "pessoa@example.com", concluido: true, etapa_atual: 5, nome_fantasia: "Estúdio", tipo_pessoa: "fisica", politica_aceita_em: "2026-01-02", termos_aceito_em: "2026-01-02" }], implantacoesLegadas: [],
     clientesFortes: [{ id: CLIENTE, conta_id: CONTA, auth_user_id: AUTH, email: "pessoa@example.com", status: "ativo" }], clientesLegados: [],
-    licencasFortes: [{ id: "l1", conta_id: CONTA, user_id: AUTH, email: "pessoa@example.com", plano: "1.0", status: "ativo", data_vencimento: "2026-02-01" }], licencasLegadas: [],
+    licencasFortes: [{ id: "l1", conta_id: CONTA, user_id: AUTH, email: "pessoa@example.com", plano: "1.0", status: "ativo", data_inicio: "2026-01-01", data_vencimento: "2026-02-01", franquia_ilimitada: false, email_incluido_mes: 400, sms_incluido_mes: 0 }], licencasLegadas: [],
     leadsFortes: [{ id: "lead1", conta_id: CONTA, email: "pessoa@example.com", estagio: "documentacao_recebida" }], leadsLegados: [], itensImplantacao: [{ id: "item1", tipo: "documento_pf", status: "aprovado", observacao_admin: null, atualizado_em: "2026-01-02", arquivo: { enviado_em: "2026-01-02" } }], historicoImplantacao: [{ evento: "documento documento_pf aprovado", criado_em: "2026-01-03" }], authConta: { id: AUTH, email: "pessoa@example.com" },
-    consumo: [{ emails_enviados: 4, sms_enviados: 0, emails_comprados: 0, sms_comprados: 0 }],
+    anoMesConsumo: "2026-01", consumo: [{ user_id: AUTH, ano_mes: "2026-01", emails_enviados: 4, emails_reservados: 1, sms_enviados: 0, sms_reservados: 0, emails_comprados: 0, sms_comprados: 0 }],
     financeiro: { ciclo: "2026-01", status: "pago", data_pagamento: "2026-01-03" },
   };
 }
@@ -73,6 +73,7 @@ test("contrato e leitor nao serializam secrets, tokens, hashes ou CPF integral",
 test("leitor ancora consultas fortes em conta_id e protege entrada", () => {
   const fonte = readFileSync(new URL("server.ts", import.meta.url), "utf8");
   assert.match(fonte, /exigirPermissao\("painel\.visualizar"\)/); assert.match(fonte, /ink_contas_comerciais[\s\S]*\.eq\("id", contaId\)/); assert.match(fonte, /\.eq\("conta_id", contaId\)/); assert.match(fonte, /\.is\("conta_id", null\)\.ilike\("email", email\)/);
+  assert.match(fonte, /mensageria_uso[\s\S]*\.eq\("user_id", conta\.auth_user_id\)\.eq\("ano_mes", anoMesConsumo\)/);
 });
 
 test("resumo e jornada completos são derivados de fatos persistidos", () => {

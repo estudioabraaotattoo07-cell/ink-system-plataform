@@ -9,12 +9,14 @@ import { calcularTrial } from "./temporal.ts";
 import { avaliarAptidaoDiagnostica, projetarDocumentos, resumirHistorico, type HistoricoFonte360, type ItemFonte360 } from "./implantacao.ts";
 // @ts-expect-error TS5097 — node:test executa este módulo puro diretamente.
 import { construirRelacionamento360, type AvaliacaoFonte360, type ChamadoFonte360, type EventoRelacionamentoFonte360, type FalhaFonte360, type MensagemFonte360 } from "./relacionamento.ts";
+// @ts-expect-error TS5097 — node:test executa este módulo puro diretamente.
+import { construirLicencaConsumoDiagnostico, type ConsumoMensalFonte360, type LicencaFonteConsumo360 } from "./licencaConsumo.ts";
 
 type ContaFonte = { id: string; auth_user_id: string | null; ink_cliente_id: string | null; nome: string | null; email: string; email_normalizado: string; whatsapp: string | null; etapa: string; origem: string | null; criado_em: string; atualizado_em: string };
 type JornadaFonte = { email_confirmado_em: string | null; primeiro_acesso_em: string | null; ultimo_acesso_em: string | null; teste_iniciado_em: string | null; teste_termina_em: string | null; teste_encerrado_em: string | null; onboarding_concluido_em: string | null; limite_email_teste: number; emails_teste_usados: number; assinatura_iniciada_em: string | null };
 type ImplantacaoFonte = { id: string; conta_id: string | null; auth_user_id: string | null; email: string; concluido: boolean; etapa_atual: number | null; nome_fantasia: string | null; tipo_pessoa: string | null; politica_aceita_em: string | null; termos_aceito_em: string | null };
 type ClienteFonte = { id: string; conta_id: string | null; auth_user_id: string | null; email: string; status: string };
-type LicencaFonte = { id: string; conta_id: string | null; user_id: string | null; email: string; plano: string | null; status: string; data_vencimento: string | null };
+type LicencaFonte = LicencaFonteConsumo360 & { email: string };
 type LeadFonte = { id: string; conta_id: string | null; email: string; estagio: string | null };
 
 export type FontesFicha360 = {
@@ -25,7 +27,7 @@ export type FontesFicha360 = {
   implantacoesFortes: ImplantacaoFonte[]; implantacoesLegadas: ImplantacaoFonte[]; clientesFortes: ClienteFonte[]; clientesLegados: ClienteFonte[];
   licencasFortes: LicencaFonte[]; licencasLegadas: LicencaFonte[]; leadsFortes: LeadFonte[]; leadsLegados: LeadFonte[];
   itensImplantacao: ItemFonte360[]; historicoImplantacao: HistoricoFonte360[]; authConta: { id: string; email: string | null } | null;
-  consumo: { emails_enviados: number; sms_enviados: number; emails_comprados: number; sms_comprados: number }[];
+  anoMesConsumo: string; consumo: ConsumoMensalFonte360[];
   financeiro: { ciclo: string; status: string; data_pagamento: string | null } | null;
 };
 
@@ -140,6 +142,9 @@ export function construirFicha360Segura(fontes: FontesFicha360, papel: unknown, 
   const trialCalculado = fontes.jornada ? calcularTrial(fontes.jornada.teste_iniciado_em, fontes.jornada.teste_termina_em, fontes.jornada.teste_encerrado_em, agora) : null;
   const relacionamentoResultado = construirRelacionamento360({ contaId: conta.id, clienteId: cliente?.id ?? null, authUserId: conta.auth_user_id, agora, mensagens: fontes.mensagens, totalMensagens: fontes.totalMensagens, avaliacoes: fontes.avaliacoes, totalAvaliacoes: fontes.totalAvaliacoes, eventos: fontes.eventos, chamados: fontes.chamados, totalChamados: fontes.totalChamados, falhas: fontes.falhas, totalFalhas: fontes.totalFalhas, totalLeads: leadsVinculo.valor.length });
   alertas.push(...relacionamentoResultado.alertas);
+  const falhasRecentes = relacionamentoResultado.relacionamento.falhasOperacionais.totalConhecido ?? relacionamentoResultado.relacionamento.falhasOperacionais.itens.length;
+  const contextoTrial = licenca?.plano === "1.0-teste" || ["teste_ativo", "teste_encerrado", "avaliacao_solicitada"].includes(etapa);
+  const licencaConsumoResultado = construirLicencaConsumoDiagnostico({ contaId: conta.id, authUserId: conta.auth_user_id, anoMes: fontes.anoMesConsumo, origemLicenca: licencaVinculo.origem, licenca, cliente, trial: contextoTrial && trialCalculado && fontes.jornada ? { status: trialCalculado.status, limiteEmails: fontes.jornada.limite_email_teste } : null, consumoMensal: fontes.consumo, falhasRecentes });
   const possuiDivergenciaIdentidade = alertas.some((alerta) => alerta.severidade === "critico");
   const bloqueios = avaliarBloqueios({ etapa, alertas, emailConfirmado, possuiAuth: Boolean(conta.auth_user_id), trialStatus: trialCalculado?.status ?? "indeterminado", implantacaoConcluida: implantacao?.concluido ?? null, documentacaoAprovada });
   let passo = avaliarProximoPasso({ etapa, emailConfirmado, possuiAuth: Boolean(conta.auth_user_id), onboardingConcluido: Boolean(fontes.jornada?.onboarding_concluido_em), implantacaoExiste: Boolean(implantacao), implantacaoConcluida: implantacao?.concluido ?? null, documentacaoAprovada, trialStatus: trialCalculado?.status ?? "indeterminado", possuiDivergenciaCritica: alertas.some((alerta) => alerta.severidade === "critico"), acaoDocumental });
@@ -147,9 +152,8 @@ export function construirFicha360Segura(fontes: FontesFicha360, papel: unknown, 
     const mapa = { responder: ["responder_contato", "Há solicitação de contato registrada.", "relacionamento"], revisar_falha: ["revisar_falha", "Existe falha recente de comunicação para revisão.", "mensageria"], acompanhar_chamado: ["acompanhar_chamado", "Existe chamado aberto para acompanhamento.", "suporte"], aguardar: ["aguardar_retorno", "Existe mensagem programada ou em processamento.", "relacionamento"] } as const;
     const [tipo, motivo, origem] = mapa[relacionamentoResultado.acao]; passo = { tipo, motivo, prioridade: relacionamentoResultado.acao === "revisar_falha" ? "alta" : "media", origens: [origem] };
   }
+  alertas.push(...licencaConsumoResultado.alertas);
   const podeLicenca = temPermissaoAdmin(papel, "licencas.visualizar"); const podeFinanceiro = temPermissaoAdmin(papel, "financeiro.visualizar");
-  const falhasRecentes = relacionamentoResultado.relacionamento.falhasOperacionais.totalConhecido ?? relacionamentoResultado.relacionamento.falhasOperacionais.itens.length;
-  const consumo = fontes.consumo.reduce((total, atual) => ({ emailsEnviados: total.emailsEnviados + (atual.emails_enviados || 0), smsEnviados: total.smsEnviados + (atual.sms_enviados || 0), emailsComprados: total.emailsComprados + (atual.emails_comprados || 0), smsComprados: total.smsComprados + (atual.sms_comprados || 0), falhasRecentes }), { emailsEnviados: 0, smsEnviados: 0, emailsComprados: 0, smsComprados: 0, falhasRecentes });
   const ficha: Ficha360Segura = {
     papel: papel as PapelAdmin,
     identidade: { contaId: conta.id, nome: conta.nome, email: conta.email, whatsapp: conta.whatsapp, origem: conta.origem, etapa, criadoEm: conta.criado_em, atualizadoEm: conta.atualizado_em },
@@ -160,7 +164,7 @@ export function construirFicha360Segura(fontes: FontesFicha360, papel: unknown, 
     implantacao: implantacao ? { id: implantacao.id, origemVinculo: implantacaoVinculo.origem, encontrada: true, concluida: implantacao.concluido, etapaAtual: implantacao.etapa_atual, nomeFantasia: implantacao.nome_fantasia, tipoPessoa: implantacao.tipo_pessoa === "fisica" || implantacao.tipo_pessoa === "juridica" ? implantacao.tipo_pessoa : null, authVinculado: Boolean(implantacao.auth_user_id), authCoerente: implantacao.auth_user_id && conta.auth_user_id ? implantacao.auth_user_id === conta.auth_user_id : null, politicaAceitaEm: implantacao.politica_aceita_em, termosAceitosEm: implantacao.termos_aceito_em, totalItens: fontes.itensImplantacao.length, itensAprovados, itensPendentes, aptidaoParaAprovacao: aptidao, historico: { abrangencia: "resumido_limitado", limite: 20, itens: resumirHistorico(fontes.historicoImplantacao) } } : null,
     documentacao: { tipo: fontes.identidadeDocumental?.tipo ?? null, ultimosQuatro: fontes.identidadeDocumental?.ultimos_quatro ?? null, comparacaoStatus: fontes.identidadeDocumental?.comparacao_status ?? null, obrigatoriosAprovados: documentacaoAprovada, itens: documentos },
     relacionamento: relacionamentoResultado.relacionamento,
-    licencaConsumo: podeLicenca ? { licenca: licenca ? { id: licenca.id, plano: licenca.plano, status: licenca.status, dataVencimento: licenca.data_vencimento, origemVinculo: licencaVinculo.origem } : null, consumo } : null,
+    licencaConsumo: podeLicenca ? licencaConsumoResultado.resumo : null,
     financeiro: podeFinanceiro && fontes.financeiro ? { ciclo: fontes.financeiro.ciclo, status: fontes.financeiro.status, dataPagamento: fontes.financeiro.data_pagamento } : null,
     alertas, acoesPermitidas: permissoesDoPapel(papel).filter((permissao) => ACOES_FICHA360.has(permissao)),
   };
