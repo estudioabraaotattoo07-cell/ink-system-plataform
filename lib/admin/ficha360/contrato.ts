@@ -11,11 +11,13 @@ import { avaliarAptidaoDiagnostica, projetarDocumentos, resumirHistorico, type H
 import { construirRelacionamento360, type AvaliacaoFonte360, type ChamadoFonte360, type EventoRelacionamentoFonte360, type FalhaFonte360, type MensagemFonte360 } from "./relacionamento.ts";
 // @ts-expect-error TS5097 — node:test executa este módulo puro diretamente.
 import { construirLicencaConsumoDiagnostico, type ConsumoMensalFonte360, type LicencaFonteConsumo360 } from "./licencaConsumo.ts";
+// @ts-expect-error TS5097 — node:test executa este módulo puro diretamente.
+import { construirFinanceiroDiagnostico, type CicloFinanceiroFonte360 } from "./financeiro.ts";
 
 type ContaFonte = { id: string; auth_user_id: string | null; ink_cliente_id: string | null; nome: string | null; email: string; email_normalizado: string; whatsapp: string | null; etapa: string; origem: string | null; criado_em: string; atualizado_em: string };
 type JornadaFonte = { email_confirmado_em: string | null; primeiro_acesso_em: string | null; ultimo_acesso_em: string | null; teste_iniciado_em: string | null; teste_termina_em: string | null; teste_encerrado_em: string | null; onboarding_concluido_em: string | null; limite_email_teste: number; emails_teste_usados: number; assinatura_iniciada_em: string | null };
 type ImplantacaoFonte = { id: string; conta_id: string | null; auth_user_id: string | null; email: string; concluido: boolean; etapa_atual: number | null; nome_fantasia: string | null; tipo_pessoa: string | null; politica_aceita_em: string | null; termos_aceito_em: string | null };
-type ClienteFonte = { id: string; conta_id: string | null; auth_user_id: string | null; email: string; status: string };
+type ClienteFonte = { id: string; conta_id: string | null; auth_user_id: string | null; email: string; status: string; plano: string | null };
 type LicencaFonte = LicencaFonteConsumo360 & { email: string };
 type LeadFonte = { id: string; conta_id: string | null; email: string; estagio: string | null };
 
@@ -28,7 +30,7 @@ export type FontesFicha360 = {
   licencasFortes: LicencaFonte[]; licencasLegadas: LicencaFonte[]; leadsFortes: LeadFonte[]; leadsLegados: LeadFonte[];
   itensImplantacao: ItemFonte360[]; historicoImplantacao: HistoricoFonte360[]; authConta: { id: string; email: string | null } | null;
   anoMesConsumo: string; consumo: ConsumoMensalFonte360[];
-  financeiro: { ciclo: string; status: string; data_pagamento: string | null } | null;
+  ciclosFinanceiros: CicloFinanceiroFonte360[];
 };
 
 function selecionarVinculo<T>(fortes: T[], legados: T[], entidade: AlertaFicha360["entidade"], alertas: AlertaFicha360[]): { valor: T | null; origem: OrigemVinculo360 } {
@@ -154,6 +156,14 @@ export function construirFicha360Segura(fontes: FontesFicha360, papel: unknown, 
   }
   alertas.push(...licencaConsumoResultado.alertas);
   const podeLicenca = temPermissaoAdmin(papel, "licencas.visualizar"); const podeFinanceiro = temPermissaoAdmin(papel, "financeiro.visualizar");
+  const financeiroResultado = podeFinanceiro ? construirFinanceiroDiagnostico({
+    vinculo: clientesFortes.length === 1
+      ? { estado: "forte_cliente_id", clienteId: clientesFortes[0].id, plano: clientesFortes[0].plano }
+      : { estado: clientesFortes.length > 1 ? "ambiguo" : "ausente", clienteId: null, plano: null },
+    ciclos: fontes.ciclosFinanceiros,
+    licencaStatus: licenca?.status ?? null,
+  }) : null;
+  if (financeiroResultado) alertas.push(...financeiroResultado.alertas);
   const ficha: Ficha360Segura = {
     papel: papel as PapelAdmin,
     identidade: { contaId: conta.id, nome: conta.nome, email: conta.email, whatsapp: conta.whatsapp, origem: conta.origem, etapa, criadoEm: conta.criado_em, atualizadoEm: conta.atualizado_em },
@@ -165,7 +175,7 @@ export function construirFicha360Segura(fontes: FontesFicha360, papel: unknown, 
     documentacao: { tipo: fontes.identidadeDocumental?.tipo ?? null, ultimosQuatro: fontes.identidadeDocumental?.ultimos_quatro ?? null, comparacaoStatus: fontes.identidadeDocumental?.comparacao_status ?? null, obrigatoriosAprovados: documentacaoAprovada, itens: documentos },
     relacionamento: relacionamentoResultado.relacionamento,
     licencaConsumo: podeLicenca ? licencaConsumoResultado.resumo : null,
-    financeiro: podeFinanceiro && fontes.financeiro ? { ciclo: fontes.financeiro.ciclo, status: fontes.financeiro.status, dataPagamento: fontes.financeiro.data_pagamento } : null,
+    financeiro: financeiroResultado?.resumo ?? null,
     alertas, acoesPermitidas: permissoesDoPapel(papel).filter((permissao) => ACOES_FICHA360.has(permissao)),
   };
   return { ok: true, ficha };

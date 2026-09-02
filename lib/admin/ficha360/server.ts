@@ -5,6 +5,7 @@ import { temPermissaoAdmin } from "@/lib/admin/permissoes";
 import { construirFicha360Segura, type FontesFicha360 } from "./contrato";
 import type { ResultadoFicha360 } from "./types";
 import { LIMITES_RELACIONAMENTO_360 } from "./relacionamento";
+import { LIMITE_HISTORICO_FINANCEIRO_360 } from "./financeiro";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -29,8 +30,8 @@ export async function obterFicha360Segura(contaId: string, agora = new Date()): 
     sb.from("ink_avaliacoes_comerciais").select("id, conta_id, nota, solicita_suporte, criado_em, dificuldades", { count: "exact" }).eq("conta_id", contaId).order("criado_em", { ascending: false }).limit(LIMITES_RELACIONAMENTO_360.avaliacoes),
     sb.from("ink_implantacao_dados").select("id, conta_id, auth_user_id, email, concluido, etapa_atual, nome_fantasia, tipo_pessoa, politica_aceita_em, termos_aceito_em").eq("conta_id", contaId),
     sb.from("ink_implantacao_dados").select("id, conta_id, auth_user_id, email, concluido, etapa_atual, nome_fantasia, tipo_pessoa, politica_aceita_em, termos_aceito_em").is("conta_id", null).ilike("email", email),
-    sb.from("ink_clientes").select("id, conta_id, auth_user_id, email, status").eq("conta_id", contaId),
-    sb.from("ink_clientes").select("id, conta_id, auth_user_id, email, status").is("conta_id", null).ilike("email", email),
+    sb.from("ink_clientes").select("id, conta_id, auth_user_id, email, status, plano").eq("conta_id", contaId),
+    sb.from("ink_clientes").select("id, conta_id, auth_user_id, email, status, plano").is("conta_id", null).ilike("email", email),
     sb.from("licencas").select("id, conta_id, user_id, email, plano, status, data_inicio, data_vencimento, franquia_ilimitada, email_incluido_mes, sms_incluido_mes").eq("conta_id", contaId),
     sb.from("licencas").select("id, conta_id, user_id, email, plano, status, data_inicio, data_vencimento, franquia_ilimitada, email_incluido_mes, sms_incluido_mes").is("conta_id", null).ilike("email", email),
     sb.from("ink_leads").select("id, conta_id, email, estagio").eq("conta_id", contaId),
@@ -48,8 +49,8 @@ export async function obterFicha360Segura(contaId: string, agora = new Date()): 
     conta.auth_user_id ? sb.from("mensageria_falhas").select("id, user_id, canal, motivo, criado_em", { count: "exact" }).eq("user_id", conta.auth_user_id).order("criado_em", { ascending: false }).limit(LIMITES_RELACIONAMENTO_360.falhas) : Promise.resolve({ data: [], error: null, count: 0 }),
     clienteCandidato ? sb.from("ink_chamados").select("id, ink_cliente_id, status", { count: "exact" }).eq("ink_cliente_id", clienteCandidato.id).limit(LIMITES_RELACIONAMENTO_360.chamados) : Promise.resolve({ data: [], error: null, count: 0 }),
     temPermissaoAdmin(admin.papel, "financeiro.visualizar") && clienteCandidato
-      ? sb.from("financeiro_ciclos").select("ciclo, status, data_pagamento").eq("ink_cliente_id", clienteCandidato.id).order("ciclo", { ascending: false }).limit(1).maybeSingle()
-      : Promise.resolve({ data: null, error: null }),
+      ? sb.from("financeiro_ciclos").select("ink_cliente_id, ciclo, status, valor_total_previsto, data_pagamento").eq("ink_cliente_id", clienteCandidato.id).order("ciclo", { ascending: false }).limit(LIMITE_HISTORICO_FINANCEIRO_360 + 1)
+      : Promise.resolve({ data: [], error: null }),
     conta.auth_user_id ? sb.auth.admin.getUserById(conta.auth_user_id) : Promise.resolve({ data: { user: null }, error: null }),
   ]);
   if (itensBase.error || historico.error || consumo.error || falhas.error || chamados.error || financeiro.error || authConta.error) return { ok: false, codigo: "ERRO_LEITURA", error: "Não foi possível completar os resumos operacionais da ficha." };
@@ -62,7 +63,7 @@ export async function obterFicha360Segura(contaId: string, agora = new Date()): 
     conta, jornada: jornada.data, identidadeDocumental: identidade.data, eventos: eventos.data ?? [], mensagens: mensagens.data ?? [], avaliacoes: avaliacoes.data ?? [], totalMensagens: mensagens.count ?? null, totalAvaliacoes: avaliacoes.count ?? null,
     implantacoesFortes: implantacoesFortes.data ?? [], implantacoesLegadas: implantacoesLegadas.data ?? [], clientesFortes: clientesFortes.data ?? [], clientesLegados: clientesLegados.data ?? [],
     licencasFortes: licencasFortes.data ?? [], licencasLegadas: licencasLegadas.data ?? [], leadsFortes: leadsFortes.data ?? [], leadsLegados: leadsLegados.data ?? [], anoMesConsumo,
-    itensImplantacao: itens, historicoImplantacao: historico.data ?? [], authConta: authConta.data.user ? { id: authConta.data.user.id, email: authConta.data.user.email ?? null } : null, consumo: consumo.data ?? [], falhas: falhas.data ?? [], totalFalhas: falhas.count ?? null, chamados: chamados.data ?? [], totalChamados: chamados.count ?? null, financeiro: financeiro.data,
+    itensImplantacao: itens, historicoImplantacao: historico.data ?? [], authConta: authConta.data.user ? { id: authConta.data.user.id, email: authConta.data.user.email ?? null } : null, consumo: consumo.data ?? [], falhas: falhas.data ?? [], totalFalhas: falhas.count ?? null, chamados: chamados.data ?? [], totalChamados: chamados.count ?? null, ciclosFinanceiros: financeiro.data ?? [],
   };
   return construirFicha360Segura(fontes, admin.papel, agora);
 }

@@ -12,9 +12,9 @@ export type ProximoPasso360 = {
 };
 export type BloqueioOperacional360 = { codigo: string; descricao: string; severidade: "atencao" | "critico"; origem: OrigemDecisao360; impedeAvanco: boolean };
 export type AlertaFicha360 = {
-  codigo: "CONTA_INEXISTENTE" | "AUTH_DIVERGENTE" | "CLIENTE_INEXISTENTE" | "IMPLANTACAO_SEM_CONTA" | "LEAD_APENAS_EMAIL" | "LICENCA_INCOERENTE" | "LICENCA_SEM_CONTA" | "CLIENTE_LICENCA_STATUS_DIVERGENTE" | "TRIAL_STATUS_DIVERGENTE" | "CONSUMO_MENSAL_AUSENTE" | "CONSUMO_MENSAL_DUPLICADO" | "EXTRAS_SEMANTICA_INDETERMINADA" | "FRANQUIA_RENOVACAO_NAO_COMPROVADA" | "CONSUMO_HISTORICO_NAO_CARREGADO" | "EMAIL_DIVERGENTE" | "DUPLICIDADE_LEGADA" | "VINCULO_OUTRA_CONTA" | "MENSAGEM_OUTRA_CONTA" | "AVALIACAO_OUTRA_CONTA" | "CHAMADO_CLIENTE_DIVERGENTE" | "FALHA_AUTH_DIVERGENTE" | "FALHA_OPERACIONAL_RECENTE" | "STATUS_MENSAGEM_INDETERMINADO";
+  codigo: "CONTA_INEXISTENTE" | "AUTH_DIVERGENTE" | "CLIENTE_INEXISTENTE" | "IMPLANTACAO_SEM_CONTA" | "LEAD_APENAS_EMAIL" | "LICENCA_INCOERENTE" | "LICENCA_SEM_CONTA" | "CLIENTE_LICENCA_STATUS_DIVERGENTE" | "TRIAL_STATUS_DIVERGENTE" | "CONSUMO_MENSAL_AUSENTE" | "CONSUMO_MENSAL_DUPLICADO" | "EXTRAS_SEMANTICA_INDETERMINADA" | "FRANQUIA_RENOVACAO_NAO_COMPROVADA" | "CONSUMO_HISTORICO_NAO_CARREGADO" | "FINANCEIRO_CLIENTE_AUSENTE" | "FINANCEIRO_CLIENTE_MULTIPLO" | "FINANCEIRO_CICLO_AUSENTE" | "FINANCEIRO_CICLO_DUPLICADO" | "FINANCEIRO_VINCULO_DIVERGENTE" | "FINANCEIRO_VALOR_LEGADO" | "FINANCEIRO_PLANO_1_0_SEM_PRECO" | "FINANCEIRO_PAGO_LICENCA_INATIVA" | "FINANCEIRO_LICENCA_ATIVA_SEM_PAGAMENTO" | "FINANCEIRO_VENCIMENTO_AUSENTE" | "FINANCEIRO_PROMOCAO_NAO_COMPROVADA" | "EMAIL_DIVERGENTE" | "DUPLICIDADE_LEGADA" | "VINCULO_OUTRA_CONTA" | "MENSAGEM_OUTRA_CONTA" | "AVALIACAO_OUTRA_CONTA" | "CHAMADO_CLIENTE_DIVERGENTE" | "FALHA_AUTH_DIVERGENTE" | "FALHA_OPERACIONAL_RECENTE" | "STATUS_MENSAGEM_INDETERMINADO";
   severidade: "informacao" | "atencao" | "critico";
-  entidade: "conta" | "implantacao" | "lead" | "cliente" | "licenca" | "consumo" | "mensagem" | "avaliacao" | "chamado" | "falha";
+  entidade: "conta" | "implantacao" | "lead" | "cliente" | "licenca" | "consumo" | "financeiro" | "mensagem" | "avaliacao" | "chamado" | "falha";
   mensagem: string;
 };
 export type IdentidadeConta360 = { contaId: string; nome: string | null; email: string; whatsapp: string | null; origem: string | null; etapa: EtapaJornadaComprador; criadoEm: string; atualizadoEm: string };
@@ -49,7 +49,20 @@ export type LicencaConsumoResumo360 = {
   disponibilidade: { estado: "ilimitada" | "calculada_parcialmente" | "indeterminada"; emailsRestantesFranquiaBase: number | null; smsRestantesFranquiaBase: number | null };
   falhasRecentes: number;
 };
-export type FinanceiroResumo360 = { ciclo: string | null; status: string | null; dataPagamento: string | null } | null;
+export type CicloFinanceiro360 = {
+  ciclo: string; naturezaCiclo: "mes_calendario" | "indeterminada"; status: string;
+  valorPrevistoRegistrado: number | null; dataPagamento: string | null;
+  pagoAdministrativamente: boolean | null; origemConfirmacao: "admin_manual" | null;
+  liquidacaoBancariaComprovada: false; confiabilidade: "confirmado_manual" | "legado" | "indeterminado";
+};
+export type FinanceiroResumo360 = {
+  natureza: "diagnostico_nao_autoritativo";
+  vinculo: { estado: "forte_cliente_id" | "ausente" | "ambiguo"; clienteId: string | null };
+  estadoGeral: "observado" | "indeterminado";
+  historico: { abrangencia: "resumido_limitado"; limite: 12; itens: CicloFinanceiro360[] };
+  promocao: { estado: "nao_comprovada_no_financeiro" };
+  vencimentoFinanceiro: null; inadimplencia: "indeterminada";
+} | null;
 export type Ficha360Segura = {
   papel: PapelAdmin; identidade: IdentidadeConta360; vinculos: VinculosFicha360; resumo: ResumoExecutivo360;
   jornada: JornadaFicha360 | null; trial: TrialFicha360 | null; implantacao: ImplantacaoResumo360 | null; documentacao: DocumentacaoResumo360 | null;
