@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { diasRestantesTeste, ETAPAS_VISUAIS, percentualEmailTeste } from "@/lib/comercial/painelComprador";
 import type { CompradorView } from "./JornadaCompradoresBoard";
+import Ficha360Ponte from "./Ficha360Ponte";
 
 function dataHora(valor: string | null) {
   return valor ? new Date(valor).toLocaleString("pt-BR") : "Ainda não aconteceu";
@@ -41,6 +42,8 @@ export default function CompradorFichaModal({ comprador, onClose }: { comprador:
           </div>
           <button onClick={onClose} aria-label="Fechar ficha" style={{ alignSelf: "flex-start", background: "#090909", border: "1px solid rgba(255,255,255,.12)", color: "#C9A84C", width: 36, height: 36, cursor: "pointer" }}>×</button>
         </header>
+
+        <Ficha360Ponte key={comprador.id} contaId={comprador.id} />
 
         <nav aria-label="Áreas da ficha" style={{ position: "sticky", top: 87, zIndex: 2, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", background: "#090909", borderBottom: "1px solid rgba(201,168,76,.22)" }}>
           {([
