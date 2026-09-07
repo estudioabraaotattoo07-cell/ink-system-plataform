@@ -6,7 +6,7 @@ export const TIPOS_OBRIGATORIOS = { fisica: ["documento_pf"], juridica: ["cartao
 const STATUS = new Set(["pendente", "recebido", "aprovado", "solicitar_novo", "rejeitado"]);
 
 export type ItemFonte360 = { id: string; tipo: string; status: string; observacao_admin: string | null; atualizado_em: string | null; arquivo: { enviado_em: string } | null };
-export type HistoricoFonte360 = { evento: string; criado_em: string };
+export type HistoricoFonte360 = { id?: string; implantacao_id?: string; evento: string; criado_em: string };
 
 export function projetarDocumentos(tipoPessoa: string | null, itens: ItemFonte360[]): DocumentoImplantacao360[] {
   const obrigatorios = tipoPessoa === "fisica" || tipoPessoa === "juridica" ? new Set<string>(TIPOS_OBRIGATORIOS[tipoPessoa]) : null;

@@ -4,9 +4,9 @@ export const LIMITES_RELACIONAMENTO_360 = { mensagens: 40, avaliacoes: 20, chama
 const STATUS_MENSAGEM = new Set(["programado", "processando", "enviado", "entregue", "clicado", "falhou", "cancelado"]);
 const STATUS_PENDENTE = new Set(["programado", "processando"]);
 
-export type MensagemFonte360 = { id: string; conta_id: string; codigo: string; nome: string; grupo: string; canal: string; status: string; criado_em: string; agendado_em: string | null; processado_em: string | null };
+export type MensagemFonte360 = { id: string; conta_id: string; codigo: string; nome: string; grupo: string; canal: string; status: string; criado_em: string; agendado_em: string | null; processado_em: string | null; enviado_em?: string | null };
 export type AvaliacaoFonte360 = { id: string; conta_id: string; nota: number; solicita_suporte: boolean; criado_em: string; dificuldades: string | null };
-export type EventoRelacionamentoFonte360 = { conta_id: string; tipo: string; criado_em: string };
+export type EventoRelacionamentoFonte360 = { id?: string; conta_id: string; tipo: string; criado_em: string };
 export type ChamadoFonte360 = { id?: string; ink_cliente_id: string; status: string };
 export type FalhaFonte360 = { id: string; user_id: string; canal: string; motivo: string | null; criado_em: string };
 

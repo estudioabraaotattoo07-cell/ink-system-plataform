@@ -13,6 +13,8 @@ import { construirRelacionamento360, type AvaliacaoFonte360, type ChamadoFonte36
 import { construirLicencaConsumoDiagnostico, type ConsumoMensalFonte360, type LicencaFonteConsumo360 } from "./licencaConsumo.ts";
 // @ts-expect-error TS5097 — node:test executa este módulo puro diretamente.
 import { construirFinanceiroDiagnostico, type CicloFinanceiroFonte360 } from "./financeiro.ts";
+// @ts-expect-error TS5097 — node:test executa este módulo puro diretamente.
+import { construirTimeline360 } from "./timeline.ts";
 
 type ContaFonte = { id: string; auth_user_id: string | null; ink_cliente_id: string | null; nome: string | null; email: string; email_normalizado: string; whatsapp: string | null; etapa: string; origem: string | null; criado_em: string; atualizado_em: string };
 type JornadaFonte = { email_confirmado_em: string | null; primeiro_acesso_em: string | null; ultimo_acesso_em: string | null; teste_iniciado_em: string | null; teste_termina_em: string | null; teste_encerrado_em: string | null; onboarding_concluido_em: string | null; limite_email_teste: number; emails_teste_usados: number; assinatura_iniciada_em: string | null };
@@ -176,6 +178,17 @@ export function construirFicha360Segura(fontes: FontesFicha360, papel: unknown, 
     relacionamento: relacionamentoResultado.relacionamento,
     licencaConsumo: podeLicenca ? licencaConsumoResultado.resumo : null,
     financeiro: financeiroResultado?.resumo ?? null,
+    timeline: construirTimeline360({
+      papel, conta, jornada: fontes.jornada, eventos: fontes.eventos, mensagens: fontes.mensagens,
+      avaliacoes: fontes.avaliacoes, implantacaoId: implantacao?.id ?? null, historicoImplantacao: fontes.historicoImplantacao,
+      itensImplantacao: fontes.itensImplantacao, authUserId: conta.auth_user_id, falhas: fontes.falhas,
+      licenca: podeLicenca && licenca?.conta_id === conta.id && (!licenca.user_id || licenca.user_id === conta.auth_user_id) ? licenca : null,
+      clienteId: financeiroResultado?.resumo.vinculo.clienteId ?? null,
+      ciclosFinanceiros: financeiroResultado?.resumo.historico.itens.map(ciclo => ({
+        ink_cliente_id: financeiroResultado.resumo.vinculo.clienteId!, ciclo: ciclo.ciclo,
+        status: ciclo.status, data_pagamento: ciclo.dataPagamento, valor_total_previsto: null,
+      })) ?? [],
+    }),
     alertas, acoesPermitidas: permissoesDoPapel(papel).filter((permissao) => ACOES_FICHA360.has(permissao)),
   };
   return { ok: true, ficha };

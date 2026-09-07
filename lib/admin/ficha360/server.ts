@@ -25,8 +25,8 @@ export async function obterFicha360Segura(contaId: string, agora = new Date()): 
   const [jornada, identidade, eventos, mensagens, avaliacoes, implantacoesFortes, implantacoesLegadas, clientesFortes, clientesLegados, licencasFortes, licencasLegadas, leadsFortes, leadsLegados] = await Promise.all([
     sb.from("ink_jornada_comercial").select("email_confirmado_em, primeiro_acesso_em, ultimo_acesso_em, teste_iniciado_em, teste_termina_em, teste_encerrado_em, onboarding_concluido_em, limite_email_teste, emails_teste_usados, assinatura_iniciada_em").eq("conta_id", contaId).maybeSingle(),
     sb.from("ink_identidades_documentais").select("tipo, ultimos_quatro, comparacao_status").eq("conta_id", contaId).maybeSingle(),
-    sb.from("ink_eventos_comerciais").select("conta_id, tipo, criado_em").eq("conta_id", contaId).order("criado_em", { ascending: false }).limit(100),
-    sb.from("ink_mensagens_comerciais").select("id, conta_id, codigo, nome, grupo, canal, status, criado_em, agendado_em, processado_em", { count: "exact" }).eq("conta_id", contaId).order("criado_em", { ascending: false }).limit(LIMITES_RELACIONAMENTO_360.mensagens),
+    sb.from("ink_eventos_comerciais").select("id, conta_id, tipo, criado_em").eq("conta_id", contaId).order("criado_em", { ascending: false }).limit(100),
+    sb.from("ink_mensagens_comerciais").select("id, conta_id, codigo, nome, grupo, canal, status, criado_em, agendado_em, processado_em, enviado_em", { count: "exact" }).eq("conta_id", contaId).order("criado_em", { ascending: false }).limit(LIMITES_RELACIONAMENTO_360.mensagens),
     sb.from("ink_avaliacoes_comerciais").select("id, conta_id, nota, solicita_suporte, criado_em, dificuldades", { count: "exact" }).eq("conta_id", contaId).order("criado_em", { ascending: false }).limit(LIMITES_RELACIONAMENTO_360.avaliacoes),
     sb.from("ink_implantacao_dados").select("id, conta_id, auth_user_id, email, concluido, etapa_atual, nome_fantasia, tipo_pessoa, politica_aceita_em, termos_aceito_em").eq("conta_id", contaId),
     sb.from("ink_implantacao_dados").select("id, conta_id, auth_user_id, email, concluido, etapa_atual, nome_fantasia, tipo_pessoa, politica_aceita_em, termos_aceito_em").is("conta_id", null).ilike("email", email),
@@ -44,7 +44,7 @@ export async function obterFicha360Segura(contaId: string, agora = new Date()): 
 
   const [itensBase, historico, consumo, falhas, chamados, financeiro, authConta] = await Promise.all([
     implantacaoCandidata ? sb.from("ink_implantacao_itens").select("id, tipo, status, observacao_admin, atualizado_em").eq("implantacao_id", implantacaoCandidata.id) : Promise.resolve({ data: [], error: null }),
-    implantacaoCandidata ? sb.from("ink_implantacao_historico").select("evento, criado_em").eq("implantacao_id", implantacaoCandidata.id).order("criado_em", { ascending: false }).limit(20) : Promise.resolve({ data: [], error: null }),
+    implantacaoCandidata ? sb.from("ink_implantacao_historico").select("id, implantacao_id, evento, criado_em").eq("implantacao_id", implantacaoCandidata.id).order("criado_em", { ascending: false }).limit(20) : Promise.resolve({ data: [], error: null }),
     conta.auth_user_id ? sb.from("mensageria_uso").select("user_id, ano_mes, emails_enviados, emails_reservados, sms_enviados, sms_reservados, emails_comprados, sms_comprados").eq("user_id", conta.auth_user_id).eq("ano_mes", anoMesConsumo) : Promise.resolve({ data: [], error: null }),
     conta.auth_user_id ? sb.from("mensageria_falhas").select("id, user_id, canal, motivo, criado_em", { count: "exact" }).eq("user_id", conta.auth_user_id).order("criado_em", { ascending: false }).limit(LIMITES_RELACIONAMENTO_360.falhas) : Promise.resolve({ data: [], error: null, count: 0 }),
     clienteCandidato ? sb.from("ink_chamados").select("id, ink_cliente_id, status", { count: "exact" }).eq("ink_cliente_id", clienteCandidato.id).limit(LIMITES_RELACIONAMENTO_360.chamados) : Promise.resolve({ data: [], error: null, count: 0 }),

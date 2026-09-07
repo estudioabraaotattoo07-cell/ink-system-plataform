@@ -63,10 +63,14 @@ export type FinanceiroResumo360 = {
   promocao: { estado: "nao_comprovada_no_financeiro" };
   vencimentoFinanceiro: null; inadimplencia: "indeterminada";
 } | null;
+export type DominioTimeline360 = "conta" | "jornada" | "trial" | "implantacao" | "documentacao" | "relacionamento" | "mensageria" | "licenca" | "financeiro";
+export type DivergenciaTimeline360 = { codigo: "TIMESTAMP_INVALIDO" | "MARCO_EVENTO_DIVERGENTE" | "EVENTO_SEM_IDENTIDADE" | "VINCULO_OUTRA_CONTA" | "EVENTO_OUTRA_IMPLANTACAO" | "FALHA_AUTH_DIVERGENTE" | "HISTORICO_DOCUMENTAL_LIMITADO" | "EVENTO_LEGADO_LIMITADO" | "PAGAMENTO_SEM_LICENCA_ATIVA" | "LICENCA_ATIVA_SEM_CONFIRMACAO_FINANCEIRA"; fonte: string; referencia: string | null };
+export type EventoTimeline360 = { id: string; contaId: string; dominio: DominioTimeline360; tipo: string; ocorreuEm: string; precisaoTemporal: "instante" | "dia"; titulo: string; resumo: string | null; origem: { fonte: string; idFonte: string | null; vinculo: "conta_id" | "implantacao_id" | "ink_cliente_id" | "auth_user_id" }; confiabilidade: "confirmado" | "confirmado_manual" | "derivado" | "limitado" };
+export type Timeline360 = { abrangencia: "resumido_limitado"; limite: 100; itens: EventoTimeline360[]; fontesConsultadas: string[]; fontesIndisponiveis: string[]; divergencias: DivergenciaTimeline360[] };
 export type Ficha360Segura = {
   papel: PapelAdmin; identidade: IdentidadeConta360; vinculos: VinculosFicha360; resumo: ResumoExecutivo360;
   jornada: JornadaFicha360 | null; trial: TrialFicha360 | null; implantacao: ImplantacaoResumo360 | null; documentacao: DocumentacaoResumo360 | null;
-  relacionamento: RelacionamentoResumo360; licencaConsumo: LicencaConsumoResumo360 | null; financeiro: FinanceiroResumo360;
+  relacionamento: RelacionamentoResumo360; licencaConsumo: LicencaConsumoResumo360 | null; financeiro: FinanceiroResumo360; timeline: Timeline360;
   alertas: AlertaFicha360[]; acoesPermitidas: PermissaoAdmin[];
 };
 export type ResultadoFicha360 = { ok: true; ficha: Ficha360Segura } | { ok: false; codigo: "CONTA_INEXISTENTE" | "ACESSO_NEGADO" | "ERRO_LEITURA"; error: string };
