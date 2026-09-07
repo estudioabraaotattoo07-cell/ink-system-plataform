@@ -22,16 +22,16 @@ export type VinculosFicha360 = { authUserId: string | null; clienteId: string | 
 export type ResumoExecutivo360 = { statusAtual: EtapaJornadaComprador; proximoPasso: ProximoPasso360; bloqueios: BloqueioOperacional360[]; possuiAuth: boolean; emailConfirmado: EstadoConhecido360; implantacaoConcluida: boolean | null; documentacaoAprovada: boolean | null; clienteOperacional: boolean; licencaAtiva: boolean | null; possuiDivergenciaIdentidade: boolean };
 export type JornadaFicha360 = { etapaConta: EtapaJornadaComprador; origemConta: string | null; contaCriadaEm: string; authVinculado: boolean; emailConfirmadoEm: string | null; primeiroAcessoEm: string | null; ultimoAcessoEm: string | null; onboardingConcluidoEm: string | null; implantacaoConcluida: boolean | null; documentacaoAprovada: boolean | null; assinaturaIniciadaEm: string | null; clienteAtivo: boolean | null };
 export type TrialFicha360 = { status: "nao_iniciado" | "ativo" | "encerrado" | "indeterminado"; iniciadoEm: string | null; terminaEm: string | null; encerradoEm: string | null; diasRestantes: number | null; diasDecorridos: number | null; vencido: boolean | null; onboardingConcluido: boolean; limiteEmails: number; emailsUsados: number };
-export type DocumentoImplantacao360 = { tipo: string; obrigatorio: boolean | null; status: "pendente" | "recebido" | "aprovado" | "solicitar_novo" | "rejeitado" | "desconhecido"; dataRelevante: string | null; possuiArquivo: boolean; possuiPendencia: boolean; motivoSeguro: string | null; requerAcaoAdministrativa: boolean };
+export type DocumentoImplantacao360 = { tipo: string; obrigatorio: boolean | null; status: "pendente" | "recebido" | "aprovado" | "solicitar_novo" | "rejeitado" | "desconhecido"; dataRelevante: string | null; possuiArquivo: boolean; possuiPendencia: boolean; motivoSeguro: null; requerAcaoAdministrativa: boolean };
 export type HistoricoImplantacao360 = { tipo: string; ocorridoEm: string; descricao: string; origem: string | null; documentoRelacionado: string | null };
 export type AptidaoAprovacao360 = { estado: "sim" | "nao" | "indeterminado"; motivos: string[]; documentosPendentes: string[]; divergencias: string[] };
 export type ImplantacaoResumo360 = { id: string; origemVinculo: OrigemVinculo360; encontrada: boolean; concluida: boolean; etapaAtual: number | null; nomeFantasia: string | null; tipoPessoa: "fisica" | "juridica" | null; authVinculado: boolean; authCoerente: boolean | null; politicaAceitaEm: string | null; termosAceitosEm: string | null; totalItens: number; itensAprovados: number; itensPendentes: number; aptidaoParaAprovacao: AptidaoAprovacao360; historico: { abrangencia: "resumido_limitado"; limite: number; itens: HistoricoImplantacao360[] } };
 export type DocumentacaoResumo360 = { tipo: "cpf" | "cnpj" | null; ultimosQuatro: string | null; comparacaoStatus: string | null; obrigatoriosAprovados: boolean | null; itens: DocumentoImplantacao360[] };
 export type HistoricoLimitado360<T> = { abrangencia: "resumido_limitado"; limite: number; totalConhecido: number | null; itens: T[] };
-export type MensagemComercial360 = { id: string; categoria: string; nome: string; canal: string; direcao: "saida" | "desconhecida"; status: string; criadoEm: string; processadoEm: string | null; resumoSeguro: string; possuiFalha: boolean; origem: "jornada_comercial" };
-export type AvaliacaoRelacionamento360 = { id: string; nota: number; solicitaSuporte: boolean; criadoEm: string; resumoSeguro: string | null };
+export type MensagemComercial360 = { id: string; categoria: string; nome: string; canal: string; direcao: "saida" | "desconhecida"; status: string; criadoEm: string; agendadoEm: string | null; processadoEm: string | null; resumoSeguro: string | null; possuiFalha: boolean; origem: "jornada_comercial" };
+export type AvaliacaoRelacionamento360 = { id: string; nota: number; solicitaSuporte: boolean; criadoEm: string; resumoSeguro: null };
 export type ChamadoSuporte360 = { id: string | null; status: string; assunto: null; prioridade: null; abertoEm: null; atualizadoEm: null; fechadoEm: null; origemVinculo: "forte_cliente_id" };
-export type FalhaComunicacao360 = { id: string; canal: string; categoria: "envio"; status: "falhou"; criadoEm: string; mensagemSanitizada: string | null; origemVinculo: "forte_auth_user_id" };
+export type FalhaComunicacao360 = { id: string; canal: string; categoria: "envio"; status: "falhou"; criadoEm: string; mensagemSanitizada: null; origemVinculo: "forte_auth_user_id" };
 export type RelacionamentoResumo360 = {
   totalLeads: number; totalEventos: number; totalMensagens: number; mensagensFalhas: number; totalAvaliacoes: number; solicitaSuporte: boolean;
   ultimoEventoEm: string | null; ultimaMensagemEm: string | null;
@@ -40,13 +40,14 @@ export type RelacionamentoResumo360 = {
   resumo: { existeInteracaoRecente: EstadoConhecido360; existeMensagemPendente: boolean; existeFalhaRecente: boolean; existeChamadoAberto: boolean; ultimaInteracaoEm: string | null; ultimoCanal: string | null; quantidadeAvaliacoes: number; existePendenciaOperacional: boolean };
 };
 export type LicencaConsumoResumo360 = {
-  referencia: { anoMes: string; natureza: "mes_calendario_mensageria"; historicoCarregado: false };
+  referencia: { anoMes: string; natureza: "diagnostico_legado_mensal"; fonte: "mensageria_uso"; autoritativo: false; historicoCarregado: false };
   licenca: null | { id: string; plano: string | null; status: string; dataInicio: string | null; dataVencimento: string | null; origemVinculo: OrigemVinculo360; franquiaIlimitada: boolean | null };
   acesso: { clienteAtivo: boolean | null; licencaAtiva: boolean | null; trialVencido: boolean | null; permitidoDerivado: boolean | null; natureza: "diagnostico_nao_autoritativo" };
   franquia: { natureza: "trial_total" | "configuracao_licenca_paga" | "indeterminada"; emailsIncluidos: number | null; smsIncluidos: number | null; renovacaoMensalComprovada: false };
   consumo: null | { estado: "observado"; linhasEncontradas: number; emailsEnviados: number; emailsReservados: number; smsEnviados: number; smsReservados: number };
   extras: { estado: "indeterminado"; emailsCompradosObservados: number | null; smsCompradosObservados: number | null; incluidosNaDisponibilidade: false };
-  disponibilidade: { estado: "ilimitada" | "calculada_parcialmente" | "indeterminada"; emailsRestantesFranquiaBase: number | null; smsRestantesFranquiaBase: number | null };
+  // Ausência de contrato autoritativo: o diagnóstico legado nunca calcula disponibilidade.
+  disponibilidade: { estado: "indeterminada"; emailsRestantesFranquiaBase: null; smsRestantesFranquiaBase: null };
   falhasRecentes: number;
 };
 export type CicloFinanceiro360 = {

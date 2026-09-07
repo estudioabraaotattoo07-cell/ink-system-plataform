@@ -4,15 +4,25 @@ import type { AptidaoAprovacao360, DocumentoImplantacao360, HistoricoImplantacao
 
 export const TIPOS_OBRIGATORIOS = { fisica: ["documento_pf"], juridica: ["cartao_cnpj", "documento_responsavel_pj"] } as const;
 const STATUS = new Set(["pendente", "recebido", "aprovado", "solicitar_novo", "rejeitado"]);
+const TIPOS_DOCUMENTO = new Set(["documento_pf", "cartao_cnpj", "documento_responsavel_pj", "logo"]);
+// Somente correspondência integral: nunca extrair fragmentos de texto livre.
+const EVENTOS = new Map([
+  ["Dados do responsável enviados", "dados_responsavel_enviados"],
+  ["Dados do estúdio enviados", "dados_estudio_enviados"],
+  ["Documentos enviados", "documentos_enviados"],
+  ["Documentação concluída e encaminhada para aprovação final", "documentacao_concluida"],
+  ["Provisionamento concluído e estágio atualizado para aprovado", "aprovacao_registrada"],
+  ["Falha ao enviar e-mail de confirmação", "falha_confirmacao"],
+]);
 
-export type ItemFonte360 = { id: string; tipo: string; status: string; observacao_admin: string | null; atualizado_em: string | null; arquivo: { enviado_em: string } | null };
+export type ItemFonte360 = { id: string; tipo: string; status: string; observacao_admin?: string | null; atualizado_em: string | null; arquivo: { enviado_em: string } | null };
 export type HistoricoFonte360 = { id?: string; implantacao_id?: string; evento: string; criado_em: string };
 
 export function projetarDocumentos(tipoPessoa: string | null, itens: ItemFonte360[]): DocumentoImplantacao360[] {
   const obrigatorios = tipoPessoa === "fisica" || tipoPessoa === "juridica" ? new Set<string>(TIPOS_OBRIGATORIOS[tipoPessoa]) : null;
   return itens.map((item) => {
     const status = STATUS.has(item.status) ? item.status as DocumentoImplantacao360["status"] : "desconhecido";
-    return { tipo: item.tipo, obrigatorio: obrigatorios ? obrigatorios.has(item.tipo) : null, status, dataRelevante: item.arquivo?.enviado_em ?? item.atualizado_em, possuiArquivo: Boolean(item.arquivo), possuiPendencia: status !== "aprovado", motivoSeguro: item.observacao_admin?.trim() || null, requerAcaoAdministrativa: ["recebido", "rejeitado", "solicitar_novo", "desconhecido"].includes(status) };
+    return { tipo: TIPOS_DOCUMENTO.has(item.tipo) ? item.tipo : "desconhecido", obrigatorio: obrigatorios ? obrigatorios.has(item.tipo) : null, status, dataRelevante: item.arquivo?.enviado_em ?? item.atualizado_em, possuiArquivo: Boolean(item.arquivo), possuiPendencia: status !== "aprovado", motivoSeguro: null, requerAcaoAdministrativa: ["recebido", "rejeitado", "solicitar_novo", "desconhecido"].includes(status) };
   });
 }
 
@@ -23,5 +33,5 @@ export function avaliarAptidaoDiagnostica(dados: DadosAptidaoAprovacao): Aptidao
 }
 
 export function resumirHistorico(itens: HistoricoFonte360[], limite = 20): HistoricoImplantacao360[] {
-  return itens.slice(0, limite).map((item) => ({ tipo: item.evento, ocorridoEm: item.criado_em, descricao: item.evento, origem: null, documentoRelacionado: item.evento.match(/documento[_:\s-]+([\w-]+)/i)?.[1] ?? null }));
+  return itens.slice(0, limite).map((item) => ({ tipo: EVENTOS.get(item.evento) ?? "evento_registrado", ocorridoEm: item.criado_em, descricao: EVENTOS.has(item.evento) ? item.evento : "Evento de implantação registrado; detalhes não expostos nesta ficha.", origem: null, documentoRelacionado: null }));
 }

@@ -58,5 +58,39 @@ test("contrato não contém nem serializa material sensível ou payload bruto", 
   assert.doesNotMatch(fonte, /select\([^)]*(token|secret|hash|\bcpf\b|headers?|payload|dados\b|provedor_id|ultimo_erro)/i);
   const entrada = base(); entrada.falhas = [{ id: "f1", user_id: AUTH, canal: "email", motivo: "erro\ncontrolado", criado_em: "2026-01-09" }];
   const resultado = construirRelacionamento360(entrada); const serializado = JSON.stringify(resultado.relacionamento);
-  assert.doesNotMatch(serializado, /"(?:token|secret|hash|cpf|payload|header|provedor)"\s*:/i); assert.equal(resultado.relacionamento.falhasOperacionais.itens[0].mensagemSanitizada, "erro controlado");
+  assert.doesNotMatch(serializado, /"(?:token|secret|hash|cpf|payload|header|provedor)"\s*:/i); assert.equal(resultado.relacionamento.falhasOperacionais.itens[0].mensagemSanitizada, null);
+});
+
+test("textos livres são omitidos, catálogo é autoritativo apenas para os rótulos", () => {
+  const sentinela = "SENTINELA_FICTICIA_RELACIONAMENTO";
+  const e = base();
+  e.mensagens = [{ ...mensagem(), codigo: "TESTE_01", nome: sentinela, grupo: sentinela }, { ...mensagem(CONTA, sentinela, 2), codigo: sentinela, nome: sentinela, grupo: sentinela, canal: sentinela }];
+  e.avaliacoes = [{ id: "a1", conta_id: CONTA, nota: 5, solicita_suporte: true, criado_em: "2026-01-09", dificuldades: sentinela }];
+  e.falhas = [{ id: "f1", user_id: AUTH, canal: sentinela, motivo: sentinela, criado_em: "2026-01-09" }];
+  e.chamados = [{ id: "c1", ink_cliente_id: CLIENTE, status: sentinela }];
+  const { relacionamento } = construirRelacionamento360(e);
+  assert.equal(JSON.stringify(relacionamento).includes(sentinela), false);
+  assert.equal(relacionamento.mensagens.itens[0].nome, "Teste iniciado");
+  assert.equal(relacionamento.mensagens.itens[0].categoria, "teste");
+  assert.equal(relacionamento.mensagens.itens[1].resumoSeguro, null);
+  assert.equal(relacionamento.avaliacoes.itens[0].resumoSeguro, null);
+  assert.equal(relacionamento.falhasOperacionais.itens[0].mensagemSanitizada, null);
+});
+
+test("agendamento não comprova processamento nem vira última interação futura", () => {
+  const e = base();
+  e.mensagens = [{ ...mensagem(CONTA, "programado"), criado_em: "2026-01-01T00:00:00Z", processado_em: null, agendado_em: "2026-02-01T00:00:00Z" }];
+  const { relacionamento } = construirRelacionamento360(e);
+  assert.equal(relacionamento.mensagens.itens[0].agendadoEm, "2026-02-01T00:00:00Z");
+  assert.equal(relacionamento.mensagens.itens[0].processadoEm, null);
+  assert.equal(relacionamento.ultimaMensagemEm, "2026-01-01T00:00:00Z");
+  assert.equal(relacionamento.resumo.existeInteracaoRecente, "nao");
+});
+
+test("processamento comprovado e agendamento permanecem distintos", () => {
+  const e = base(); e.mensagens = [{ ...mensagem(), agendado_em: "2026-01-08T00:00:00Z" }];
+  const m = construirRelacionamento360(e).relacionamento.mensagens.itens[0];
+  assert.equal(m.processadoEm, "2026-01-09T00:00:00Z"); assert.equal(m.agendadoEm, "2026-01-08T00:00:00Z");
+  e.mensagens[0].processado_em = null; e.mensagens[0].agendado_em = null;
+  assert.equal(construirRelacionamento360(e).relacionamento.mensagens.itens[0].processadoEm, null);
 });

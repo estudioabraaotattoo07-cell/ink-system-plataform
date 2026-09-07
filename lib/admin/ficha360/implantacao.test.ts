@@ -27,5 +27,28 @@ test("status aprovado não pede ação e complementação permanece pendente", (
 });
 test("histórico é resumido e limitado", () => {
   const resultado = resumirHistorico(Array.from({ length: 25 }, (_, i) => ({ evento: `evento-${i}`, criado_em: `2026-01-${String(i + 1).padStart(2, "0")}` })));
-  assert.equal(resultado.length, 20); assert.equal(resultado[0].tipo, "evento-0");
+  assert.equal(resultado.length, 20); assert.equal(resultado[0].tipo, "evento_registrado");
+});
+
+test("observações e tipos desconhecidos não são projetados como texto livre", () => {
+  const sentinela = "SENTINELA_FICTICIA_DOCUMENTO";
+  const docs = projetarDocumentos("fisica", [{ ...item("documento_pf", "rejeitado"), observacao_admin: sentinela }, item(sentinela, sentinela)]);
+  assert.equal(docs[0].motivoSeguro, null);
+  assert.equal(docs[1].tipo, "desconhecido"); assert.equal(docs[1].status, "desconhecido");
+  assert.equal(JSON.stringify(docs).includes(sentinela), false);
+});
+
+test("histórico permite somente evento integral conhecido, sem extrair fragmentos", () => {
+  const sentinela = "SENTINELA_FICTICIA_HISTORICO";
+  const itens = resumirHistorico([
+    { evento: "Documentos enviados", criado_em: "2026-01-01" },
+    { evento: `Documentos enviados ${sentinela}`, criado_em: "2026-01-02" },
+    { evento: `documento_${sentinela}`, criado_em: "2026-01-03" },
+    { evento: "__proto__", criado_em: "2026-01-04" },
+  ]);
+  assert.equal(itens[0].tipo, "documentos_enviados");
+  for (const item of itens.slice(1)) {
+    assert.equal(item.tipo, "evento_registrado"); assert.equal(item.documentoRelacionado, null);
+  }
+  assert.equal(JSON.stringify(itens).includes(sentinela), false);
 });

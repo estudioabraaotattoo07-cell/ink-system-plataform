@@ -157,3 +157,32 @@ test("suporte recebe relacionamento sanitizado e continua sem financeiro", () =>
   const resultado = construirFicha360Segura(entrada, "suporte", new Date("2026-01-05T00:00:00Z")); assert.equal(resultado.ok, true); if (!resultado.ok) return;
   assert.equal(resultado.ficha.relacionamento.chamados.itens.length, 1); assert.equal(resultado.ficha.financeiro, null); assert.equal(resultado.ficha.acoesPermitidas.includes("relacionamento.visualizar"), true); assert.doesNotMatch(JSON.stringify(resultado.ficha.relacionamento), /"(?:token|secret|hash|cpf|payload|header|provedor)"\s*:/i);
 });
+
+for (const papel of ["proprietario", "administrador", "suporte"] as const) {
+  test(`${papel}: textos livres não atravessam o contrato completo`, () => {
+    const sentinela = "SENTINELA_FICTICIA_NAO_PUBLICAR";
+    const entrada = fontes();
+    entrada.itensImplantacao[0].observacao_admin = sentinela;
+    entrada.historicoImplantacao = [{ evento: sentinela, criado_em: "2026-01-03" }];
+    entrada.mensagens[0].nome = sentinela; entrada.mensagens[0].grupo = sentinela; entrada.mensagens[0].codigo = sentinela;
+    entrada.avaliacoes = [{ id: "av1", conta_id: CONTA, nota: 5, solicita_suporte: true, dificuldades: sentinela, criado_em: "2026-01-04" }];
+    entrada.falhas = [{ id: "f1", user_id: AUTH, canal: "email", motivo: sentinela, criado_em: "2026-01-04" }];
+    const resultado = construirFicha360Segura(entrada, papel, new Date("2026-01-05T00:00:00Z"));
+    assert.equal(resultado.ok, true); if (!resultado.ok) return;
+    assert.equal(JSON.stringify(resultado.ficha).includes(sentinela), false);
+    assert.equal(resultado.ficha.documentacao?.itens[0].motivoSeguro, null);
+    assert.equal(resultado.ficha.relacionamento.avaliacoes.itens[0].resumoSeguro, null);
+    assert.equal(resultado.ficha.relacionamento.falhasOperacionais.itens[0].mensagemSanitizada, null);
+    assert.equal(resultado.ficha.licencaConsumo?.referencia.autoritativo, false);
+    assert.equal(resultado.ficha.licencaConsumo?.disponibilidade.emailsRestantesFranquiaBase, null);
+    if (papel === "suporte") assert.equal(resultado.ficha.financeiro, null);
+  });
+}
+
+test("leitor não busca os textos livres dispensados pelo diagnóstico", () => {
+  const fonte = readFileSync(new URL("server.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(fonte, /select\([^)]*\b(observacao_admin|dificuldades|motivo)\b/);
+  const consultaMensagens = fonte.match(/from\("ink_mensagens_comerciais"\)\s*\.select\("([^"]+)"/)?.[1];
+  assert.ok(consultaMensagens, "consulta de mensagens comerciais deve permanecer explícita");
+  assert.equal(consultaMensagens.split(/\s*,\s*/).some((campo) => campo === "nome" || campo === "grupo"), false);
+});

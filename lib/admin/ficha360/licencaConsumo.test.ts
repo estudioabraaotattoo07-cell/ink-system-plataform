@@ -48,15 +48,16 @@ test("user_id divergente do Auth gera alerta critico", () => {
   assert.ok(construirLicencaConsumoDiagnostico(e).alertas.some((a) => a.codigo === "LICENCA_INCOERENTE" && a.severidade === "critico"));
 });
 
-test("franquia limitada calcula apenas restante base e inclui reservas", () => {
+test("consumo mensal legado nunca calcula disponibilidade comercial", () => {
   const { resumo } = construirLicencaConsumoDiagnostico(entrada());
-  assert.equal(resumo.disponibilidade.estado, "calculada_parcialmente"); assert.equal(resumo.disponibilidade.emailsRestantesFranquiaBase, 370); assert.equal(resumo.disponibilidade.smsRestantesFranquiaBase, 7);
+  assert.deepEqual(resumo.referencia, { anoMes: "2026-01", natureza: "diagnostico_legado_mensal", fonte: "mensageria_uso", autoritativo: false, historicoCarregado: false });
+  assert.equal(resumo.disponibilidade.estado, "indeterminada"); assert.equal(resumo.disponibilidade.emailsRestantesFranquiaBase, null); assert.equal(resumo.disponibilidade.smsRestantesFranquiaBase, null);
 });
 
 test("franquia ilimitada nao inventa saldo numerico", () => {
   const e = entrada(); e.licenca!.franquia_ilimitada = true;
   const { resumo } = construirLicencaConsumoDiagnostico(e);
-  assert.deepEqual(resumo.disponibilidade, { estado: "ilimitada", emailsRestantesFranquiaBase: null, smsRestantesFranquiaBase: null });
+  assert.deepEqual(resumo.disponibilidade, { estado: "indeterminada", emailsRestantesFranquiaBase: null, smsRestantesFranquiaBase: null });
 });
 
 test("trial mantem limite total e nao calcula renovacao mensal", () => {
@@ -75,7 +76,7 @@ test("acesso derivado exige cliente e licenca ativos e trial nao vencido", () =>
 test("extras observados permanecem indeterminados e fora do saldo", () => {
   const e = entrada(); e.consumoMensal[0].emails_comprados = 50;
   const { resumo, alertas } = construirLicencaConsumoDiagnostico(e);
-  assert.equal(resumo.extras.estado, "indeterminado"); assert.equal(resumo.extras.emailsCompradosObservados, 50); assert.equal(resumo.extras.incluidosNaDisponibilidade, false); assert.equal(resumo.disponibilidade.emailsRestantesFranquiaBase, 370); assert.ok(alertas.some((a) => a.codigo === "EXTRAS_SEMANTICA_INDETERMINADA"));
+  assert.equal(resumo.extras.estado, "indeterminado"); assert.equal(resumo.extras.emailsCompradosObservados, 50); assert.equal(resumo.extras.incluidosNaDisponibilidade, false); assert.equal(resumo.disponibilidade.emailsRestantesFranquiaBase, null); assert.ok(alertas.some((a) => a.codigo === "EXTRAS_SEMANTICA_INDETERMINADA"));
 });
 
 test("modulo permanece puro e sem dados proibidos ou mutations", () => {

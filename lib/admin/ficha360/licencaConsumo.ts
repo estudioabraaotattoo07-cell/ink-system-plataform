@@ -51,17 +51,12 @@ export function construirLicencaConsumoDiagnostico(entrada: {
       : { natureza: "indeterminada" as const, emailsIncluidos: null, smsIncluidos: null, renovacaoMensalComprovada: false as const };
   if (!ehTrial && licenca && (licenca.email_incluido_mes !== null || licenca.sms_incluido_mes !== null)) alertas.push({ codigo: "FRANQUIA_RENOVACAO_NAO_COMPROVADA", severidade: "informacao", entidade: "licenca", mensagem: "A franquia paga configurada é informativa; sua renovação mensal não está comprovada." });
 
-  let disponibilidade: LicencaConsumoResumo360["disponibilidade"] = { estado: "indeterminada", emailsRestantesFranquiaBase: null, smsRestantesFranquiaBase: null };
-  if (licenca?.franquia_ilimitada === true) disponibilidade = { estado: "ilimitada", emailsRestantesFranquiaBase: null, smsRestantesFranquiaBase: null };
-  else if (!ehTrial && consumo && franquia.emailsIncluidos !== null && franquia.smsIncluidos !== null) disponibilidade = {
-    estado: "calculada_parcialmente",
-    emailsRestantesFranquiaBase: Math.max(0, franquia.emailsIncluidos - consumo.emailsEnviados - consumo.emailsReservados),
-    smsRestantesFranquiaBase: Math.max(0, franquia.smsIncluidos - consumo.smsEnviados - consumo.smsReservados),
-  };
+  // Registros mensais legados não comprovam disponibilidade do ciclo comercial.
+  const disponibilidade: LicencaConsumoResumo360["disponibilidade"] = { estado: "indeterminada", emailsRestantesFranquiaBase: null, smsRestantesFranquiaBase: null };
 
   const permitidoDerivado = clienteAtivo === null || licencaAtiva === null || (trial && trialVencido === null) ? null : clienteAtivo && licencaAtiva && trialVencido !== true;
   return { resumo: {
-    referencia: { anoMes: entrada.anoMes, natureza: "mes_calendario_mensageria", historicoCarregado: false },
+    referencia: { anoMes: entrada.anoMes, natureza: "diagnostico_legado_mensal", fonte: "mensageria_uso", autoritativo: false, historicoCarregado: false },
     licenca: licenca ? { id: licenca.id, plano: licenca.plano, status: licenca.status, dataInicio: licenca.data_inicio, dataVencimento: licenca.data_vencimento, origemVinculo: entrada.origemLicenca, franquiaIlimitada: licenca.franquia_ilimitada } : null,
     acesso: { clienteAtivo, licencaAtiva, trialVencido, permitidoDerivado, natureza: "diagnostico_nao_autoritativo" },
     franquia, consumo,
