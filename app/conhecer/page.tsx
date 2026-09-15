@@ -322,7 +322,7 @@ export default function LandingPage() {
           <div className="landing-bloco-2-art">
             <picture>
               <source media="(max-width: 700px)" srcSet="/imagens/landing/bloco-2/bloco-2-mobile.png" />
-              <img src="/imagens/landing/bloco-2/bloco-2-desktop.png" alt="Tatuadora encerrando o expediente enquanto a operação do estúdio continua" />
+              <img src="/imagens/landing/bloco-2/bloco-2-mobile.png" alt="Tatuadora encerrando o expediente enquanto a operação do estúdio continua" />
             </picture>
           </div>
           <p className="landing-bloco-2-closing">E começa tudo de novo antes das tarefas anteriores terminarem.</p>
@@ -707,7 +707,7 @@ export default function LandingPage() {
           <div className="landing-bloco-4-art">
             <picture>
               <source media="(max-width: 700px)" srcSet="/imagens/landing/bloco-4/bloco-4-mobile.png" />
-              <img src="/imagens/landing/bloco-4/bloco-4-desktop.png" alt="Tatuadora desenhando enquanto pensa nas tarefas operacionais do estúdio" />
+              <img src="/imagens/landing/bloco-4/bloco-4-mobile.png" alt="Tatuadora desenhando enquanto pensa nas tarefas operacionais do estúdio" />
             </picture>
           </div>
           <div className="landing-bloco-4-narrative">
@@ -964,7 +964,7 @@ export default function LandingPage() {
           <div className="landing-bloco-5-art">
             <picture>
               <source media="(max-width: 700px)" srcSet="/imagens/landing/bloco-5/bloco-5-mobile.png" />
-              <img src="/imagens/landing/bloco-5/bloco-5-desktop.png" alt="Tatuadora trabalhando com o pipeline do Ink System visível no notebook" />
+              <img src="/imagens/landing/bloco-5/bloco-5-mobile.png" alt="Tatuadora trabalhando com o pipeline do Ink System visível no notebook" />
             </picture>
           </div>
           <p className="landing-bloco-5-support-two">Clientes, projetos, agenda, financeiro e acompanhamentos em um só lugar.</p>
