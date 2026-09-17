@@ -1,17 +1,14 @@
 // app/components/landing/Footer.tsx
 //
-// Só exibe o que existe de verdade. Termos de Uso, Política de
-// Privacidade, Política de Assinatura e Cancelamento, Segurança e
-// Contato/Suporte não têm rota real neste projeto hoje -- por isso não
-// aparecem aqui, nem como link (proibido usar href="#" ou link quebrado),
-// nem como aviso interno visível ao visitante. A lista dessas páginas
-// ausentes é só uma pendência de auditoria (ver relatório), não algo que
-// o visitante deva ver.
+// Só exibe o que existe de verdade. Termos de Uso, Política de Assinatura
+// e Cancelamento, Segurança e Contato/Suporte ainda não têm rota real neste
+// projeto e, por isso, não aparecem como links quebrados.
 const LINKS_INTERNOS = [
   { href: "#funcionalidades", label: "Funcionalidades" },
   { href: "#como-comeca", label: "Como funciona" },
   { href: "#comecar", label: "Preço" },
   { href: "#duvidas", label: "Perguntas frequentes" },
+  { href: "/politica-de-privacidade", label: "Política de Privacidade" },
 ];
 
 export function Footer() {

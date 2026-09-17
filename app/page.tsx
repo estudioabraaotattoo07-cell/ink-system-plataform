@@ -434,7 +434,11 @@ export default function HomePage() {
             textTransform: "uppercase",
           }}
         >
-          Ink System
+          <span>Ink System</span>
+          <span aria-hidden="true"> · </span>
+          <a href="/politica-de-privacidade" style={{ color: "inherit", textDecoration: "none" }}>
+            Política de Privacidade
+          </a>
         </footer>
       </div>
     </main>
