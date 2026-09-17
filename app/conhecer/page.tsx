@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import Link from "next/link";
 import { Header } from "../components/landing/Header";
 import { CtaButton } from "../components/landing/CtaButton";
 import CadastroTesteForm from "../components/landing/CadastroTesteForm";
@@ -2231,6 +2232,12 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <footer style={{ padding: "0 24px 32px", textAlign: "center", fontFamily: "var(--font-body)", fontSize: 11, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: ".08em" }}>
+        <Link href="/politica-de-privacidade" style={{ color: "inherit", textDecoration: "none" }}>
+          Política de Privacidade
+        </Link>
+      </footer>
 
     </main>
   );
