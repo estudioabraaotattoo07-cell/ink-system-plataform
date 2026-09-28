@@ -56,6 +56,9 @@ async function dbDelete(table: string, id: any, onError?: (msg: string) => void)
   const { error } = await sb.from(table).delete().eq("id", id);
   if (error) { console.error("delete", table, id, error.message); onError?.(error.message); }
 }
+// Reset bloqueado (2026-09-28): esta cópia não apaga dados operacionais. A
+// exclusão definitiva é só de Cliente de teste, pela Lixeira do CRM (inq-saas).
+const AVISO_RESET_BLOQUEADO = "Apagar dados operacionais está indisponível. Para remover um Cliente de teste, utilize a Lixeira do CRM. Clientes reais não podem ser excluídos definitivamente.";
 
 // ─── THEMES ──────────────────────────────────────────────────────────────────
 type ThemeId = "carvalho" | "sangue" | "cobalto" | "mono";
@@ -1401,11 +1404,6 @@ export default function CrmClient({
   const [lixeiraOrfaos, setLixeiraOrfaos] = useState<any[]>([]);
   const [lixeiraLoading, setLixeiraLoading] = useState(false);
   const [showLixeiraModal, setShowLixeiraModal] = useState(false);
-  const [lixeiraExcluindoId, setLixeiraExcluindoId] = useState<string|null>(null);
-  const [lixeiraExcluindoTimer, setLixeiraExcluindoTimer] = useState(0);
-  const [confirmReset, setConfirmReset] = useState(false);
-  const [resetUndo, setResetUndo] = useState(false);
-  const [resetTimer, setResetTimer] = useState<any>(null);
   const [formStep, setFormStep] = useState(1);
   const [emailError, setEmailError] = useState("");
   const [confirmMover, setConfirmMover] = useState<{cid: any; stage: any; agEvents: any[]} | null>(null);
@@ -2729,14 +2727,6 @@ export default function CrmClient({
     await sb.from("clientes").update({ excluido_em: new Date().toISOString() }).eq("id", cid);
     addLog(`Cliente "${nome}" movido para a Lixeira`);
     setConfirmExcluirCliente(null);
-  };
-
-  const deleteClientDefinitivo = async (cid: string) => {
-    await sb.from("agendamentos_pendentes").delete().eq("cliente_id", cid);
-    await sb.from("eventos_trafego").delete().eq("cliente_id", cid);
-    await sb.from("financeiro").delete().eq("cliente_id", cid);
-    await sb.from("agenda").delete().eq("cliente_id", cid);
-    await sb.from("clientes").delete().eq("id", cid);
   };
 
   const carregarLixeira = async () => {
@@ -12077,45 +12067,19 @@ export default function CrmClient({
                     ? <div style={{ fontSize: 12, color: "var(--tx3)", textAlign: "center", padding: "30px 0" }}>Nenhum cliente na lixeira.</div>
                     : lixeiraClientes.map((c: any) => {
                         const excl = new Date(c.excluido_em);
-                        const expira = new Date(excl.getTime() + 30 * 24 * 60 * 60 * 1000);
-                        const diasRestantes = Math.max(0, Math.ceil((expira.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
                         return (
                           <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 0", borderBottom: "1px solid var(--br)", fontSize: 12 }}>
                             <div style={{ flex: 1 }}>
                               <div style={{ fontWeight: 600, color: "var(--tx)" }}>{c.nome}</div>
                               <div style={{ color: "var(--tx3)" }}>{c.tel}{c.email ? ` · ${c.email}` : ""}</div>
-                              <div style={{ color: diasRestantes <= 3 ? "#C0392B" : "var(--tx3)", marginTop: 2 }}>
-                                Excluído em {excl.toLocaleDateString("pt-BR")} · restam {diasRestantes} dia{diasRestantes !== 1 ? "s" : ""}
+                              <div style={{ color: "var(--tx3)", marginTop: 2 }}>
+                                Excluído em {excl.toLocaleDateString("pt-BR")}
                               </div>
                             </div>
                             <button onClick={async () => { await sb.from("clientes").update({ excluido_em: null }).eq("id", c.id); const { data: restaurado } = await sb.from("clientes").select("*").eq("id", c.id).single(); if (restaurado) setClients((p: any[]) => [restaurado, ...p.filter((x: any) => x.id !== c.id)]); carregarLixeira(); addLog(`Cliente "${c.nome}" restaurado da Lixeira`); }}
                               style={{ background: "rgba(39,174,96,.12)", border: "1px solid rgba(39,174,96,.3)", borderRadius: 6, padding: "5px 10px", fontSize: 11, color: "#27AE60", cursor: "pointer", whiteSpace: "nowrap" }}>
                               Restaurar
                             </button>
-                            {lixeiraExcluindoId === c.id ? (
-                              <button onClick={() => { setLixeiraExcluindoId(null); setLixeiraExcluindoTimer(0); }}
-                                style={{ background: "rgba(192,57,43,.2)", border: "1px solid rgba(192,57,43,.5)", borderRadius: 6, padding: "5px 10px", fontSize: 11, color: "#C0392B", cursor: "pointer", whiteSpace: "nowrap", minWidth: 80 }}>
-                                Desfazer ({lixeiraExcluindoTimer}s)
-                              </button>
-                            ) : (
-                              <button onClick={() => {
-                                setLixeiraExcluindoId(c.id);
-                                let t = 8;
-                                setLixeiraExcluindoTimer(t);
-                                const iv = setInterval(() => {
-                                  t--;
-                                  setLixeiraExcluindoTimer(t);
-                                  if (t <= 0) {
-                                    clearInterval(iv);
-                                    deleteClientDefinitivo(c.id).then(() => { carregarLixeira(); addLog(`Cliente "${c.nome}" excluído definitivamente`); });
-                                    setLixeiraExcluindoId(null);
-                                  }
-                                }, 1000);
-                              }}
-                                style={{ background: "rgba(192,57,43,.12)", border: "1px solid rgba(192,57,43,.3)", borderRadius: 6, padding: "5px 10px", fontSize: 11, color: "#C0392B", cursor: "pointer", whiteSpace: "nowrap" }}>
-                                Excluir agora
-                              </button>
-                            )}
                           </div>
                         );
                       })
@@ -13100,68 +13064,6 @@ export default function CrmClient({
             </>
           );
         })()}
-
-        {/* ── MODAL RESET DE FÁBRICA ── */}
-        {confirmReset && (
-          <div className="ov" style={{ zIndex: 99999 }} onClick={() => setConfirmReset(false)}>
-            <div onClick={e => e.stopPropagation()} style={{ background: "var(--dk2)", border: "1px solid rgba(192,57,43,.4)", borderRadius: 12, width: "min(480px, 92vw)", padding: "28px 28px 22px", display: "flex", flexDirection: "column", gap: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(192,57,43,.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>⚠️</div>
-                <div>
-                  <div style={{ fontSize: 17, fontWeight: 700, color: "#C0392B", fontFamily: "'Cormorant Garamond',serif" }}>Apagar Dados Operacionais</div>
-                  <div style={{ fontSize: 12, color: "var(--tx2)", marginTop: 3 }}>Esta ação é irreversível</div>
-                </div>
-              </div>
-              <div style={{ fontSize: 13, color: "var(--tx2)", lineHeight: 1.7, background: "rgba(192,57,43,.08)", border: "1px solid rgba(192,57,43,.2)", borderRadius: 8, padding: "14px 16px" }}>
-                Serão apagados permanentemente:<br />
-                <strong style={{ color: "var(--tx)" }}>• Todos os clientes</strong><br />
-                <strong style={{ color: "var(--tx)" }}>• Todos os agendamentos</strong><br />
-                <strong style={{ color: "var(--tx)" }}>• Todos os lançamentos financeiros e saídas</strong><br /><br />
-                <span style={{ color: "var(--tx3)", fontSize: 12 }}>Profissionais e configurações do estúdio serão mantidos.</span>
-              </div>
-              {!resetUndo && (
-                <div style={{ display: "flex", gap: 8, justifyContent: "space-between", alignItems: "center" }}>
-                  <button className="btn-c" onClick={() => setConfirmReset(false)}>Cancelar</button>
-                  <button style={{ background: "#C0392B", border: "none", borderRadius: 7, padding: "10px 20px", fontSize: 13, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}
-                    onClick={() => {
-                      setResetUndo(true);
-                      let count = 8;
-                      const t = setInterval(async () => {
-                        count--;
-                        if (count <= 0) {
-                          clearInterval(t);
-                          await sb.from("saidas").delete().eq("user_id", userId);
-                          await sb.from("financeiro").delete().eq("user_id", userId);
-                          await sb.from("agenda").delete().eq("user_id", userId);
-                          await sb.from("clientes").delete().eq("user_id", userId);
-                          await sb.from("artistas").delete().eq("user_id", userId);
-                          await sb.from("historico").delete().eq("user_id", userId);
-                          setClients([]); setAgEvents([]); setFin([]); setSaidas([]); setArtists([]); setHistorico([]);
-                          setResetUndo(false); setConfirmReset(false); setShowSettings(false);
-                          setShowAviso("Reset concluído. Sistema limpo e pronto para uso real. 🖤");
-                        }
-                      }, 1000);
-                      setResetTimer(t);
-                    }}>
-                    Sim, estou ciente
-                  </button>
-                </div>
-              )}
-              {resetUndo && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <div style={{ fontSize: 13, color: "var(--tx2)", textAlign: "center" }}>Apagando em <strong style={{ color: "#C0392B" }}>8 segundos</strong>...</div>
-                  <div style={{ height: 6, background: "var(--dk3)", borderRadius: 3, overflow: "hidden" }}>
-                    <div style={{ height: 6, background: "#C0392B", borderRadius: 3, animation: "resetBar 8s linear forwards" }} />
-                  </div>
-                  <button onClick={() => { clearInterval(resetTimer); setResetUndo(false); setConfirmReset(false); }}
-                    style={{ background: "var(--dk3)", border: "1px solid var(--br)", borderRadius: 7, padding: "10px 0", fontSize: 13, fontWeight: 700, color: "var(--tx)", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
-                    ↩ Cancelar — Desfazer
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* ── MODAL ORÇAMENTO ── */}
         {/* ── MODAL GERENCIAR ESTILO / REGIÃO ── */}
@@ -14156,7 +14058,7 @@ export default function CrmClient({
                   </div>
                   <div>
                     <div className="stit">🗑 Lixeira</div>
-                    <div style={{ fontSize: 12, color: "var(--tx2)", marginBottom: 10 }}>Clientes excluídos ficam aqui por 30 dias antes da remoção definitiva.</div>
+                    <div style={{ fontSize: 12, color: "var(--tx2)", marginBottom: 10 }}>Clientes enviados para a Lixeira permanecem aqui até serem restaurados. A exclusão definitiva de Clientes de teste é realizada pelo CRM Ink System.</div>
                     <button onClick={() => { setShowLixeiraModal(true); carregarLixeira(); }} style={{ background: "var(--dk3)", border: "1px solid var(--br)", borderRadius: 7, padding: "8px 16px", fontSize: 12, color: "var(--tx)", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
                       🗑 Abrir Lixeira {lixeiraClientes.length > 0 && <span style={{ background: "var(--gold)", color: "#1a1a1a", borderRadius: 10, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{lixeiraClientes.length}</span>}
                     </button>
@@ -14165,14 +14067,14 @@ export default function CrmClient({
                     <div className="stit" style={{ color: "#C0392B" }}>Zona de Perigo</div>
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 10 }}>
                       <div style={{ fontSize: 12, color: "var(--tx2)", lineHeight: 1.6 }}>
-                        Remove clientes, agendamentos e financeiro. Profissionais e configurações são preservados.
+                        Esta ação está indisponível nesta versão. Para remover um Cliente de teste, utilize a Lixeira do CRM Ink System. Clientes reais não podem ser excluídos definitivamente.
                       </div>
-                      <div style={{ position: "relative", flexShrink: 0 }} title={"Remove permanentemente todos os clientes, agendamentos e lançamentos financeiros cadastrados. As configurações do estúdio, artistas, metas e preferências da " + (auraName || "agente") + " são preservadas. Use antes de iniciar o uso real do sistema após testes."}>
+                      <div style={{ position: "relative", flexShrink: 0 }} title="A exclusão de clientes é controlada pelo CRM Ink System para preservar o histórico e evitar remoções parciais de dados.">
                         <span style={{ width: 18, height: 18, borderRadius: "50%", background: "var(--dk4)", border: "1px solid var(--br)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "var(--tx3)", cursor: "help", fontWeight: 700 }}>ℹ</span>
                       </div>
                     </div>
                     <button style={{ background: "rgba(192,57,43,.12)", border: "1px solid rgba(192,57,43,.3)", borderRadius: 7, padding: "8px 16px", fontSize: 12, color: "#C0392B", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}
-                      onClick={() => setConfirmReset(true)}>
+                      onClick={() => setShowAviso(AVISO_RESET_BLOQUEADO)}>
                       🗑 Apagar Dados Operacionais
                     </button>
                   </div>
