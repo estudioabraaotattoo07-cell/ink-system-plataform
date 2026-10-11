@@ -20,6 +20,14 @@ let sb: any = createClient(
 );
 // Variável global para manter tool pendente da Aura sem stale closure
 let _auraToolPendenteCache: { tool: string; params: any; descricao: string } | null = null;
+// Nome / Identificação do Projeto: projetos[].nome. COMPATIBILIDADE TRANSITÓRIA (somente leitura): até a migration
+// inq-saas/sql/2026-10-15_projetos_nome_no_lugar_de_estilo.sql renomear a chave no banco, Projetos antigos ainda guardam o nome em
+// `estilo`; sem a chave `nome`, ele é lido no lugar -- nunca gravado. Remover o fallback depois da migration.
+function nomeDoProjeto(p: any): string {
+  if (!p || typeof p !== "object") return "";
+  if (typeof p.nome === "string") return p.nome;
+  return typeof p.estilo === "string" ? p.estilo : "";
+}
 
 // Notificação nativa do browser para alertar sobre ações pendentes da Aura
 function notificarAura(titulo: string, corpo: string) {
@@ -1448,7 +1456,7 @@ export default function CrmClient({
   const [piercingEditProjId, setPiercingEditProjId] = useState<any>(null);
   const [piercingEditItemId, setPiercingEditItemId] = useState<string | null>(null); // se setado, o painel edita esse item em vez de adicionar um novo
   const [piercingEditForm, setPiercingEditForm] = useState({ joiaId: "", piercingModo: "" as "" | "joia" | "joia_aplicacao", valorAplicacao: "", joiaCascGrupo: "", joiaCascSubgrupo: "", desconto: "" });
-  const [novoProjetoForm, setNovoProjetoForm] = useState({ estilo: "", tam: "Medio", primeira: false, desc: "", valorTotal: "", servico: "", artista: "", piercingModo: "" as "" | "joia" | "joia_aplicacao", joiaId: "", valorAplicacao: "", joiaCascGrupo: "", joiaCascSubgrupo: "", piercingItens: [] as { id: string; joiaId: string; nome: string; tamanho?: string; valorJoia: number; valorAplicacao: number }[] });
+  const [novoProjetoForm, setNovoProjetoForm] = useState({ nome: "", tam: "Medio", primeira: false, desc: "", valorTotal: "", servico: "", artista: "", piercingModo: "" as "" | "joia" | "joia_aplicacao", joiaId: "", valorAplicacao: "", joiaCascGrupo: "", joiaCascSubgrupo: "", piercingItens: [] as { id: string; joiaId: string; nome: string; tamanho?: string; valorJoia: number; valorAplicacao: number }[] });
   const [showRecorrenteModal, setShowRecorrenteModal] = useState<{cid: any} | null>(null);
   const [recorrenteForm, setRecorrenteForm] = useState({ dataInicio: new Date().toISOString().split("T")[0], intervalo: 7, total: 4, hora: 9, duracao: 2, artista: "" });
   const [fichaRevelada, setFichaRevelada] = useState<Set<any>>(new Set());
@@ -2078,7 +2086,7 @@ export default function CrmClient({
       etapa_antes_agenda: (c as any).etapa_antes_agenda ?? null,
       orig: c.orig || "", email: c.email || "",
       tam: c.tam || "Medio", intencao: c.intencao || "", primeira: c.primeira || false,
-      cob: c.cob || false, descricao: c.desc || "",
+      cob: c.cob || false,
       stars: c.stars || 0, star_reason: c.starReason || "",
       consent: c.consent, nps: c.nps, obs: c.obs || "",
       val_a: c.val_a || 0, val_c: c.val_c || 0, pgto: c.pgto || "",
@@ -2176,7 +2184,7 @@ export default function CrmClient({
       ((c as any).projetos || []).some((p: any) =>
         (p.desc || "").toLowerCase().includes(q) ||
         (p.servico || "").toLowerCase().includes(q) ||
-        (p.estilo || "").toLowerCase().includes(q)
+        nomeDoProjeto(p).toLowerCase().includes(q)
       ) ||
       ((c as any).hist || []).some((h: any) => (h.t || "").toLowerCase().includes(q));
     const mE = !filtroExtra
@@ -2803,7 +2811,7 @@ export default function CrmClient({
       hist: [{ t: "Cadastro manual criado", d: new Date().toLocaleString("pt-BR") }], pv: [],
       projetos: [{
         id: 1, status: "andamento",
-        estilo: (form as any).estilo || "",
+        nome: (form as any).nomeProjeto || "",
         tam: (form as any).tam || "Medio",
         regiao: (form as any).regiao || "",
         desc: (form as any).desc || "",
@@ -2823,11 +2831,11 @@ export default function CrmClient({
         etapa: "lead",
         orig: nc.orig || "Instagram Organico",
         email: nc.email || "",
-        estilo: nc.estilo || "", regiao: nc.regiao || "",
+        regiao: nc.regiao || "",
         tam: nc.tam || "Medio",
         intencao: nc.intencao || "",
         servico_interesse: (form as any).servicoInteresse || "",
-        cob: nc.cob || false, descricao: nc.desc || "",
+        cob: nc.cob || false,
         stars: 0, consent: null, nps: null, obs: "",
         val_a: (form as any).valorProjeto ? Number(String((form as any).valorProjeto).replace(/\./g,"").replace(",",".")) : 0,
         val_c: 0, pgto: "", orcamento: false, contrato: false,
@@ -2875,7 +2883,7 @@ export default function CrmClient({
     }
     setShowForm(false);
     setFormAg({ agendar: false, data: "", hora: "09:00", tipo: "cons" });
-    setForm({ nome: "", tel: "", email: "", insta: "", artista: "", estilo: "", regiao: "", tam: "Medio", desc: "", orig: "Instagram Organico", qual: "Q2", primeira: false, cob: false, intencao: "", nascimento: "" });
+    setForm({ nome: "", tel: "", email: "", insta: "", artista: "", nomeProjeto: "", regiao: "", tam: "Medio", desc: "", orig: "Instagram Organico", qual: "Q2", primeira: false, cob: false, intencao: "", nascimento: "" });
     setNovoClientePiercing({ piercingItens: [], joiaId: "", piercingModo: "", valorAplicacao: "", joiaCascGrupo: "", joiaCascSubgrupo: "" });
     addLog(`Cliente "${nc.nome}" cadastrado`);
   };
@@ -3618,7 +3626,6 @@ export default function CrmClient({
           nome: params.nome,
           tel: params.tel || "",
           email: params.email || "",
-          estilo: params.estilo || "",
           obs: params.obs || "",
           etapa: "lead",
           qual: "Q2",
@@ -3654,7 +3661,7 @@ export default function CrmClient({
           if (!cliente) return "❌ Cliente não encontrado.";
           const novoProjeto = {
             id: Date.now().toString(),
-            estilo: params.estilo || "",
+            nome: params.estilo || "",
             desc: params.descricao || "",
             servico: params.servico || "tatuagem",
             tam: params.tamanho || "Medio",
@@ -4171,9 +4178,9 @@ export default function CrmClient({
   const estilos = useMemo(() => {
     const m: Record<string, number> = {};
     clientesFiltrados.forEach(c => {
-      const projs = (c.projetos || []).filter((p: any) => p && p.status !== "cancelado" && p.estilo);
+      const projs = (c.projetos || []).filter((p: any) => p && p.status !== "cancelado" && nomeDoProjeto(p));
       if (projs.length > 0) {
-        projs.forEach((p: any) => { m[p.estilo] = (m[p.estilo] || 0) + 1; });
+        projs.forEach((p: any) => { const n = nomeDoProjeto(p); m[n] = (m[n] || 0) + 1; });
       } else if (c.estilo) {
         m[c.estilo] = (m[c.estilo] || 0) + 1;
       }
@@ -9016,7 +9023,7 @@ export default function CrmClient({
 
                     const projetos = (sc as any).projetos || [];
                     const ultimoProjeto = projetos[projetos.length - 1];
-                    const descProjeto = ultimoProjeto ? `<p><strong>Projeto:</strong> ${ultimoProjeto.estilo || ""} — ${ultimoProjeto.tam || ""} — ${ultimoProjeto.servico || ""}</p>` : "";
+                    const descProjeto = ultimoProjeto ? `<p><strong>Projeto:</strong> ${nomeDoProjeto(ultimoProjeto)} — ${ultimoProjeto.tam || ""} — ${ultimoProjeto.servico || ""}</p>` : "";
 
                     const htmlEmail = `
                       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#222;">
@@ -10295,7 +10302,7 @@ export default function CrmClient({
                     {novoProjetoAberto !== sc.id && (
                       <button title="Cada projeto representa uma tatuagem ou trabalho artístico do cliente. Você pode ter múltiplos projetos por cliente." onClick={() => {
                         setNovoProjetoAberto(sc.id);
-                        setNovoProjetoForm({ estilo: "", tam: "Medio", primeira: false, desc: "", valorTotal: "", servico: "", artista: "", piercingModo: "", joiaId: "", valorAplicacao: "", joiaCascGrupo: "", joiaCascSubgrupo: "", piercingItens: [] });
+                        setNovoProjetoForm({ nome: "", tam: "Medio", primeira: false, desc: "", valorTotal: "", servico: "", artista: "", piercingModo: "", joiaId: "", valorAplicacao: "", joiaCascGrupo: "", joiaCascSubgrupo: "", piercingItens: [] });
                       }} style={{ fontSize: 11, fontWeight: 600, background: "var(--dk3)", border: "1px solid var(--br)", borderRadius: 6, padding: "4px 10px", color: "var(--gold)", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
                         + Nova Solicitação de Serviço
                       </button>
@@ -10307,8 +10314,8 @@ export default function CrmClient({
                       <div style={{ fontSize: 11, color: "var(--gold)", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em" }}>Nova Solicitação de Serviço</div>
                       <div className="fi2">
                         <div className="fil">Nome / Identificação do Projeto *</div>
-                        <input className="ef" placeholder="Ex: Tatuagem na coxa, Cobertura de tattoo antiga, Piercing na orelha..." value={novoProjetoForm.estilo}
-                          onChange={e => setNovoProjetoForm(p => ({ ...p, estilo: e.target.value }))} />
+                        <input className="ef" placeholder="Ex: Tatuagem na coxa, Cobertura de tattoo antiga, Piercing na orelha..." value={novoProjetoForm.nome}
+                          onChange={e => setNovoProjetoForm(p => ({ ...p, nome: e.target.value }))} />
                       </div>
                       <div className="fi2">
                         <div className="fil">Serviço</div>
@@ -10493,22 +10500,22 @@ export default function CrmClient({
                           style={{ resize: "vertical", minHeight: 55, width: "100%", fontFamily: "inherit" }} />
                       </div>
                       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                        <button onClick={() => { setNovoProjetoAberto(null); setNovoProjetoForm({ estilo: "", tam: "Medio", primeira: false, desc: "", valorTotal: "", servico: "", artista: "", piercingModo: "", joiaId: "", valorAplicacao: "", joiaCascGrupo: "", joiaCascSubgrupo: "", piercingItens: [] }); }} style={{ background: "none", border: "1px solid var(--br)", borderRadius: 6, padding: "6px 14px", fontSize: 12, color: "var(--tx2)", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>Descartar</button>
+                        <button onClick={() => { setNovoProjetoAberto(null); setNovoProjetoForm({ nome: "", tam: "Medio", primeira: false, desc: "", valorTotal: "", servico: "", artista: "", piercingModo: "", joiaId: "", valorAplicacao: "", joiaCascGrupo: "", joiaCascSubgrupo: "", piercingItens: [] }); }} style={{ background: "none", border: "1px solid var(--br)", borderRadius: 6, padding: "6px 14px", fontSize: 12, color: "var(--tx2)", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>Descartar</button>
                         <button onClick={() => {
-                          if (!novoProjetoForm.estilo.trim()) { setShowAviso("Preencha o nome/identificação do projeto."); return; }
+                          if (!novoProjetoForm.nome.trim()) { setShowAviso("Preencha o nome/identificação do projeto."); return; }
                           const val = parseFloat(novoProjetoForm.valorTotal.replace(/\./g,"").replace(",",".")) || 0;
-                          const proj: any = { id: Date.now(), estilo: novoProjetoForm.estilo, tam: novoProjetoForm.tam, primeira: novoProjetoForm.primeira, desc: novoProjetoForm.desc, servico: (novoProjetoForm as any).servico || "", artista: novoProjetoForm.artista || sc.artista || "", valorTotal: val, status: "ativo", criadoEm: new Date().toLocaleDateString("pt-BR"), pagamentos: [] };
+                          const proj: any = { id: Date.now(), nome: novoProjetoForm.nome, tam: novoProjetoForm.tam, primeira: novoProjetoForm.primeira, desc: novoProjetoForm.desc, servico: (novoProjetoForm as any).servico || "", artista: novoProjetoForm.artista || sc.artista || "", valorTotal: val, status: "ativo", criadoEm: new Date().toLocaleDateString("pt-BR"), pagamentos: [] };
                           if (novoProjetoForm.piercingItens.length > 0) {
                             proj.piercingItens = novoProjetoForm.piercingItens;
                           }
                           const projs = [...(sc.projetos || [])];
                           if (projs.length === 0 && (sc.estilo || sc.desc)) {
-                            projs.push({ id: Date.now()-1, estilo: sc.estilo||"", tam: sc.tam||"Medio", primeira: sc.primeira||false, desc: sc.desc||"", valorTotal: 0, status: "ativo", criadoEm: "—", pagamentos: [] });
+                            projs.push({ id: Date.now()-1, nome: sc.estilo||"", tam: sc.tam||"Medio", primeira: sc.primeira||false, desc: sc.desc||"", valorTotal: 0, status: "ativo", criadoEm: "—", pagamentos: [] });
                           }
                           projs.push(proj);
                           upC(sc.id, "projetos", projs);
                           setNovoProjetoAberto(null);
-                          setNovoProjetoForm({ estilo: "", tam: "Medio", primeira: false, desc: "", valorTotal: "", servico: "", artista: "", piercingModo: "", joiaId: "", valorAplicacao: "", joiaCascGrupo: "", joiaCascSubgrupo: "", piercingItens: [] });
+                          setNovoProjetoForm({ nome: "", tam: "Medio", primeira: false, desc: "", valorTotal: "", servico: "", artista: "", piercingModo: "", joiaId: "", valorAplicacao: "", joiaCascGrupo: "", joiaCascSubgrupo: "", piercingItens: [] });
                           setClients(p => p.map(c => c.id !== sc.id ? c : { ...c, hist: [...c.hist, { t: "Projeto criado: R$" + val.toLocaleString("pt-BR",{minimumFractionDigits:2}), d: new Date().toLocaleDateString("pt-BR") }] }));
                         }} style={{ background: "var(--gold)", color: "#000", border: "none", borderRadius: 6, padding: "6px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>Salvar Projeto</button>
                       </div>
@@ -10519,7 +10526,7 @@ export default function CrmClient({
                     const projetos: any[] = sc.projetos && sc.projetos.length > 0
                       ? sc.projetos
                       : (sc.estilo || sc.desc)
-                        ? [{ id: "legacy", estilo: sc.estilo || "", tam: sc.tam || "Medio", primeira: sc.primeira || false, desc: sc.desc || "", status: "ativo", criadoEm: "—" }]
+                        ? [{ id: "legacy", nome: sc.estilo || "", tam: sc.tam || "Medio", primeira: sc.primeira || false, desc: sc.desc || "", status: "ativo", criadoEm: "—" }]
                         : [];
                     const ativos = projetos.filter((p: any) => p.status !== "concluido");
                     const concluidos = projetos.filter((p: any) => p.status === "concluido");
@@ -10536,7 +10543,7 @@ export default function CrmClient({
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
                               <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
                                 <span style={{ fontSize: 9, color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".05em" }}>Solicitação {pi + 1} — Em andamento</span>
-                                <span style={{ fontSize: 13, color: "var(--gold)", fontWeight: 700 }}>{draft.estilo || "(sem título)"}</span>
+                                <span style={{ fontSize: 13, color: "var(--gold)", fontWeight: 700 }}>{nomeDoProjeto(draft) || "(sem título)"}</span>
                               </div>
                       {(draft as any).servico && <span style={{ fontSize: 10, background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", borderRadius: 10, padding: "1px 8px", color: "var(--gold)", marginLeft: 6 }}>{(draft as any).servico}</span>}
                               <div style={{ display: "flex", gap: 6 }}>
@@ -10581,7 +10588,7 @@ export default function CrmClient({
                             })()}
                             <div className="fi2">
                               <div className="fil">Nome / Identificação do Projeto</div>
-                              <input className="ef" placeholder="Ex: Tatuagem na coxa, Cobertura de tattoo antiga, Piercing na orelha..." value={draft.estilo || ""} onChange={e => setProjDraftField(proj, { estilo: e.target.value })} />
+                              <input className="ef" placeholder="Ex: Tatuagem na coxa, Cobertura de tattoo antiga, Piercing na orelha..." value={nomeDoProjeto(draft)} onChange={e => setProjDraftField(proj, { nome: e.target.value, estilo: undefined })} />
                             </div>
                             <div className="fi2">
                               <div className="fil" title="Se este projeto for feito por outro profissional (diferente do responsável pela ficha), selecione aqui — o financeiro e a comissão vão para quem estiver marcado.">Profissional Responsável (por este projeto)</div>
@@ -11214,7 +11221,7 @@ export default function CrmClient({
                   <>
                     <div className="ff">
                       <label className="fl">Nome / Identificação do Projeto</label>
-                      <input className="fi" placeholder="Ex: Tatuagem na coxa, Cobertura de tattoo antiga, Piercing na orelha..." value={(form as any).estilo || ""} onChange={e => setForm({ ...form, estilo: e.target.value } as any)} />
+                      <input className="fi" placeholder="Ex: Tatuagem na coxa, Cobertura de tattoo antiga, Piercing na orelha..." value={(form as any).nomeProjeto || ""} onChange={e => setForm({ ...form, nomeProjeto: e.target.value } as any)} />
                     </div>
                     <div className="ff">
                       <label className="fl">Serviço de Interesse</label>
@@ -11664,7 +11671,7 @@ export default function CrmClient({
                                     background: activeP ? cor + "33" : "var(--dk3)",
                                     border: "1px solid " + (activeP ? cor : "var(--br)"),
                                     color: activeP ? cor : "var(--tx2)" }}>
-                                  <div>{p.estilo || servicoNome}</div>
+                                  <div>{nomeDoProjeto(p) || servicoNome}</div>
                                   {p.servico && <div style={{ fontSize: 10, opacity: .8, marginTop: 2, fontWeight: 400 }}>{p.servico}</div>}
                                   {(p.piercingItens || []).length > 0 && (
                                     <div style={{ fontSize: 10, opacity: .8, marginTop: 2, fontWeight: 400 }}>
@@ -12483,7 +12490,7 @@ export default function CrmClient({
         {cancelProjetoModal && (() => {
           const cli = clients.find(c => c.id === cancelProjetoModal.clienteId);
           const proj = (cli?.projetos || []).find((p: any) => p.id === cancelProjetoModal.projetoId);
-          const temDados = proj && (proj.estilo || proj.desc || proj.valorTotal > 0);
+          const temDados = proj && (nomeDoProjeto(proj) || proj.desc || proj.valorTotal > 0);
           const pago = proj ? (proj.pagamentos || []).reduce((s: number, p: any) => s + (Number(p.valor)||0), 0) : 0;
           return (
             <div className="ov" onClick={() => setCancelProjetoModal(null)}>
@@ -12524,7 +12531,7 @@ export default function CrmClient({
                         if (c.id !== clienteId) return c;
                         const projs = (c.projetos || []).filter((p: any) => p.id !== projetoId);
                         const hist = [...c.hist,
-                          { t: `Projeto excluído: ${proj?.estilo || "sem estilo"}${motivo ? " — " + motivo : ""}`, d: new Date().toLocaleDateString("pt-BR") },
+                          { t: `Projeto excluído: ${nomeDoProjeto(proj) || "sem nome"}${motivo ? " — " + motivo : ""}`, d: new Date().toLocaleDateString("pt-BR") },
                           ...(pago > 0 ? [{ t: `Crédito disponível: R$ ${pago.toLocaleString("pt-BR",{minimumFractionDigits:2})} (projeto cancelado)`, d: new Date().toLocaleDateString("pt-BR") }] : [])
                         ];
                         const updated = { ...c, projetos: projs, hist, credito: (c.credito || 0) + pago };
@@ -12636,7 +12643,7 @@ export default function CrmClient({
                     <select className="ef" value={(projPagamentoAtual?.clienteId === confirmPagamento.cid && projPagamentoAtual.projetoId) || ""}
                       onChange={e => setProjPagamentoAtual({ clienteId: confirmPagamento.cid, projetoId: e.target.value })}>
                       <option value="">Selecione...</option>
-                      {ativosPag.map((p: any) => <option key={p.id} value={p.id}>{p.estilo || p.servico || "Solicitação"}</option>)}
+                      {ativosPag.map((p: any) => <option key={p.id} value={p.id}>{nomeDoProjeto(p) || p.servico || "Solicitação"}</option>)}
                     </select>
                   </div>
                 );
@@ -14611,7 +14618,7 @@ export default function CrmClient({
                           }}
                           style={{ width: "100%", background: "var(--dk3)", border: "1px solid var(--br)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--tx)", fontFamily: "'DM Sans',sans-serif", boxSizing: "border-box" }}>
                           <option value="">Selecione...</option>
-                          {(pgAvulso.projetos || []).map((p: any) => <option key={p.id} value={p.id}>{p.estilo || p.servico || "Solicitação"}</option>)}
+                          {(pgAvulso.projetos || []).map((p: any) => <option key={p.id} value={p.id}>{nomeDoProjeto(p) || p.servico || "Solicitação"}</option>)}
                         </select>
                       </div>
                     )}
