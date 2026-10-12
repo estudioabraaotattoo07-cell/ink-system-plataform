@@ -17,6 +17,8 @@ const nextConfig: NextConfig = {
   // absoluto pros bundles JS/CSS.
   async rewrites() {
     return [
+      { source: "/tattooarena", destination: "https://ink-system-tattoo-arena-preview.inksystembr.workers.dev/tattooarena" },
+      { source: "/tattooarena/:path*", destination: "https://ink-system-tattoo-arena-preview.inksystembr.workers.dev/tattooarena/:path*" },
       { source: "/login", destination: "https://inq-saas.vercel.app/" },
       { source: "/assets/:path*", destination: "https://inq-saas.vercel.app/assets/:path*" },
       // Site público de cada estúdio (inksystem.com.br/slug) — motor real fica
