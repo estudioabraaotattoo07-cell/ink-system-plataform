@@ -185,10 +185,8 @@ test("Convite Google (D+2) continua com a mesma condição de gatilho -- não fo
   assert.match(src, /status === "positiva" && cliente\.google_convite_em && new Date\(cliente\.google_convite_em\) <= hoje/);
 });
 
-test("bloco de aguard_prox_sessao -> hibernacao (D+90, precedente histórico deste bloco) foi retirado pelo Bloco C -- substituído por aguard_agend -> hibernacao D+60", () => {
-  // Retirada esperada e autorizada (Bloco C, 2026-08-27): a etapa
-  // aguard_prox_sessao deixou de existir no pipeline; sua régua de
-  // hibernação foi fundida em aguard_agend -> hibernacao D+60.
-  assert.doesNotMatch(src, /"Movido automaticamente para Hibernação após 90 dias sem nova solicitação — " \+ cliente\.nome/);
-  assert.match(src, /"Movido automaticamente para Hibernação após 60 dias em Aguardando Agendamento — " \+ cliente\.nome/);
+test("hibernação de aguard_prox_sessao (D+90) e de aguard_agend (D+60 por cliente) foram APOSENTADAS neste motor -- a Hibernação (D+67) é por Projeto, no inq-saas", () => {
+  assert.doesNotMatch(src, /Hibernação após 90 dias sem nova solicitação/);
+  assert.doesNotMatch(src, /Hibernação após 60 dias em Aguardando Agendamento/);
+  assert.doesNotMatch(src, /\.eq\("etapa", "aguard_agend"\)/);
 });

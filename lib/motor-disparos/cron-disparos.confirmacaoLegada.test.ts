@@ -177,15 +177,13 @@ test("CONTROLE: Avaliação Google (outro bloco, mesmo loop) continua enviando -
   assert.ok(chamadas.some((c) => c.tabela === "clientes" && c.metodo !== "GET" && /__avaliacao_google__/.test(corpoTexto(c))), "dedup do próprio bloco de Avaliação segue gravado");
 });
 
-test("CONTROLE: Aguardando Agendamento (boas-vindas D+0, outro bloco) continua enviando", async () => {
+test("CONTROLE: Aguardando Agendamento (aguard_agend) é APOSENTADO neste motor -- nada é enviado nem gravado (a régua por Projeto vive no inq-saas)", async () => {
   const f = fixtures();
-  f.clientes.push({ id: "cC", user_id: "u1", nome: "Carla Teste", email: "carla@exemplo.com", tel: "", etapa: "aguard_agend", etapa_desde: ETAPA_DESDE, disparos_enviados: {}, excluido_em: null, sessao_concluida_em: null, projetos: [] });
+  f.clientes.push({ id: "cC", user_id: "u1", nome: "Carla Teste", email: "carla@exemplo.com", tel: "", etapa: "aguard_agend", etapa_desde: ETAPA_DESDE, disparos_enviados: {}, excluido_em: null, sessao_concluida_em: null });
   const { resultado, chamadas } = await executarMotor(f);
   assert.equal(resultado.status, 200);
-  const e = envios(chamadas);
-  assert.deepEqual(e.map((c) => c.corpo.to), ["carla@exemplo.com"], "só a Carla (boas-vindas), nada para a Maria (sessao_agend)");
-  assert.match(String(e[0].corpo.subject), /Obrigado pela sua visita/);
-  assert.ok(chamadas.some((c) => c.tabela === "clientes" && c.metodo !== "GET" && /__aguard_1a_sessao_bv__/.test(corpoTexto(c))));
+  assert.deepEqual(envios(chamadas), [], "nenhum e-mail por causa de aguard_agend");
+  assert.ok(!chamadas.some((c) => c.tabela === "clientes" && c.metodo !== "GET" && /__aguard_1a_sessao_(bv|d30)__/.test(corpoTexto(c))), "nenhuma chave de controle antiga gravada");
 });
 
 test("CONTROLE: com o legado desligado, cliente em sessao_agend + cliente que aciona outros blocos => só os outros blocos enviam, nada de 'confirmada'", async () => {
@@ -196,8 +194,8 @@ test("CONTROLE: com o legado desligado, cliente em sessao_agend + cliente que ac
   );
   const { resultado, chamadas } = await executarMotor(f);
   assert.equal(resultado.status, 200);
-  assert.deepEqual(envios(chamadas).map((c) => c.corpo.to).sort(), ["bruno@exemplo.com", "carla@exemplo.com"]);
-  assert.equal(resultado.body.disparos, 2);
+  assert.deepEqual(envios(chamadas).map((c) => c.corpo.to).sort(), ["bruno@exemplo.com"], "Carla (aguard_agend) não recebe nada deste motor");
+  assert.equal(resultado.body.disparos, 1);
 });
 
 // ── estrutural: gate explícito, código preservado, nada mais desligado ──────────────────────────────────────
@@ -220,12 +218,9 @@ test("ESTRUTURA: só ESSE bloco foi desligado -- D-1 legado continua desligado e
   assert.equal((src.match(/^const D1_LEGADO_ATIVO = false;$/gm) || []).length, 1);
   for (const marcador of [
     "// ── AVALIAÇÃO GOOGLE",
-    "// ── AGUARDANDO AGENDAMENTO",
     "// ── PÓS-VENDA → REENGAJAMENTO",
     "// ── PRECISA REMARCAR",
     "fluxo_nps_ativa",
-    "__aguard_1a_sessao_bv__",
-    "__aguard_1a_sessao_d30__",
     "__precisa_remarcar_email__",
     "export async function executarMotorDisparos",
   ]) assert.ok(src.includes(marcador), `bloco/marcador preservado: ${marcador}`);
