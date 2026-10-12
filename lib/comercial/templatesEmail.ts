@@ -42,7 +42,7 @@ export function montarEmailComercial({ codigo, mensagemId, nome, appUrl, acaoUrl
     },
     TESTE_01: {
       assunto: "Seu teste de 7 dias no Ink System começou",
-      corpo: `<p>${ola}</p><p>Seu acesso ao Ink System está ativo e os seus sete dias de experiência começaram agora.</p><p>Ao entrar, conclua a configuração inicial do estúdio. Esse preenchimento prepara um ambiente individual, separado das demais contas.</p><p>Durante o teste, os disparos de e-mail são limitados. SMS e WhatsApp não fazem parte desta experiência gratuita.</p>${botao("Assinar agora", assinaturaUrl, true)}${botao("Acessar minha conta", loginUrl)}`,
+      corpo: `<p>${ola}</p><p>Seu acesso ao Ink System está ativo e os seus sete dias de experiência começaram agora.</p><p>Ao entrar, conclua a configuração inicial do estúdio. Esse preenchimento prepara um ambiente individual, separado das demais contas.</p><p>Durante o teste, os disparos de e-mail são limitados. WhatsApp não faz parte desta experiência gratuita.</p>${botao("Assinar agora", assinaturaUrl, true)}${botao("Acessar minha conta", loginUrl)}`,
     },
     TESTE_02: {
       assunto: "Como está sendo sua experiência no Ink System?",

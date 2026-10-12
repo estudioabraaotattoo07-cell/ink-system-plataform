@@ -14,7 +14,7 @@ function diasParaVencimento(dataVenc: string | null) {
 export type LinhaCliente = {
   cliente: Record<string, any>;
   chamados: { total: number; abertos: number };
-  extras: { emailsComprados: number; smsComprados: number } | null;
+  extras: { emailsComprados: number } | null;
   falhas: { total: number; ultimoMotivo: string; ultimoCanal: string } | null;
 };
 
@@ -96,17 +96,13 @@ export default function ClienteFichaModal({ linha, permissoes, onClose }: { linh
           <Campo label="E-mail" valor={c.email || "—"} />
           <Campo label="Vencimento" valor={diasParaVencimento(c.data_vencimento)} />
           <Campo label="Storage usado" valor={`${c.storage_usado_mb ?? 0}MB`} />
-          <Campo label="SMS/mês" valor={c.sms_usados_mes ?? 0} />
           <Campo label="Artistas" valor={c.artistas_count ?? 0} />
           <Campo label="Assessorias/mês" valor={c.assessorias_usadas_mes ?? 0} />
           <Campo
             label="Extras comprados"
             valor={
-              extras && (extras.emailsComprados > 0 || extras.smsComprados > 0)
-                ? [
-                    extras.smsComprados > 0 ? `+${extras.smsComprados} SMS` : null,
-                    extras.emailsComprados > 0 ? `+${extras.emailsComprados} e-mail` : null,
-                  ].filter(Boolean).join(" · ")
+              extras && extras.emailsComprados > 0
+                ? `+${extras.emailsComprados} e-mail`
                 : "—"
             }
           />

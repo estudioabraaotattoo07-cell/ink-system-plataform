@@ -32,8 +32,8 @@ export async function obterFicha360Segura(contaId: string, agora = new Date()): 
     sb.from("ink_implantacao_dados").select("id, conta_id, auth_user_id, email, concluido, etapa_atual, nome_fantasia, tipo_pessoa, politica_aceita_em, termos_aceito_em").is("conta_id", null).ilike("email", email),
     sb.from("ink_clientes").select("id, conta_id, auth_user_id, email, status, plano").eq("conta_id", contaId),
     sb.from("ink_clientes").select("id, conta_id, auth_user_id, email, status, plano").is("conta_id", null).ilike("email", email),
-    sb.from("licencas").select("id, conta_id, user_id, email, plano, status, data_inicio, data_vencimento, franquia_ilimitada, email_incluido_mes, sms_incluido_mes").eq("conta_id", contaId),
-    sb.from("licencas").select("id, conta_id, user_id, email, plano, status, data_inicio, data_vencimento, franquia_ilimitada, email_incluido_mes, sms_incluido_mes").is("conta_id", null).ilike("email", email),
+    sb.from("licencas").select("id, conta_id, user_id, email, plano, status, data_inicio, data_vencimento, franquia_ilimitada, email_incluido_mes").eq("conta_id", contaId),
+    sb.from("licencas").select("id, conta_id, user_id, email, plano, status, data_inicio, data_vencimento, franquia_ilimitada, email_incluido_mes").is("conta_id", null).ilike("email", email),
     sb.from("ink_leads").select("id, conta_id, email, estagio").eq("conta_id", contaId),
     sb.from("ink_leads").select("id, conta_id, email, estagio").is("conta_id", null).ilike("email", email),
   ]);
@@ -45,7 +45,7 @@ export async function obterFicha360Segura(contaId: string, agora = new Date()): 
   const [itensBase, historico, consumo, falhas, chamados, financeiro, authConta] = await Promise.all([
     implantacaoCandidata ? sb.from("ink_implantacao_itens").select("id, tipo, status, atualizado_em").eq("implantacao_id", implantacaoCandidata.id) : Promise.resolve({ data: [], error: null }),
     implantacaoCandidata ? sb.from("ink_implantacao_historico").select("id, implantacao_id, evento, criado_em").eq("implantacao_id", implantacaoCandidata.id).order("criado_em", { ascending: false }).limit(20) : Promise.resolve({ data: [], error: null }),
-    conta.auth_user_id ? sb.from("mensageria_uso").select("user_id, ano_mes, emails_enviados, emails_reservados, sms_enviados, sms_reservados, emails_comprados, sms_comprados").eq("user_id", conta.auth_user_id).eq("ano_mes", anoMesConsumo) : Promise.resolve({ data: [], error: null }),
+    conta.auth_user_id ? sb.from("mensageria_uso").select("user_id, ano_mes, emails_enviados, emails_reservados, emails_comprados").eq("user_id", conta.auth_user_id).eq("ano_mes", anoMesConsumo) : Promise.resolve({ data: [], error: null }),
     conta.auth_user_id ? sb.from("mensageria_falhas").select("id, user_id, canal, criado_em", { count: "exact" }).eq("user_id", conta.auth_user_id).order("criado_em", { ascending: false }).limit(LIMITES_RELACIONAMENTO_360.falhas) : Promise.resolve({ data: [], error: null, count: 0 }),
     clienteCandidato ? sb.from("ink_chamados").select("id, ink_cliente_id, status", { count: "exact" }).eq("ink_cliente_id", clienteCandidato.id).limit(LIMITES_RELACIONAMENTO_360.chamados) : Promise.resolve({ data: [], error: null, count: 0 }),
     temPermissaoAdmin(admin.papel, "financeiro.visualizar") && clienteCandidato

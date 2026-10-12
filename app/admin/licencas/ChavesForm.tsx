@@ -159,7 +159,7 @@ export default function ChavesForm({ configuracao }: { configuracao: Configuraca
         <Campo label="Taxa de bounce (%)" value={resendBounce} onChange={setResendBounce} />
       </div>
 
-      <div style={{ fontSize: 13, fontWeight: 700, color: "#C9A84C", marginBottom: 4 }}>Zenvia — SMS / WhatsApp</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: "#C9A84C", marginBottom: 4 }}>Zenvia — WhatsApp</div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
         <CampoSecret label="Zenvia API Key" value={zenviaApiKey} onChange={setZenviaApiKey} configurado={configurados.zenviaApiKey} />
         <Campo label="Número de Envio" value={zenviaNumero} onChange={setZenviaNumero} />

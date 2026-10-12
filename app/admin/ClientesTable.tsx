@@ -19,7 +19,7 @@ export default function ClientesTable({ linhas, permissoes }: { linhas: LinhaCli
       <table style={{ width: "100%", borderCollapse: "collapse", whiteSpace: "nowrap" }}>
         <thead>
           <tr>
-            {["Estúdio", "E-mail", "Plano", "Status", "Vencimento", "Storage", "SMS/mês", "Artistas", "Assessorias", "Extras comprados", "Falhas (30d)", "Chamados"].map((h) => (
+            {["Estúdio", "E-mail", "Plano", "Status", "Vencimento", "Storage", "Artistas", "Assessorias", "Extras comprados", "Falhas (30d)", "Chamados"].map((h) => (
               <th key={h} style={{ background: "#0A0A0A", borderBottom: "1px solid rgba(201,168,76,0.45)", padding: "12px 16px", fontSize: 10, letterSpacing: ".09em", textTransform: "uppercase", color: "#C9A84C", fontWeight: 600, textAlign: "left" }}>
                 {h}
               </th>
@@ -59,15 +59,11 @@ export default function ClientesTable({ linhas, permissoes }: { linhas: LinhaCli
                 </td>
                 <td style={td}>{diasParaVencimento(c.data_vencimento)}</td>
                 <td style={td}>{c.storage_usado_mb ?? 0}MB</td>
-                <td style={td}>{c.sms_usados_mes ?? 0}</td>
                 <td style={td}>{c.artistas_count ?? 0}</td>
                 <td style={td}>{c.assessorias_usadas_mes ?? 0}</td>
                 <td style={{ ...td, color: "#A09585" }}>
-                  {extras && (extras.emailsComprados > 0 || extras.smsComprados > 0)
-                    ? [
-                        extras.smsComprados > 0 ? `+${extras.smsComprados} SMS` : null,
-                        extras.emailsComprados > 0 ? `+${extras.emailsComprados} e-mail` : null,
-                      ].filter(Boolean).join(" · ")
+                  {extras && extras.emailsComprados > 0
+                    ? `+${extras.emailsComprados} e-mail`
                     : "—"}
                 </td>
                 <td style={td}>

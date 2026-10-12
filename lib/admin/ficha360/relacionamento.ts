@@ -12,7 +12,7 @@ export type EventoRelacionamentoFonte360 = { id?: string; conta_id: string; tipo
 export type ChamadoFonte360 = { id?: string; ink_cliente_id: string; status: string };
 export type FalhaFonte360 = { id: string; user_id: string; canal: string; motivo?: string | null; criado_em: string };
 
-const canalPermitido = (valor: string) => ["email", "sms", "whatsapp"].includes(valor) ? valor : "desconhecido";
+const canalPermitido = (valor: string) => ["email", "whatsapp"].includes(valor) ? valor : "desconhecido";
 
 function maisRecente(datas: Array<string | null>): string | null {
   return datas.filter((data): data is string => Boolean(data)).sort((a, b) => Date.parse(b) - Date.parse(a))[0] ?? null;

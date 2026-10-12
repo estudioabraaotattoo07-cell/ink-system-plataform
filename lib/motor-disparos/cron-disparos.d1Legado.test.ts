@@ -10,7 +10,7 @@
 //   2. os OUTROS disparos do motor continuam funcionando (controle positivo: e-mail
 //      da Avaliação Google, que roda no mesmo loop por cliente) e o cron não é
 //      desligado (a rota/vercel.json permanecem);
-//   3. o D-0 (SMS do dia) e demais réguas continuam presentes no código.
+//   3. as demais réguas continuam presentes no código.
 //
 // Rodar com: node --test lib/motor-disparos/cron-disparos.d1Legado.test.ts
 
@@ -39,7 +39,7 @@ function montarFixtures() {
   return {
     configuracoes: [{
       user_id: "u-dono", studio_name: "Estudio Teste", resend_api_key: "re_fake", email_remetente: "Estudio <a@b.com>",
-      canais_habilitados: { email: true, sms: false, whatsapp: false }, fluxo_confirmacao_presenca_ativa: true,
+      canais_habilitados: { email: true, whatsapp: false }, fluxo_confirmacao_presenca_ativa: true,
       studio_rua: "Rua A", studio_numero: "1", studio_bairro: "Centro", studio_city: "Vitoria",
     }],
     // conta do dono: única que o gate antigo (temDisparosPrata) liberava para o D-1 legado
@@ -163,18 +163,16 @@ test("CONTROLE POSITIVO -- outros disparos preservados: a Avaliação Google (me
   assert.ok(dedup, "o dedup da avaliação continua sendo gravado");
 });
 
-test("bloco removido do fluxo por UMA constante e nada além: D1_LEGADO_ATIVO=false gateia só o bloco D-1; D-0, réguas e o resto seguem presentes", () => {
+test("bloco removido do fluxo por UMA constante e nada além: D1_LEGADO_ATIVO=false gateia só o bloco D-1; réguas e o resto seguem presentes", () => {
   assert.match(src, /const D1_LEGADO_ATIVO = false;/);
   const ocorrencias = src.match(/D1_LEGADO_ATIVO/g) || [];
   assert.equal(ocorrencias.length, 2, "1 declaração + 1 uso (o gate do bloco D-1)");
   assert.match(src, /if \(D1_LEGADO_ATIVO && temDisparosPrata && cfg\.fluxo_confirmacao_presenca_ativa !== false && \(cliente\.etapa === "sessao_agend" \|\| cliente\.etapa === "cons_agendada"\)\) \{/);
   // vizinhos e demais disparos ainda no arquivo, sem a nova constante
   for (const marcador of [
-    "// ── SMS D-0", "// ── NOVAS ETAPAS SEM AUTOMAÇÃO", "// ── AVALIAÇÃO GOOGLE", "__sms_d0__", "// ── PÓS-VENDA → REENGAJAMENTO — D+7", "// ── PRECISA REMARCAR",
+    "// ── NOVAS ETAPAS SEM AUTOMAÇÃO", "// ── AVALIAÇÃO GOOGLE", "// ── PÓS-VENDA → REENGAJAMENTO — D+7", "// ── PRECISA REMARCAR",
     "dispararMensagemEtapaSimples", "export async function executarMotorDisparos",
   ]) assert.ok(src.includes(marcador), `faltou: ${marcador}`);
-  const trecho = src.slice(src.indexOf("// ── SMS D-0"), src.indexOf("// ── LEMBRETE D-1"));
-  assert.equal(trecho.includes("D1_LEGADO_ATIVO"), false, "o D-0 não é gateado pela constante do D-1");
   const seguinte = src.slice(src.indexOf("// ── NOVAS ETAPAS SEM AUTOMAÇÃO"));
   assert.equal(seguinte.includes("D1_LEGADO_ATIVO"), false, "as réguas seguintes não são gateadas");
 });

@@ -43,11 +43,11 @@ export type LicencaConsumoResumo360 = {
   referencia: { anoMes: string; natureza: "diagnostico_legado_mensal"; fonte: "mensageria_uso"; autoritativo: false; historicoCarregado: false };
   licenca: null | { id: string; plano: string | null; status: string; dataInicio: string | null; dataVencimento: string | null; origemVinculo: OrigemVinculo360; franquiaIlimitada: boolean | null };
   acesso: { clienteAtivo: boolean | null; licencaAtiva: boolean | null; trialVencido: boolean | null; permitidoDerivado: boolean | null; natureza: "diagnostico_nao_autoritativo" };
-  franquia: { natureza: "trial_total" | "configuracao_licenca_paga" | "indeterminada"; emailsIncluidos: number | null; smsIncluidos: number | null; renovacaoMensalComprovada: false };
-  consumo: null | { estado: "observado"; linhasEncontradas: number; emailsEnviados: number; emailsReservados: number; smsEnviados: number; smsReservados: number };
-  extras: { estado: "indeterminado"; emailsCompradosObservados: number | null; smsCompradosObservados: number | null; incluidosNaDisponibilidade: false };
+  franquia: { natureza: "trial_total" | "configuracao_licenca_paga" | "indeterminada"; emailsIncluidos: number | null; renovacaoMensalComprovada: false };
+  consumo: null | { estado: "observado"; linhasEncontradas: number; emailsEnviados: number; emailsReservados: number };
+  extras: { estado: "indeterminado"; emailsCompradosObservados: number | null; incluidosNaDisponibilidade: false };
   // Ausência de contrato autoritativo: o diagnóstico legado nunca calcula disponibilidade.
-  disponibilidade: { estado: "indeterminada"; emailsRestantesFranquiaBase: null; smsRestantesFranquiaBase: null };
+  disponibilidade: { estado: "indeterminada"; emailsRestantesFranquiaBase: null };
   falhasRecentes: number;
 };
 export type CicloFinanceiro360 = {

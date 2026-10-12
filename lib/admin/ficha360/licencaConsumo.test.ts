@@ -6,8 +6,8 @@ import { construirLicencaConsumoDiagnostico, type ConsumoMensalFonte360, type Li
 
 const CONTA = "11111111-1111-4111-8111-111111111111";
 const AUTH = "22222222-2222-4222-8222-222222222222";
-const licenca: LicencaFonteConsumo360 = { id: "l1", conta_id: CONTA, user_id: AUTH, plano: "1.0", status: "ativo", data_inicio: "2026-01-01", data_vencimento: "2026-02-01", franquia_ilimitada: false, email_incluido_mes: 400, sms_incluido_mes: 10 };
-const consumo: ConsumoMensalFonte360 = { user_id: AUTH, ano_mes: "2026-01", emails_enviados: 25, emails_reservados: 5, sms_enviados: 2, sms_reservados: 1, emails_comprados: 0, sms_comprados: 0 };
+const licenca: LicencaFonteConsumo360 = { id: "l1", conta_id: CONTA, user_id: AUTH, plano: "1.0", status: "ativo", data_inicio: "2026-01-01", data_vencimento: "2026-02-01", franquia_ilimitada: false, email_incluido_mes: 400 };
+const consumo: ConsumoMensalFonte360 = { user_id: AUTH, ano_mes: "2026-01", emails_enviados: 25, emails_reservados: 5, emails_comprados: 0 };
 
 function entrada(): Parameters<typeof construirLicencaConsumoDiagnostico>[0] {
   return { contaId: CONTA, authUserId: AUTH, anoMes: "2026-01", origemLicenca: "forte_conta_id" as const, licenca: { ...licenca }, cliente: { status: "ativo" }, trial: null, consumoMensal: [{ ...consumo }], falhasRecentes: 0 };
@@ -16,7 +16,7 @@ function entrada(): Parameters<typeof construirLicencaConsumoDiagnostico>[0] {
 test("licenca forte separa enviados e reservados no mes explicito", () => {
   const { resumo } = construirLicencaConsumoDiagnostico(entrada());
   assert.equal(resumo.referencia.anoMes, "2026-01"); assert.equal(resumo.referencia.historicoCarregado, false);
-  assert.deepEqual(resumo.consumo, { estado: "observado", linhasEncontradas: 1, emailsEnviados: 25, emailsReservados: 5, smsEnviados: 2, smsReservados: 1 });
+  assert.deepEqual(resumo.consumo, { estado: "observado", linhasEncontradas: 1, emailsEnviados: 25, emailsReservados: 5 });
 });
 
 test("mes sem consumo permanece ausente em vez de virar zero", () => {
@@ -51,13 +51,13 @@ test("user_id divergente do Auth gera alerta critico", () => {
 test("consumo mensal legado nunca calcula disponibilidade comercial", () => {
   const { resumo } = construirLicencaConsumoDiagnostico(entrada());
   assert.deepEqual(resumo.referencia, { anoMes: "2026-01", natureza: "diagnostico_legado_mensal", fonte: "mensageria_uso", autoritativo: false, historicoCarregado: false });
-  assert.equal(resumo.disponibilidade.estado, "indeterminada"); assert.equal(resumo.disponibilidade.emailsRestantesFranquiaBase, null); assert.equal(resumo.disponibilidade.smsRestantesFranquiaBase, null);
+  assert.equal(resumo.disponibilidade.estado, "indeterminada"); assert.equal(resumo.disponibilidade.emailsRestantesFranquiaBase, null);
 });
 
 test("franquia ilimitada nao inventa saldo numerico", () => {
   const e = entrada(); e.licenca!.franquia_ilimitada = true;
   const { resumo } = construirLicencaConsumoDiagnostico(e);
-  assert.deepEqual(resumo.disponibilidade, { estado: "indeterminada", emailsRestantesFranquiaBase: null, smsRestantesFranquiaBase: null });
+  assert.deepEqual(resumo.disponibilidade, { estado: "indeterminada", emailsRestantesFranquiaBase: null });
 });
 
 test("trial mantem limite total e nao calcula renovacao mensal", () => {

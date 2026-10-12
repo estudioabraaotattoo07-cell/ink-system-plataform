@@ -37,7 +37,7 @@ function montarFixtures() {
   return {
     configuracoes: [{
       user_id: "u-dono", studio_name: "Estudio Teste", resend_api_key: "re_fake", email_remetente: "Estudio <a@b.com>",
-      canais_habilitados: { email: true, sms: false, whatsapp: false },
+      canais_habilitados: { email: true, whatsapp: false },
       studio_rua: "Rua A", studio_numero: "1", studio_bairro: "Centro", studio_city: "Vitoria",
     }],
     ink_clientes: [{ auth_user_id: "u-dono", plano: "1.0", email: OWNER_EMAIL }],

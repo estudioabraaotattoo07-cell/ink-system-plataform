@@ -37,7 +37,7 @@ export type CompradorView = {
     id: string;
     codigo: string;
     nome: string;
-    canal: "email" | "sms" | "whatsapp";
+    canal: "email" | "whatsapp";
     status: "programado" | "processando" | "enviado" | "entregue" | "clicado" | "falhou" | "cancelado";
     agendado_em: string | null;
     criado_em: string;

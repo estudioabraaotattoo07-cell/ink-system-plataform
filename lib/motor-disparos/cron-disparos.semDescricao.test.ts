@@ -17,7 +17,6 @@ test("a consulta de clientes do cron não seleciona descricao (nem estilo)", () 
   }
 });
 
-test("nenhuma leitura de cliente.descricao sobrou; o SMS do dia ao artista mantém o texto vazio já existente", () => {
+test("nenhuma leitura de cliente.descricao sobrou", () => {
   assert.doesNotMatch(codigo, /cliente\.descricao|\.descricao\b/);
-  assert.match(codigo, /solicitacao: solicitacao \|\| "não informado"/);
 });

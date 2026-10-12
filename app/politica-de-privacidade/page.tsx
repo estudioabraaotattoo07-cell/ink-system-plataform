@@ -69,7 +69,7 @@ const secoes = [
     conteudo: (
       <>
         <p>Podemos utilizar prestadores que processam dados na medida necessária para disponibilizar infraestrutura e funcionalidades. Atualmente, o serviço utiliza ou se apoia em soluções como <strong>Supabase</strong>, para autenticação, banco de dados e armazenamento; <strong>Vercel</strong>, para hospedagem e execução da aplicação; <strong>Resend</strong>, para envio de e-mails; e serviços internos ou associados do ecossistema INK SYSTEM.</p>
-        <p>Recursos de SMS ou WhatsApp podem utilizar a Zenvia quando essa integração estiver configurada e habilitada para a conta. Isso não significa que a Zenvia seja utilizada por todas as contas.</p>
+        <p>Recursos de WhatsApp podem utilizar a Zenvia quando essa integração estiver configurada e habilitada para a conta. Isso não significa que a Zenvia seja utilizada por todas as contas.</p>
       </>
     ),
   },

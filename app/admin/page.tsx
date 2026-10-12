@@ -64,12 +64,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const anoMesAtual = new Date().toISOString().slice(0, 7);
   const { data: usoMensagem, error: erroUso } = await sbAdmin
     .from("mensageria_uso")
-    .select("user_id, emails_enviados, sms_enviados, emails_comprados, sms_comprados")
+    .select("user_id, emails_comprados")
     .neq("user_id", LABORATORIO_AUTH_USER_ID)
     .eq("ano_mes", anoMesAtual);
-  const usoPorUser = new Map<string, { emailsComprados: number; smsComprados: number }>();
+  const usoPorUser = new Map<string, { emailsComprados: number }>();
   for (const u of usoMensagem ?? []) {
-    usoPorUser.set(u.user_id, { emailsComprados: u.emails_comprados || 0, smsComprados: u.sms_comprados || 0 });
+    usoPorUser.set(u.user_id, { emailsComprados: u.emails_comprados || 0 });
   }
 
   const { data: falhas, error: erroFalhas } = await sbAdmin
@@ -105,11 +105,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const hojeStr = new Date().toISOString().slice(0, 10);
   const { data: usoHoje, error: erroUsoHoje } = await sbAdmin
     .from("mensageria_diario")
-    .select("emails_enviados, sms_enviados")
+    .select("emails_enviados")
     .neq("user_id", LABORATORIO_AUTH_USER_ID)
     .eq("dia", hojeStr);
   const emailsHoje = (usoHoje ?? []).reduce((s, u) => s + (u.emails_enviados || 0), 0);
-  const smsHoje = (usoHoje ?? []).reduce((s, u) => s + (u.sms_enviados || 0), 0);
 
   const linhas = clientes ?? [];
   const erro = erroClientes || erroChamados || erroStats || erroLeads || erroUso || erroFalhas || erroUsoHoje
@@ -214,12 +213,6 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ fontSize: 14 }}>📧</span>
             <span style={{ fontSize: 13, fontWeight: 700, color: "#E8E2D9" }}>{emailsHoje}</span>
-            <span style={{ fontSize: 10, color: "#6B5E54" }}>hoje</span>
-          </div>
-          <div style={{ width: 1, background: "rgba(201,168,76,0.2)" }} />
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ fontSize: 14 }}>💬</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#E8E2D9" }}>{smsHoje}</span>
             <span style={{ fontSize: 10, color: "#6B5E54" }}>hoje</span>
           </div>
         </div>

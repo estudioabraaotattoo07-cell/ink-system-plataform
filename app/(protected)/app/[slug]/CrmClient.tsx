@@ -1296,7 +1296,7 @@ export default function CrmClient({
   // ── SELEÇÃO MÚLTIPLA + DISPARO EM MASSA ──
   const [selMode, setSelMode] = useState(false);
   const [selIds, setSelIds] = useState<Set<string>>(new Set());
-  const [disparoMassa, setDisparoMassa] = useState<{canal: "email"|"sms"; texto: string; fase: "compose"|"confirm"|"enviando"|"done"; ok: number; total: number} | null>(null);
+  const [disparoMassa, setDisparoMassa] = useState<{canal: "email"; texto: string; fase: "compose"|"confirm"|"enviando"|"done"; ok: number; total: number} | null>(null);
   const [cnpj, setCnpj] = useState("");
   const [metaMensal, setMetaMensal] = useState(0);
   const [descontoAniversario, setDescontoAniversario] = useState(5);
@@ -1502,8 +1502,8 @@ export default function CrmClient({
   const [editandoListas, setEditandoListas] = useState(false);
   const [agPipelineOpen, setAgPipelineOpen] = useState(false);
   const [pvEditando, setPvEditando] = useState<number | null>(null);
-  const [canaisHabilitados, setCanaisHabilitados] = useState<{email: boolean; whatsapp: boolean; sms: boolean}>({ email: true, whatsapp: false, sms: false });
-  const [fluxoToggles, setFluxoToggles] = useState({ boas_vindas_email: true, nps: true, google_convite: true, confirmacao_presenca: true, notificacao_artista: true, confirma_consulta: true, confirma_sessao: true, sms_consulta: true, sms_sessao: true, recontato_prox_sessao: true, remarcar: true, agradecimento_1asessao: true, recontato_d30: true });
+  const [canaisHabilitados, setCanaisHabilitados] = useState<{email: boolean; whatsapp: boolean}>({ email: true, whatsapp: false });
+  const [fluxoToggles, setFluxoToggles] = useState({ boas_vindas_email: true, nps: true, google_convite: true, confirmacao_presenca: true, notificacao_artista: true, confirma_consulta: true, confirma_sessao: true, recontato_prox_sessao: true, remarcar: true, agradecimento_1asessao: true, recontato_d30: true });
   const [toggleConfirm, setToggleConfirm] = useState<{campo: string; novoValor: boolean; label: string} | null>(null);
   // ── ACORDEÃO DAS RÉGUAS ──
   const [pvAccordion, setPvAccordion] = useState<{preVenda: boolean; preSessao: boolean; posVenda: boolean; fluxo: boolean; sazonais: boolean}>({ preVenda: false, preSessao: false, posVenda: false, fluxo: true, sazonais: false });
@@ -1532,7 +1532,7 @@ export default function CrmClient({
   const [zenviaApiKey, setZenviaApiKey] = useState("");
   const [zenviaNumero, setZenviaNumero] = useState("");
   // ── TESTE DE CANAIS (confirmação manual de recebimento) ──
-  const [testeCanalEnviado, setTesteCanalEnviado] = useState<{canal: "email" | "sms" | "whatsapp"; destino: string} | null>(null);
+  const [testeCanalEnviado, setTesteCanalEnviado] = useState<{canal: "email" | "whatsapp"; destino: string} | null>(null);
   const [testandoCanal, setTestandoCanal] = useState<string | null>(null);
   const [auraApiKey, setAuraApiKey] = useState("");
   const [vercelToken, setVercelToken] = useState("");
@@ -1787,7 +1787,7 @@ export default function CrmClient({
           if (cfg.canais_habilitados) {
             try {
               const parsedCH = typeof cfg.canais_habilitados === "string" ? JSON.parse(cfg.canais_habilitados) : cfg.canais_habilitados;
-              setCanaisHabilitados(prev => ({ ...prev, ...parsedCH }));
+              setCanaisHabilitados(prev => ({ ...prev, email: parsedCH.email ?? prev.email, whatsapp: parsedCH.whatsapp ?? prev.whatsapp }));
             } catch {}
           }
           // ── TOGGLES DE AUTOMAÇÃO ──
@@ -1799,8 +1799,6 @@ export default function CrmClient({
             notificacao_artista: cfg.fluxo_notificacao_artista_ativa !== false,
             confirma_consulta: cfg.fluxo_confirma_consulta_ativa !== false,
             confirma_sessao: cfg.fluxo_confirma_sessao_ativa !== false,
-            sms_consulta: cfg.fluxo_sms_consulta_ativa !== false,
-            sms_sessao: cfg.fluxo_sms_sessao_ativa !== false,
             recontato_prox_sessao: cfg.fluxo_recontato_prox_sessao_ativa !== false,
             remarcar: cfg.fluxo_remarcar_ativa !== false,
             agradecimento_1asessao: cfg.fluxo_agradecimento_1asessao_ativa !== false,
@@ -1930,7 +1928,7 @@ export default function CrmClient({
     } catch {}
   };
 
-  const testarCanal = async (canal: "email" | "sms" | "whatsapp") => {
+  const testarCanal = async (canal: "email" | "whatsapp") => {
     if (canal === "email") {
       if (!resendApiKey || !emailRemetente) { setShowAviso("Preencha a Resend API Key e o Email Remetente antes de testar."); return; }
       if (!studioEmail) { setShowAviso("Preencha o Email do Estúdio em Configurações → Estúdio para receber o teste."); return; }
@@ -2001,7 +1999,7 @@ export default function CrmClient({
             body: JSON.stringify({ apiKey: resendApiKey, from: emailRemetente, to: cliente.email, subject: etapa.label + " — " + (studioName || "INK SYSTEM"), html })
           });
           enviados++;
-        } else if ((canal === "whatsapp" || canal === "sms") && zenviaApiKey && zenviaNumero && cliente.tel) {
+        } else if (canal === "whatsapp" && zenviaApiKey && zenviaNumero && cliente.tel) {
           await fetch("/api/zenvia", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -2129,7 +2127,7 @@ export default function CrmClient({
         const fluxo = fluxos.find((f: any) => f.etapa_slug === c.etapa && f.ativo);
         if (fluxo) {
           const texto = String(fluxo.mensagem || "").replace("{nome}", c.nome || "o cliente");
-          const canalLabel = fluxo.canal === "sms" ? "SMS" : fluxo.canal === "whatsapp" ? "WhatsApp" : "e-mail";
+          const canalLabel = fluxo.canal === "whatsapp" ? "WhatsApp" : "e-mail";
           const etapaLabel = stages.find(s => s.id === c.etapa)?.label || c.etapa;
           setShowAviso(`🔔 "${c.nome}" entrou em "${etapaLabel}" — receberia agora este ${canalLabel}:\n\n"${texto}"`);
         }
@@ -2939,7 +2937,7 @@ export default function CrmClient({
   };
 
   // E-mail do dia 0 da régua de pós-venda de piercing — disparado na hora em que a solicitação é concluída.
-  // Os dias 1/7/15/30 (e o SMS do dia 37) rodam pelo cron do servidor, não por aqui.
+  // Os dias 1/7/15/30 rodam pelo cron do servidor, não por aqui.
   const enviarEmailPosVendaPiercingDia0 = async (cid: number) => {
     const cliente = clients.find(c => c.id === cid);
     if (!resendApiKey || !emailRemetente || !cliente?.email) return;
@@ -3325,7 +3323,6 @@ export default function CrmClient({
     const dataHora = agora.toLocaleDateString("pt-BR");
     const horaStr = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     let emailOk = 0;
-    let smsOk = 0;
     for (const cliente of clientesAlvo) {
       if (cliente.email && resendApiKey && emailRemetente) {
         try {
@@ -3343,31 +3340,12 @@ export default function CrmClient({
           emailOk++;
         } catch {}
       }
-      if (cliente.tel && zenviaApiKey && zenviaNumero) {
-        try {
-          const smsBody = mensagem.slice(0, 160);
-          await fetch("/api/zenvia", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              from: zenviaNumero,
-              to: cliente.tel,
-              text: smsBody
-            })
-          });
-          smsOk++;
-        } catch {}
-      }
     }
     const novoItem = { data: dataHora, hora: horaStr, segmento: segmentoLabel, destinatarios: clientesAlvo.length, preview: mensagem.slice(0, 60) };
     setDisparosHist(p => [novoItem, ...p.slice(0, 19)]);
     const emailCount = clientesAlvo.filter(c => c.email).length;
-    const smsCount = clientesAlvo.filter(c => c.tel).length;
     if (emailCount > 0) {
       try { await sb.from("historico").insert({ data: dataHora, hora: horaStr, acao: "Disparo Email — " + segmentoLabel + " — " + emailCount + " destinatários", user_id: userId }); } catch {}
-    }
-    if (smsCount > 0) {
-      try { await sb.from("historico").insert({ data: dataHora, hora: horaStr, acao: "Disparo SMS — " + segmentoLabel + " — " + smsCount + " destinatários", user_id: userId }); } catch {}
     }
   };
 
@@ -3533,19 +3511,6 @@ export default function CrmClient({
           motivo: { type: "string", description: "Motivo da ausência: sem_aviso, cancelou_cima_hora, remarcou, problema_pessoal, outro" }
         },
         required: ["cliente_id", "cliente_nome", "data", "motivo"]
-      }
-    },
-    {
-      name: "disparar_sms",
-      description: "Envia um SMS para um cliente via Zenvia. Só funciona se as credenciais Zenvia estiverem configuradas em Configurações. Sempre mostrar o conteúdo da mensagem e pedir confirmação antes de enviar.",
-      input_schema: {
-        type: "object",
-        properties: {
-          cliente_tel: { type: "string", description: "Telefone do destinatário, apenas números com DDD (ex: 27999999999)" },
-          cliente_nome: { type: "string", description: "Nome do cliente para confirmação" },
-          mensagem: { type: "string", description: "Texto do SMS. Máximo recomendado: 160 caracteres." }
-        },
-        required: ["cliente_tel", "cliente_nome", "mensagem"]
       }
     },
     {
@@ -3762,37 +3727,6 @@ export default function CrmClient({
           return "✅ Falta registrada para **" + params.cliente_nome + "** em " + params.data + ". Motivo: " + params.motivo + ". Total de faltas: **" + novasFaltas + "**.";
         } catch {
           return "❌ Erro ao registrar falta.";
-        }
-      }
-      if (tool === "disparar_sms") {
-        try {
-          if (!zenviaApiKey) {
-            return "❌ Credenciais Zenvia não configuradas. Acesse **Configurações → IA → SMS** para configurar.";
-          }
-          const smsResp = await fetch("/api/zenvia", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              from: zenviaNumero,
-              to: params.cliente_tel,
-              text: params.mensagem
-            })
-          });
-          if (!smsResp.ok) {
-            const errData = await smsResp.json().catch(() => ({}));
-            return "❌ Zenvia retornou erro " + smsResp.status + ": " + (errData.message || errData.error || JSON.stringify(errData));
-          }
-          try {
-            await sb.from("historico").insert({
-              data: dataStr,
-              hora: horaStr,
-              acao: (auraName || "IA") + " enviou SMS para " + params.cliente_nome + " (" + params.cliente_tel + ")",
-              user_id: userId
-            });
-          } catch {}
-          return "✅ SMS enviado para **" + params.cliente_nome + "** (" + params.cliente_tel + ").";
-        } catch (err: any) {
-          return "❌ Erro ao enviar SMS: " + (err?.message || "erro desconhecido") + ". Verifique as credenciais Zenvia em Configurações.";
         }
       }
       if (tool === "encaminhar_pdf") {
@@ -4045,10 +3979,6 @@ export default function CrmClient({
           else if (toolUseBlock.name === "registrar_falta") {
             const p2 = toolUseBlock.input;
             descricao = "Registrar falta de **" + p2.cliente_nome + "** em " + p2.data + " · motivo: " + p2.motivo;
-          }
-          else if (toolUseBlock.name === "disparar_sms") {
-            const p2 = toolUseBlock.input;
-            descricao = "Enviar SMS para **" + p2.cliente_nome + "** (" + p2.cliente_tel + "):\n" + p2.mensagem;
           }
           else if (toolUseBlock.name === "encaminhar_pdf") {
             descricao = "Encaminhar PDF para **" + p2.destinatario_nome + "** (" + p2.destinatario_email + ")\nAssunto: " + p2.assunto;
@@ -4323,7 +4253,6 @@ export default function CrmClient({
         const { data: cli } = await sb.from("clientes").select("disparos_enviados").eq("id", ev.cliente_id).single();
         oldDisparos = cli?.disparos_enviados || {};
         const novo: any = { ...oldDisparos };
-        delete novo["__sms_d0__" + ev.id];
         delete novo["__confirmacao_d1__" + ev.id];
         Object.keys(novo).forEach(k => { if (k.startsWith("fluxo__")) delete novo[k]; });
         await sb.from("clientes").update({ disparos_enviados: novo }).eq("id", ev.cliente_id);
@@ -4825,7 +4754,7 @@ export default function CrmClient({
                   </div>
                 </div>
                 <div className="ff"><label className="fl">E-mail de acesso ao sistema</label><input className="fi" type="email" placeholder="email@exemplo.com" value={artForm.email} onChange={e => setArtForm({ ...artForm, email: e.target.value.toLowerCase() })} /></div>
-                <div className="ff"><label className="fl">Telefone / WhatsApp (recebe SMS de lembrete de sessão)</label><input className="fi" placeholder="(99) 99999-9999" value={artForm.tel} onChange={e => setArtForm({ ...artForm, tel: maskTel(e.target.value) })} /></div>
+                <div className="ff"><label className="fl">Telefone / WhatsApp</label><input className="fi" placeholder="(99) 99999-9999" value={artForm.tel} onChange={e => setArtForm({ ...artForm, tel: maskTel(e.target.value) })} /></div>
                 <div className="ff"><label className="fl">Instagram</label><input className="fi" placeholder="@perfil" value={artForm.insta} onChange={e => { const v = e.target.value; setArtForm({ ...artForm, insta: v && !v.startsWith("@") ? "@" + v : v }); }} /></div>
                 <div className="ff"><DateScroller label="Aniversário" anos="passado" value={artForm.nascimento} onChange={v => setArtForm({ ...artForm, nascimento: v })} /></div>
                 <div className="ff"><label className="fl">Cor de identificação (aparece na agenda e no pipeline)</label><ColorPicker value={artForm.cor} onChange={cor => setArtForm({ ...artForm, cor })} /></div>
@@ -5231,7 +5160,7 @@ export default function CrmClient({
                         : null;
                       const disparosC = (c as any).disparos_enviados || {};
                       const qtdDisparosC = Object.keys(disparosC).length;
-                      const temFluxoEventoBadge = !!evAtualBadge && (!!disparosC["__confirmacao_d1__" + evAtualBadge.id] || !!disparosC["__sms_d0__" + evAtualBadge.id]);
+                      const temFluxoEventoBadge = !!evAtualBadge && !!disparosC["__confirmacao_d1__" + evAtualBadge.id];
                       const temFluxoBadge = temFluxoEventoBadge || qtdDisparosC > 0;
                       const anivHoje = isAniversHoje((c as any).nascimento || "");
                       const eMenorCard = isMenor((c as any).nascimento || "");
@@ -5320,10 +5249,8 @@ export default function CrmClient({
                               {temFluxoBadge && (() => {
                                 if (temFluxoEventoBadge) {
                                   const d1Enviado = !!disparosC["__confirmacao_d1__" + evAtualBadge.id];
-                                  const d0Enviado = !!disparosC["__sms_d0__" + evAtualBadge.id];
                                   const partes = [];
                                   if (d1Enviado) partes.push("Lembrete D-1");
-                                  if (d0Enviado) partes.push("SMS do dia");
                                   return <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 3, background: "rgba(74,158,191,.15)", color: "var(--ab)", border: "1px solid rgba(74,158,191,.3)" }}>📨 {partes.join(" + ")} enviado{partes.length > 1 ? "s" : ""}</span>;
                                 }
                                 return <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 3, background: "rgba(74,158,191,.15)", color: "var(--ab)", border: "1px solid rgba(74,158,191,.3)" }}>📨 {qtdDisparosC} {qtdDisparosC === 1 ? "envio" : "envios"}</span>;
@@ -5362,9 +5289,6 @@ export default function CrmClient({
                   const html = "<div style='font-family:Arial,sans-serif;font-size:14px;line-height:1.8;color:#222;max-width:600px'>" + msg.replace(/\n/g, "<br>") + "</div>";
                   const r = await fetch("/api/resend", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ apiKey: resendApiKey, from: (nomeRemetente || studioName || "INK SYSTEM") + " <" + emailRemetente + ">", to: c.email, subject: "Mensagem de " + (studioName || "INK SYSTEM"), html }) });
                   if (r.ok) ok++;
-                } else if (disparoMassa!.canal === "sms" && c.tel && zenviaApiKey && zenviaNumero) {
-                  const r = await fetch("/api/zenvia", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ from: zenviaNumero, to: c.tel, text: msg, canal: "sms" }) });
-                  if (r.ok) ok++;
                 }
               } catch {}
             }
@@ -5402,7 +5326,7 @@ export default function CrmClient({
                   ) : disparoMassa.fase === "confirm" ? (
                     <>
                       <div style={{ fontSize: 13, color: "var(--tx)", lineHeight: 1.6 }}>
-                        Tem certeza que deseja enviar <strong>{disparoMassa.canal === "email" ? "e-mail" : "SMS"}</strong> para <strong>{selIds.size} cliente(s)</strong>? Esta ação não pode ser desfeita.
+                        Tem certeza que deseja enviar <strong>e-mail</strong> para <strong>{selIds.size} cliente(s)</strong>? Esta ação não pode ser desfeita.
                       </div>
                       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                         <button className="btn-c" onClick={() => setDisparoMassa(d => d ? { ...d, fase: "compose" } : d)}>Voltar</button>
@@ -5418,10 +5342,6 @@ export default function CrmClient({
                         <div style={{ fontSize: 11, color: "var(--tx3)", marginBottom: 6 }}>Canal</div>
                         <div style={{ display: "flex", gap: 8 }}>
                           <button className={"fb" + (disparoMassa.canal === "email" ? " on" : "")} onClick={() => setDisparoMassa(d => d ? { ...d, canal: "email" } : d)}>✉ E-mail</button>
-                          <button className={"fb" + (disparoMassa.canal === "sms" ? " on" : "")} style={{ opacity: (zenviaApiKey && canaisHabilitados.sms) ? 1 : 0.4, cursor: (zenviaApiKey && canaisHabilitados.sms) ? "pointer" : "not-allowed" }}
-                            onClick={() => { if (zenviaApiKey && canaisHabilitados.sms) setDisparoMassa(d => d ? { ...d, canal: "sms" } : d); }}>
-                            💬 SMS{!(zenviaApiKey && canaisHabilitados.sms) ? " (não configurado)" : ""}
-                          </button>
                         </div>
                       </div>
                       <div>
@@ -5503,7 +5423,7 @@ export default function CrmClient({
                         : null;
                       const disparosRow = (c as any).disparos_enviados || {};
                       const qtdDisparosRow = Object.keys(disparosRow).length;
-                      const temFluxoRow = (!!evAtualRow && (!!disparosRow["__confirmacao_d1__" + evAtualRow.id] || !!disparosRow["__sms_d0__" + evAtualRow.id])) || qtdDisparosRow > 0;
+                      const temFluxoRow = (!!evAtualRow && !!disparosRow["__confirmacao_d1__" + evAtualRow.id]) || qtdDisparosRow > 0;
                       const selecionado = selIds.has(c.id);
                       return (
                         <tr key={c.id} data-letter={c.nome[0]?.toUpperCase()}
@@ -7434,7 +7354,7 @@ export default function CrmClient({
                 <div style={{ fontSize: 12, fontWeight: 600, color: "var(--tx)", marginBottom: 4 }}>Canais habilitados</div>
                 <div style={{ fontSize: 11, color: "var(--tx3)", marginBottom: 10 }}>Status definido por teste real, em Configurações → IA. O canal usado em cada mensagem é escolhido na própria régua.</div>
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                  {([["email", "E-mail"], ["whatsapp", "WhatsApp"], ["sms", "SMS"]] as const).map(([ch, label]) => {
+                  {([["email", "E-mail"], ["whatsapp", "WhatsApp"]] as const).map(([ch, label]) => {
                     const testado = canaisHabilitados[ch] === true;
                     return (
                       <div key={ch}
@@ -7455,7 +7375,7 @@ export default function CrmClient({
                   <div onClick={e => e.stopPropagation()} style={{ background: "var(--dk2)", border: "1px solid var(--br)", borderRadius: 12, width: "min(380px, 90vw)", padding: "24px 24px 20px", display: "flex", flexDirection: "column", gap: 14, animation: "slideInRight .25s ease" }}>
                     <div style={{ fontSize: 15, fontWeight: 700, color: "var(--gold)", fontFamily: "'Cormorant Garamond',serif" }}>Você recebeu a mensagem de teste?</div>
                     <div style={{ fontSize: 13, color: "var(--tx)", lineHeight: 1.6 }}>
-                      Enviamos uma mensagem de teste via <strong>{testeCanalEnviado.canal === "email" ? "E-mail" : testeCanalEnviado.canal === "sms" ? "SMS" : "WhatsApp"}</strong> para <strong>{testeCanalEnviado.destino}</strong>. Confirme se ela chegou antes de marcar o canal como aprovado.
+                      Enviamos uma mensagem de teste via <strong>{testeCanalEnviado.canal === "email" ? "E-mail" : "WhatsApp"}</strong> para <strong>{testeCanalEnviado.destino}</strong>. Confirme se ela chegou antes de marcar o canal como aprovado.
                     </div>
                     <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                       <button className="btn-c" onClick={() => confirmarRecebimentoTeste(false)}>Não recebi</button>
@@ -7556,7 +7476,7 @@ export default function CrmClient({
                   setFluxoEditLocal(novaEtapa);
                   setFluxoSlugAberto(slug);
                 };
-                const CANAIS_OPT = [{ v: "email", l: "E-mail" }, { v: "sms", l: "SMS" }, { v: "whatsapp", l: "WhatsApp" }, { v: "ambos", l: "E-mail + SMS" }];
+                const CANAIS_OPT = [{ v: "email", l: "E-mail" }, { v: "whatsapp", l: "WhatsApp" }];
                 return (
                   <div style={{ padding: "8px 16px 16px" }}>
                     <div style={{ fontSize: 12, color: "var(--tx3)", marginBottom: 14 }}>
@@ -7640,12 +7560,10 @@ export default function CrmClient({
                                 if (sid === "cons_agendada") return (<>
                                   <CardSistema ativo={fluxoToggles.confirma_consulta} toggleKey="confirma_consulta" label="E-mail de confirmação de consulta" gatilho="Imediato — ao agendar a consulta" preview={"Assunto: Sua consulta está agendada, {nome} ✦\n\nOlá, {nome}! Que bom ter você aqui. Sua consulta na {estudio} foi agendada com sucesso — esse é o primeiro passo do seu projeto de tatuagem.\n\n📅 Data · 🕐 Horário · ✦ Profissional · 📍 Local\n\nNa consulta vamos: entender sua ideia, definir estilo/tamanho/posicionamento, tirar dúvidas e apresentar orçamento personalizado."} />
                                   <CardSistema ativo={fluxoToggles.confirmacao_presenca} toggleKey="confirmacao_presenca" label="Lembrete D-1 de consulta" gatilho="Um dia antes — evento na agenda amanhã" preview={"Assunto: Sua consulta é amanhã — {estudio}\n\nOlá, {nome}! Sua consulta está marcada para amanhã.\n\nEstamos ansiosos para conhecer a sua ideia — mal podemos esperar!\n\nConfirme sua presença aqui: [link]\n\nLembrete carinhoso: faltas sem aviso podem resultar em restrições futuras de agendamento."} />
-                                  <CardSistema ativo={fluxoToggles.sms_consulta} toggleKey="sms_consulta" label="SMS no dia da consulta — cliente e artista" gatilho="No dia — manhã cedo (cliente + artista vinculado)" preview={"Cliente: Olá, {nome}! Hoje é o dia da sua consulta na {estudio}. Estamos ansiosos para ouvir a sua ideia e apresentar o projeto da sua nova arte que será eternizada na sua pele. Te esperamos às {hora} em: {endereco}. Até logo! — {estudio}\n\nArtista: INK SYSTEM: Você tem uma consulta hoje com {nome} às {hora}. Projeto solicitado: {solicitacao}. Confira sua agenda e prepare-se."} />
                                 </>);
                                 if (sid === "sessao_agend") return (<>
                                   <CardSistema ativo={fluxoToggles.confirma_sessao} toggleKey="confirma_sessao" label="E-mail de confirmação de sessão" gatilho="Imediato — ao agendar a sessão" preview={"Assunto: Sua sessão está confirmada, {nome} ✦\n\nOlá, {nome}! Sua sessão na {estudio} está marcada e a gente já está animado com o que vem por aí.\n\n📅 Data · 🕐 Horário · ✦ Profissional · 📍 Local\n\nAntes da sua sessão: alimente-se bem, evite álcool 24h antes, durma bem, hidrate a pele da região."} />
                                   <CardSistema ativo={fluxoToggles.confirmacao_presenca} toggleKey="confirmacao_presenca" label="Lembrete D-1 de sessão" gatilho="Um dia antes — evento na agenda amanhã" preview={"Assunto: Sua sessão é amanhã — {estudio}\n\nOlá, {nome}! A arte está pronta, o artista está animado — mal podemos esperar para tatuar você!\n\nConfirme sua presença: [link]\n\nLembrete carinhoso: faltas sem aviso são registradas e podem resultar em restrições futuras."} />
-                                  <CardSistema ativo={fluxoToggles.sms_sessao} toggleKey="sms_sessao" label="SMS no dia da sessão — cliente e artista" gatilho="No dia — manhã cedo (cliente + artista vinculado)" preview={"Cliente: Olá, {nome}! Hoje é o dia da sua sessão de tatuagem na {estudio}. A arte está pronta e o artista está animado para tatuar você! Te esperamos às {hora} em: {endereco}. Pontualidade é muito importante para nós. Até logo! — {estudio}\n\nArtista: INK SYSTEM: Você tem uma sessão de tatuagem hoje com {nome} às {hora}. Projeto solicitado: {solicitacao}. Prepare tudo para a arte de hoje."} />
                                 </>);
                                 if (sid === "pos_venda" || sid === "tatuado") return (<>
                                   <CardSistema ativo={fluxoToggles.nps} toggleKey="nps" label="Avaliação NPS pós-sessão" gatilho="D+1 — após entrada no Pós-venda" preview={"Assunto: Como foi sua sessão, {nome}?\n\nFoi uma alegria ter você no estúdio. Como você avalia sua experiência? [escala 0–10]\n\nNota e comentário salvos na ficha automaticamente."} />
@@ -8258,7 +8176,7 @@ export default function CrmClient({
                   setCampSazEditLocal(novaEtapa);
                   setCampSazSlugAberto(slug);
                 };
-                const CANAIS_OPT_SAZ = [{ v: "email", l: "E-mail" }, { v: "sms", l: "SMS" }];
+                const CANAIS_OPT_SAZ = [{ v: "email", l: "E-mail" }];
                 return (
                   <div style={{ padding: "8px 16px 16px" }}>
                     <div style={{ fontSize: 12, color: "var(--tx3)", marginBottom: 14 }}>
@@ -10046,7 +9964,6 @@ export default function CrmClient({
                   const disparos = (sc as any).disparos_enviados || {};
                   const LABELS: [string, string][] = [
                     ["__confirmacao_d1__", "Lembrete D-1 de sessão/consulta"],
-                    ["__sms_d0__", "SMS do dia da sessão/consulta"],
                     ["__avaliacao_google__", "Avaliação Google"],
                     ["__aguard_prox_sessao_d60__", "Recontato D+60 (aguardando próxima sessão)"],
                     ["__precisa_remarcar_email__", "E-mail — Precisa Remarcar"],

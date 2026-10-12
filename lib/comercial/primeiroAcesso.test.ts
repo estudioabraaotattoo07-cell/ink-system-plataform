@@ -15,10 +15,10 @@ test("primeiro acesso nasce da identidade autenticada e é idempotente", () => {
   assert.match(migracao, /'teste_iniciado:' \|\| v_conta\.id::text/);
 });
 
-test("ambiente individual e licença temporária não liberam SMS", () => {
+test("ambiente individual e licença temporária de teste", () => {
   assert.match(migracao, /insert into public\.ink_clientes/);
   assert.match(migracao, /insert into public\.licencas/);
-  assert.match(migracao, /false, 30, 0, v_conta\.id/);
+  assert.match(migracao, /email_incluido_mes = 30/);
   assert.match(migracao, /plano = '1\.0-teste'/);
 });
 

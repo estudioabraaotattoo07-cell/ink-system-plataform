@@ -26,7 +26,7 @@ test("TESTE_01 informa início, onboarding e canais disponíveis sem expor a fra
   assert.match(fonte, /Seu teste de 7 dias no Ink System começou/);
   assert.match(fonte, /ambiente individual/);
   assert.match(fonte, /disparos de e-mail são limitados/);
-  assert.match(fonte, /SMS e WhatsApp não fazem parte/);
+  assert.match(fonte, /WhatsApp não faz parte/);
   assert.doesNotMatch(fonte, /Durante o teste[^`]*30 e-mails/);
   assert.match(fonte, /botao\("Assinar agora", assinaturaUrl, true\)/);
 });

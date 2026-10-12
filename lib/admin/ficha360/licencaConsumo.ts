@@ -3,11 +3,10 @@ import type { AlertaFicha360, LicencaConsumoResumo360, OrigemVinculo360 } from "
 export type LicencaFonteConsumo360 = {
   id: string; conta_id: string | null; user_id: string | null; plano: string | null; status: string;
   data_inicio: string | null; data_vencimento: string | null; franquia_ilimitada: boolean | null;
-  email_incluido_mes: number | null; sms_incluido_mes: number | null;
+  email_incluido_mes: number | null;
 };
 export type ConsumoMensalFonte360 = {
-  user_id: string; ano_mes: string; emails_enviados: number; emails_reservados: number;
-  sms_enviados: number; sms_reservados: number; emails_comprados: number; sms_comprados: number;
+  user_id: string; ano_mes: string; emails_enviados: number; emails_reservados: number; emails_comprados: number;
 };
 
 const ativo = (valor: unknown) => typeof valor === "string" && valor.trim().toLowerCase() === "ativo";
@@ -39,20 +38,19 @@ export function construirLicencaConsumoDiagnostico(entrada: {
   const consumo = unica ? {
     estado: "observado" as const, linhasEncontradas: 1,
     emailsEnviados: quantidade(unica.emails_enviados), emailsReservados: quantidade(unica.emails_reservados),
-    smsEnviados: quantidade(unica.sms_enviados), smsReservados: quantidade(unica.sms_reservados),
   } : null;
-  if (unica && (unica.emails_comprados || unica.sms_comprados)) alertas.push({ codigo: "EXTRAS_SEMANTICA_INDETERMINADA", severidade: "atencao", entidade: "consumo", mensagem: "Existem extras observados no mês, mas sua semântica de saldo não está certificada." });
+  if (unica && unica.emails_comprados) alertas.push({ codigo: "EXTRAS_SEMANTICA_INDETERMINADA", severidade: "atencao", entidade: "consumo", mensagem: "Existem extras observados no mês, mas sua semântica de saldo não está certificada." });
 
   const ehTrial = Boolean(trial);
   const franquia = ehTrial
-    ? { natureza: "trial_total" as const, emailsIncluidos: trial!.limiteEmails, smsIncluidos: 0, renovacaoMensalComprovada: false as const }
+    ? { natureza: "trial_total" as const, emailsIncluidos: trial!.limiteEmails, renovacaoMensalComprovada: false as const }
     : licenca
-      ? { natureza: "configuracao_licenca_paga" as const, emailsIncluidos: licenca.email_incluido_mes, smsIncluidos: licenca.sms_incluido_mes, renovacaoMensalComprovada: false as const }
-      : { natureza: "indeterminada" as const, emailsIncluidos: null, smsIncluidos: null, renovacaoMensalComprovada: false as const };
-  if (!ehTrial && licenca && (licenca.email_incluido_mes !== null || licenca.sms_incluido_mes !== null)) alertas.push({ codigo: "FRANQUIA_RENOVACAO_NAO_COMPROVADA", severidade: "informacao", entidade: "licenca", mensagem: "A franquia paga configurada é informativa; sua renovação mensal não está comprovada." });
+      ? { natureza: "configuracao_licenca_paga" as const, emailsIncluidos: licenca.email_incluido_mes, renovacaoMensalComprovada: false as const }
+      : { natureza: "indeterminada" as const, emailsIncluidos: null, renovacaoMensalComprovada: false as const };
+  if (!ehTrial && licenca && licenca.email_incluido_mes !== null) alertas.push({ codigo: "FRANQUIA_RENOVACAO_NAO_COMPROVADA", severidade: "informacao", entidade: "licenca", mensagem: "A franquia paga configurada é informativa; sua renovação mensal não está comprovada." });
 
   // Registros mensais legados não comprovam disponibilidade do ciclo comercial.
-  const disponibilidade: LicencaConsumoResumo360["disponibilidade"] = { estado: "indeterminada", emailsRestantesFranquiaBase: null, smsRestantesFranquiaBase: null };
+  const disponibilidade: LicencaConsumoResumo360["disponibilidade"] = { estado: "indeterminada", emailsRestantesFranquiaBase: null };
 
   const permitidoDerivado = clienteAtivo === null || licencaAtiva === null || (trial && trialVencido === null) ? null : clienteAtivo && licencaAtiva && trialVencido !== true;
   return { resumo: {
@@ -60,7 +58,7 @@ export function construirLicencaConsumoDiagnostico(entrada: {
     licenca: licenca ? { id: licenca.id, plano: licenca.plano, status: licenca.status, dataInicio: licenca.data_inicio, dataVencimento: licenca.data_vencimento, origemVinculo: entrada.origemLicenca, franquiaIlimitada: licenca.franquia_ilimitada } : null,
     acesso: { clienteAtivo, licencaAtiva, trialVencido, permitidoDerivado, natureza: "diagnostico_nao_autoritativo" },
     franquia, consumo,
-    extras: { estado: "indeterminado", emailsCompradosObservados: unica ? quantidade(unica.emails_comprados) : null, smsCompradosObservados: unica ? quantidade(unica.sms_comprados) : null, incluidosNaDisponibilidade: false },
+    extras: { estado: "indeterminado", emailsCompradosObservados: unica ? quantidade(unica.emails_comprados) : null, incluidosNaDisponibilidade: false },
     disponibilidade, falhasRecentes: quantidade(entrada.falhasRecentes),
   }, alertas };
 }

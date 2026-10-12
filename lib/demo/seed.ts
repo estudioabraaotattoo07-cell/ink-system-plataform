@@ -65,7 +65,7 @@ export function buildSeed(artistaId1: string, artistaId2: string) {
       mensagem: "Olá {nome}! Sua consulta foi confirmada. Você vai receber um lembrete um dia antes." },
     { id: "fx-3", user_id: DEMO_USER_ID, etapa_slug: "sessao_agend", dias: 0, canal: "email", ativo: true, ordem: 1,
       mensagem: "Olá {nome}! Sua sessão de tatuagem foi agendada com sucesso. Chegue com 15 minutos de antecedência." },
-    { id: "fx-4", user_id: DEMO_USER_ID, etapa_slug: "aguard_agend", dias: 0, canal: "sms", ativo: true, ordem: 1,
+    { id: "fx-4", user_id: DEMO_USER_ID, etapa_slug: "aguard_agend", dias: 0, canal: "email", ativo: true, ordem: 1,
       mensagem: "Oi {nome}, ainda estamos combinando a data da sua próxima sessão. Já te avisamos assim que fechar!" },
     { id: "fx-5", user_id: DEMO_USER_ID, etapa_slug: "aguard_1a_sessao", dias: 0, canal: "email", ativo: true, ordem: 1,
       mensagem: "Olá {nome}! Estamos organizando os detalhes da sua primeira sessão, em breve entramos em contato." },

@@ -44,7 +44,7 @@ test("falha só entra por user_id coerente e falha recente orienta revisão", ()
   assert.equal(resultado.relacionamento.falhasOperacionais.itens.length, 1); assert.equal(resultado.relacionamento.resumo.existeFalhaRecente, true); assert.equal(resultado.acao, "revisar_falha"); assert.ok(resultado.alertas.some((a) => a.codigo === "FALHA_OPERACIONAL_RECENTE"));
 });
 test("falha com Auth divergente é descartada e divergência prevalece", () => {
-  const entrada = base(); entrada.falhas = [{ id: "f1", user_id: OUTRO, canal: "sms", motivo: "Falha", criado_em: "2026-01-09" }];
+  const entrada = base(); entrada.falhas = [{ id: "f1", user_id: OUTRO, canal: "email", motivo: "Falha", criado_em: "2026-01-09" }];
   const resultado = construirRelacionamento360(entrada);
   assert.equal(resultado.relacionamento.falhasOperacionais.itens.length, 0); assert.equal(resultado.acao, null); assert.ok(resultado.alertas.some((a) => a.codigo === "FALHA_AUTH_DIVERGENTE" && a.severidade === "critico"));
 });

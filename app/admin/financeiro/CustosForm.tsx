@@ -46,7 +46,7 @@ export default function CustosForm({ custos }: { custos: Custo[] }) {
       </div>
       <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
         <input
-          placeholder="Ex: Zenvia (SMS)"
+          placeholder="Ex: Resend (e-mail)"
           value={nome}
           onChange={(e) => setNome(e.target.value)}
           style={{ flex: 1, background: "#0A0A0A", border: "1px solid rgba(201,168,76,0.18)", borderRadius: 6, color: "#E8E2D9", fontSize: 12, padding: "6px 10px" }}

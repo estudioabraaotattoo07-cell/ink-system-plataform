@@ -35,7 +35,7 @@ type Opcoes = { cfg?: any; cli?: any; agenda?: any[]; overrides?: any[]; ink?: a
 
 function fixtures({ cfg = {}, cli = {}, agenda, overrides = [], ink = [{ auth_user_id: "u1", plano: "1.0", email: "cliente@x.com" }] }: Opcoes = {}) {
   return {
-    configuracoes: [{ user_id: "u1", studio_name: "Estudio", resend_api_key: "re_fake", email_remetente: "Estudio <a@b.com>", canais_habilitados: { email: true, sms: false, whatsapp: false }, fluxo_confirmacao_presenca_ativa: true, ...cfg }],
+    configuracoes: [{ user_id: "u1", studio_name: "Estudio", resend_api_key: "re_fake", email_remetente: "Estudio <a@b.com>", canais_habilitados: { email: true, whatsapp: false }, fluxo_confirmacao_presenca_ativa: true, ...cfg }],
     ink_clientes: ink,
     mensagens_sistema_override: overrides,
     clientes: [
@@ -136,14 +136,13 @@ const CENARIOS: Array<[string, Opcoes]> = [
   ["dedup com etapa_desde DIFERENTE (cliente re-movido)", { cli: { disparos_enviados: { "__confirma_sessao__2020-01-01T00:00:00.000Z": "x" } } }],
   ["dedup PRESENTE (o novo fluxo enviou de fato)", { cli: { disparos_enviados: { ["__confirma_sessao__" + ETAPA_DESDE]: "x" } } }],
   ["override canal='whatsapp' (o fluxo novo não envia: canal != e-mail)", { overrides: [{ user_id: "u1", chave: "confirmacao_sessao", ativo: true, canal: "whatsapp", mensagem: "x" }] }],
-  ["canais_habilitados.email = false", { cfg: { canais_habilitados: { email: false, sms: false, whatsapp: false } } }],
+  ["canais_habilitados.email = false", { cfg: { canais_habilitados: { email: false, whatsapp: false } } }],
   ["override ativo = false", { overrides: [{ user_id: "u1", chave: "confirmacao_sessao", ativo: false, canal: "email", mensagem: "x" }] }],
   ["fluxo_confirma_sessao_ativa = false", { cfg: { fluxo_confirma_sessao_ativa: false } }],
   ["toggles explicitamente LIGADOS + override e-mail ativo (nada disso reabilita o legado)", { cfg: { fluxo_confirma_sessao_ativa: true, fluxo_confirma_consulta_ativa: true }, overrides: [{ user_id: "u1", chave: "confirmacao_sessao", ativo: true, canal: "email", mensagem: "Olá {nome}" }] }],
   ["evento futuro CANCELADO", { agenda: [{ id: 1, cliente_id: "cA", user_id: "u1", data: dia(7), hora: "10:00", status: "cancelado", tipo: "sess_ana" }] }],
   ["SÉRIE RECORRENTE: 4 sessões futuras, cliente recém-movido, sem chave", { agenda: [7, 14, 21, 28].map((d, i) => ({ id: i + 1, cliente_id: "cA", user_id: "u1", data: dia(d), hora: "10:00", status: "agendado", tipo: "sess_ana" })) }],
   ["conta sem linha em ink_clientes (sem gate de plano)", { ink: [] }],
-  ["cliente só com telefone + Zenvia + override canal='sms' (o legado enviava SMS)", { cfg: { zenvia_api_key: "z", zenvia_numero: "551100000000" }, cli: { email: "", tel: "27999990000" }, overrides: [{ user_id: "u1", chave: "confirmacao_sessao", ativo: true, canal: "sms", mensagem: "x" }] }],
   ["cliente com e-mail E telefone, Zenvia configurada, canal padrão", { cfg: { zenvia_api_key: "z", zenvia_numero: "551100000000" }, cli: { tel: "27999990000" } }],
 ];
 
@@ -209,9 +208,9 @@ test("ESTRUTURA: constante CONFIRMACAO_LEGADA_ATIVA = false e o gate está exata
   assert.equal(src.split(gate).length - 1, 1, "um único gate, no if do bloco");
   const iBloco = src.indexOf("// ── E-MAIL DE CONFIRMAÇÃO IMEDIATA");
   const iGate = src.indexOf(gate);
-  const iSms = src.indexOf("// ── SMS D-0");
-  assert.ok(iBloco !== -1 && iGate > iBloco && iGate < iSms, "o gate fica entre o cabeçalho do bloco e o SMS D-0 (que segue ativo)");
-  const bloco = src.slice(iBloco, iSms);
+  const iFim = src.indexOf("// ── LEMBRETE D-1");
+  assert.ok(iBloco !== -1 && iGate > iBloco && iGate < iFim, "o gate fica entre o cabeçalho do bloco e o bloco seguinte (D-1 legado)");
+  const bloco = src.slice(iBloco, iFim);
   assert.match(bloco, /está confirmada/, "código do bloco preservado nesta rodada");
   assert.match(bloco, /__confirma_consulta__/);
   assert.match(bloco, /DESATIVADO \(CONFIRMACAO_LEGADA_ATIVA = false/);
@@ -224,7 +223,6 @@ test("ESTRUTURA: só ESSE bloco foi desligado -- D-1 legado continua desligado e
     "// ── AGUARDANDO AGENDAMENTO",
     "// ── PÓS-VENDA → REENGAJAMENTO",
     "// ── PRECISA REMARCAR",
-    "// ── SMS D-0",
     "fluxo_nps_ativa",
     "__aguard_1a_sessao_bv__",
     "__aguard_1a_sessao_d30__",
@@ -233,9 +231,8 @@ test("ESTRUTURA: só ESSE bloco foi desligado -- D-1 legado continua desligado e
   ]) assert.ok(src.includes(marcador), `bloco/marcador preservado: ${marcador}`);
   // o gate novo aparece SÓ no bloco de confirmação: nenhum outro `if (` do arquivo depende da constante
   assert.equal((src.match(/if \(CONFIRMACAO_LEGADA_ATIVA/g) || []).length, 1);
-  // o SMS D-0 e o D-1 legado continuam com o gate que já tinham
+  // o D-1 legado continua com o gate que já tinha
   assert.ok(src.includes("if (D1_LEGADO_ATIVO && temDisparosPrata"));
-  assert.ok(src.includes("if (temDisparosPrata && cfg.zenvia_api_key && cfg.zenvia_numero && (cliente.etapa === \"sessao_agend\" || cliente.etapa === \"cons_agendada\"))"), "SMS D-0 (aviso do dia) intacto");
 });
 
 test("ESTRUTURA: o cron não foi desligado -- vercel.json mantém o agendamento e a rota continua chamando o motor e a fila comercial", () => {

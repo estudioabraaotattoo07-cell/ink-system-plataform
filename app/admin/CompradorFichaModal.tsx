@@ -108,7 +108,7 @@ export default function CompradorFichaModal({ comprador, onClose }: { comprador:
 
           {aba === "relacionamento" && <section>
             <h3 style={{ color: "#C9A84C", fontSize: 12, letterSpacing: ".08em", textTransform: "uppercase" }}>Mensagens da conta</h3>
-            <p style={{ color: "#716A61", fontSize: 11, marginTop: 5 }}>Registro de e-mails, SMS e WhatsApp programados ou processados pelo Ink System.</p>
+            <p style={{ color: "#716A61", fontSize: 11, marginTop: 5 }}>Registro de e-mails e WhatsApp programados ou processados pelo Ink System.</p>
             {comprador.mensagens.length === 0 ? (
               <div style={{ color: "#716A61", fontSize: 12, marginTop: 14 }}>Nenhuma mensagem registrada ainda.</div>
             ) : comprador.mensagens.map((mensagem) => (
