@@ -489,9 +489,8 @@ const DEFAULT_STAGES = [
   { id: "tatuado", label: "Sessão Realizada", color: "#27AE60", emoji: "✅" },
   { id: "pos_venda", label: "Pós-venda", color: "#E67E22", emoji: "💬" },
   { id: "pos_venda_piercing", label: "Pós-venda Piercing", color: "#D4527E", emoji: "💍" },
-  { id: "reengajamento", label: "Reengajamento", color: "#16A085", emoji: "💎" },
   { id: "lista_espera", label: "Lista de Espera", color: "#3498DB", emoji: "⏳" },
-  { id: "hibernacao", label: "Hibernação", color: "#666", emoji: "💤" },
+  { id: "hibernacao", label: "Reengajamento", color: "#666", emoji: "💎" },
   { id: "blacklist", label: "Blacklist", color: "#C0392B", emoji: "🚫" },
 ];
 
@@ -504,13 +503,12 @@ const STAGE_INFO: Record<string, string> = {
   tatuado: "Sessão concluída com sucesso. Agora é hora do pós-atendimento: acompanhe a cicatrização, peça feedback, solicite avaliação e mantenha o vínculo para futuras sessões ou indicações. Um cliente satisfeito é o melhor canal de aquisição.",
   aguard_1a_sessao: "Consulta concluída — cliente aguarda o agendamento da primeira sessão do projeto. O projeto foi alinhado, o artista está ciente. Entre em contato para marcar a data e não deixe o ímpeto esfriar.",
   aguard_prox_sessao: "Sessão parcial concluída — projeto em andamento com mais sessões previstas, mas sem data marcada ainda. Entre em contato para definir o próximo horário e manter o projeto em movimento.",
-  reengajamento: "Projeto encerrado. Cliente faz parte da base ativa — apto a retornar com um novo projeto. O sistema envia mensagens de reativação a cada 180 dias automaticamente. Foco em fidelização e indicações.",
   precisa_remarcar: "Cliente recusou a confirmação de presença ou sinalizou que precisa remarcar. Entre em contato imediatamente via WhatsApp para redefinir a data antes que o slot seja perdido.",
   aguard_agend: "Cliente que confirmou interesse em agendar mas ainda não tem data definida — seja por indisponibilidade de agenda, aguardo de orçamento ou outro motivo. Monitore e entre em contato assim que houver abertura. Não deixe esfriar.",
   pos_venda: "Clientes que passaram pela régua de pós-venda após a sessão. Foco em satisfação, cicatrização saudável e fidelização. Mantenha o relacionamento ativo: eles têm grande potencial para retornar e indicar novas pessoas.",
   pos_venda_piercing: "Cliente que acabou de fazer um piercing. Régua própria de acompanhamento de cicatrização (dias 0, 1, 7, 15 e 30) e garantia com retorno presencial obrigatório entre o 30º e o 37º dia. Fique de olho na foto enviada no dia 7 — se houver vermelhidão, inchaço ou secreção, o cliente já foi orientado a chamar no WhatsApp.",
   lista_espera: "Clientes que querem ser atendidos mas a agenda está sem disponibilidade no momento. Estão aguardando a vez. Contate assim que surgir uma abertura — eles já demonstraram comprometimento ao aceitar esperar.",
-  hibernacao: "Clientes inativos temporariamente: sem resposta, sem interesse imediato ou que pediram para ser contatados futuramente. A IA recontata automaticamente na data programada. Não descarte — muitos retornam quando o momento é certo.",
+  hibernacao: "Reengajamento: clientes que esgotaram o fluxo anterior sem nova atividade e recebem contatos de recuperação de longo prazo. A régua oficial (D+30, D+90 e D+180, depois a cada 180 dias) roda no motor do inq-saas. Sai daqui quem tem um atendimento (Consulta, Sessão, Retoque ou Piercing) agendado.",
   blacklist: "Clientes com ocorrências graves: faltas repetidas sem aviso, comportamento inadequado, inadimplência ou outros motivos que justifiquem a suspensão do atendimento. Registro para controle interno. Visível apenas pela equipe.",
 };
 
@@ -7492,7 +7490,7 @@ export default function CrmClient({
                         precisa_remarcar: 1,
                         aguard_prox_sessao: 1,
                         pos_venda: 2, tatuado: 2,
-                        reengajamento: 1,
+                        hibernacao: 1,
                       };
                       const totalSistema = sistemaCounts[sid] || 0;
                       const totalFluxos = etapasDesteSlug.length + totalSistema;
@@ -7579,8 +7577,8 @@ export default function CrmClient({
                                   <CardSistema ativo={fluxoToggles.agradecimento_1asessao} toggleKey="agradecimento_1asessao" label="E-mail de agradecimento pela consulta" gatilho="Imediato — ao entrar em Aguardando 1ª Sessão" preview={"Assunto: Obrigado pela sua visita, {nome}\n\nOlá, {nome}! Queremos te agradecer por ter vindo até a gente. Sua pontualidade e compromisso dizem muito sobre quem você é.\n\nSeu projeto está registrado com carinho. Daqui a 30 dias vamos entrar em contato para saber se já chegou a sua hora!\n\nRespeitoso abraço, {estudio}"} />
                                   <CardSistema ativo={fluxoToggles.recontato_d30} toggleKey="recontato_d30" label="E-mail de recontato D+30 — Sim / Não" gatilho="30 dias após entrar na etapa — repete a cada 30 dias enquanto clicar Não" preview={"Assunto: Já chegou a sua hora, {nome}?\n\nFaz 30 dias desde a sua consulta. Seu projeto continua guardado com o mesmo cuidado de sempre.\n\n{artista} criou algo pensado exclusivamente para você.\n\n[ Sim, quero agendar! ] → abre WhatsApp\n[ Ainda não ] → recontato em mais 30 dias"} />
                                 </>);
-                                if (sid === "reengajamento") return (
-                                  <CardSistema label="Reativação de clientes" gatilho="A cada 180 dias — cliente em Reengajamento" preview={"Olá, {nome}! Espero que sua arte esteja linda e bem cuidada. Se a próxima ideia já está nascendo, você sabe onde nos encontrar."} />
+                                if (sid === "hibernacao") return (
+                                  <CardSistema label="Régua de Reengajamento" gatilho="D+30 → D+90 → D+180 → a cada 180 dias — enquanto o cliente continuar elegível" preview={"Régua única e oficial, enviada pelo motor do inq-saas (INK SIGNATURE). Esta tela não cria nem edita disparos para esta etapa."} />
                                 );
                                 return null;
                               })()}
@@ -7613,14 +7611,6 @@ export default function CrmClient({
                                         </div>
                                       )}
                                     </div>
-                                    {stage.id === "reengajamento" && (
-                                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                        <input type="checkbox" id={"rep_" + fe.id} checked={!!(fluxoEditLocal?.repetir)} onChange={e => setFluxoEditLocal((p: any) => ({ ...p, repetir: e.target.checked }))} />
-                                        <label htmlFor={"rep_" + fe.id} style={{ fontSize: 12, color: "var(--tx2)" }}>Repetir a cada</label>
-                                        <input className="ef" type="number" min={30} style={{ width: 70 }} value={fluxoEditLocal?.repetir_intervalo_dias || 180} onChange={e => setFluxoEditLocal((p: any) => ({ ...p, repetir_intervalo_dias: parseInt(e.target.value) || 180 }))} />
-                                        <span style={{ fontSize: 12, color: "var(--tx3)" }}>dias</span>
-                                      </div>
-                                    )}
                                     <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                                       <button className="btn-c" onClick={() => { setFluxoEditandoId(null); setFluxoEditLocal(null); }}>Cancelar</button>
                                       <button className="btn-s" onClick={() => salvarFluxoEtapa(fluxoEditLocal)} disabled={fluxoSalvando}>{fluxoSalvando ? "Salvando..." : "Salvar"}</button>
@@ -7665,14 +7655,6 @@ export default function CrmClient({
                                     <div className="fil" style={{ marginBottom: 3 }}>Mensagem <span style={{ color: "var(--tx3)", fontWeight: 400 }}>(use {"{nome}"} e {"{estudio}"})</span></div>
                                     <textarea className="ef" rows={4} value={fluxoEditLocal?.mensagem || ""} onChange={e => setFluxoEditLocal((p: any) => ({ ...p, mensagem: e.target.value }))} style={{ resize: "vertical", width: "100%" }} />
                                   </div>
-                                  {stage.id === "reengajamento" && (
-                                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                      <input type="checkbox" id={"rep_new"} checked={!!(fluxoEditLocal?.repetir)} onChange={e => setFluxoEditLocal((p: any) => ({ ...p, repetir: e.target.checked }))} />
-                                      <label htmlFor="rep_new" style={{ fontSize: 12, color: "var(--tx2)" }}>Repetir a cada</label>
-                                      <input className="ef" type="number" min={30} style={{ width: 70 }} value={fluxoEditLocal?.repetir_intervalo_dias || 180} onChange={e => setFluxoEditLocal((p: any) => ({ ...p, repetir_intervalo_dias: parseInt(e.target.value) || 180 }))} />
-                                      <span style={{ fontSize: 12, color: "var(--tx3)" }}>dias</span>
-                                    </div>
-                                  )}
                                   <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                                     <button className="btn-c" onClick={() => { setFluxoEditandoId(null); setFluxoEditLocal(null); }}>Cancelar</button>
                                     <button className="btn-s" onClick={() => salvarFluxoEtapa(fluxoEditLocal)} disabled={fluxoSalvando}>{fluxoSalvando ? "Salvando..." : "Salvar"}</button>
@@ -11772,7 +11754,7 @@ export default function CrmClient({
                           <div style={{ fontSize: 11, color: "var(--tx3)", fontWeight: 600, marginBottom: 2 }}>O que acontece agora?</div>
                           {[
                             { destino: "aguard_1a_sessao", label: "🖊️ Aguardando 1ª Sessão", cor: "#F39C12", borda: "rgba(243,156,18,.35)", sessao: false },
-                            { destino: "hibernacao",       label: "💤 Hibernação",            cor: "#888",    borda: "rgba(102,102,102,.35)", sessao: false },
+                            { destino: "hibernacao",       label: "💎 Reengajamento",            cor: "#888",    borda: "rgba(102,102,102,.35)", sessao: false },
                             { destino: "aguard_1a_sessao", label: "📅 Agendar Sessão Agora", cor: "#27AE60", borda: "rgba(39,174,96,.35)",   sessao: true  },
                           ].map(op => (
                             <button key={op.label} onClick={async () => {
@@ -12036,7 +12018,7 @@ export default function CrmClient({
             <div onClick={e => e.stopPropagation()} style={{ background: "var(--dk2)", border: "1px solid rgba(230,126,34,.4)", borderRadius: 12, width: "min(460px, 92vw)", padding: "24px 24px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
               <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 18, fontWeight: 700, color: (confirmCancelarEvento as any).quem === "profissional" ? "#9B59B6" : "#E67E22" }}>{(confirmCancelarEvento as any).quem === "profissional" ? "⊘ Profissional Desmarcou" : "⊘ Cliente Desmarcou"}</div>
               <div style={{ fontSize: 13, color: "var(--tx2)", lineHeight: 1.6 }}>
-                {(confirmCancelarEvento as any).quem === "profissional" ? "O profissional desmarcou este evento." : "O cliente desmarcou este evento."} O cliente será movido para <strong style={{ color: "#888" }}>Hibernação</strong> e o motivo ficará registrado no histórico.
+                {(confirmCancelarEvento as any).quem === "profissional" ? "O profissional desmarcou este evento." : "O cliente desmarcou este evento."} O cliente será movido para <strong style={{ color: "#888" }}>Reengajamento</strong> e o motivo ficará registrado no histórico.
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 11, color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".06em" }}>Motivo do cancelamento *</label>
@@ -12108,7 +12090,7 @@ export default function CrmClient({
                         <div style={{ fontSize: 11, color: "var(--tx3)", fontWeight: 600 }}>Consulta realizada — o que acontece agora?</div>
                         {[
                           { destino: "aguard_1a_sessao", label: "🖊️ Aguardando 1ª Sessão", cor: "#F39C12", borda: "rgba(243,156,18,.35)", sessao: false },
-                          { destino: "hibernacao",       label: "💤 Hibernação",            cor: "#888",    borda: "rgba(102,102,102,.35)", sessao: false },
+                          { destino: "hibernacao",       label: "💎 Reengajamento",            cor: "#888",    borda: "rgba(102,102,102,.35)", sessao: false },
                           { destino: "aguard_1a_sessao", label: "📅 Agendar Sessão Agora", cor: "#27AE60", borda: "rgba(39,174,96,.35)",   sessao: true  },
                         ].map(op => (
                           <button key={op.label} onClick={async () => {
@@ -12898,7 +12880,7 @@ export default function CrmClient({
           const isPosVenda = stage?.id === "pos_venda";
           const isListaEspera = stage?.id === "lista_espera";
           const cor = isBlacklist ? "var(--q1)" : isHibernacao ? "#888" : isListaEspera ? "#3498DB" : "var(--gold)";
-          const titulo = isPosVenda ? "Observação do Evento" : isBlacklist ? "🚫 Mover para Blacklist" : isHibernacao ? "💤 Hibernar Cliente" : isListaEspera ? "⏳ Lista de Espera" : stage?.label || "";
+          const titulo = isPosVenda ? "Observação do Evento" : isBlacklist ? "🚫 Mover para Blacklist" : isHibernacao ? "💎 Mover para Reengajamento" : isListaEspera ? "⏳ Lista de Espera" : stage?.label || "";
           return (
             <div className="ov" onClick={() => setPipelineMotivo(null)}>
               <div onClick={e => e.stopPropagation()} style={{ background: "var(--dk2)", border: `1px solid ${isBlacklist ? "rgba(192,57,43,.4)" : "var(--br)"}`, borderRadius: 12, width: "min(460px, 92vw)", padding: "24px 24px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
@@ -14464,10 +14446,10 @@ export default function CrmClient({
                 <button onClick={() => {
                   const cid = agendarProximaModal.cid;
                   setAgendarProximaModal(null);
-                  executarMove(cid, "reengajamento");
+                  executarMove(cid, "hibernacao");
                 }} style={{ background: "rgba(22,160,133,.12)", border: "1px solid rgba(22,160,133,.4)", borderRadius: 8, padding: "12px 16px", fontSize: 13, fontWeight: 700, color: "#16A085", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", textAlign: "left" }}>
                   💎 Projeto encerrado → Reengajamento
-                  <div style={{ fontSize: 11, fontWeight: 400, color: "rgba(22,160,133,.8)", marginTop: 3 }}>Régua de pós-venda (D+1/D+7/D+30/D+37) + reativação a cada 180 dias</div>
+                  <div style={{ fontSize: 11, fontWeight: 400, color: "rgba(22,160,133,.8)", marginTop: 3 }}>Régua única de Reengajamento: D+30, D+90, D+180 e depois a cada 180 dias</div>
                 </button>
                 <button onClick={() => {
                   const cid = agendarProximaModal.cid;
