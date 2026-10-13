@@ -74,7 +74,7 @@ test("não cria nenhuma chave de dedup em disparos_enviados -- idempotência vem
 
 test("etapa e etapa_desde são atualizados juntos, numa única chamada", () => {
   const trecho = trechoBlocoD();
-  assert.match(trecho, /\.update\(\{ etapa: "reengajamento", etapa_desde: new Date\(\)\.toISOString\(\) \}\)/);
+  assert.match(trecho, /\.update\(\{ etapa: "hibernacao", etapa_desde: new Date\(\)\.toISOString\(\) \}\)/);
 });
 
 // ═══════════════════════════════════════════════════════════════════════════

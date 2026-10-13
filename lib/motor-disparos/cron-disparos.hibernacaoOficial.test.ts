@@ -12,11 +12,19 @@ import test from "node:test";
 const src = readFileSync(new URL("./cron-disparos.js", import.meta.url), "utf8");
 
 test("fluxo_etapas nunca dispara para a etapa hibernacao (régua oficial única, no inq-saas)", () => {
-  assert.match(src, /const etapasDoFluxo = etapaSlug === "hibernacao" \? \[\] : \(fluxoEtapas\[etapaSlug\] \|\| \[\]\);/);
+  assert.match(src, /const etapasDoFluxo = \(etapaSlug === "hibernacao" \|\| etapaSlug === "reengajamento"\) \? \[\] : \(fluxoEtapas\[etapaSlug\] \|\| \[\]\);/);
   assert.match(src, /api\/_lib\/hibernacaoRegua\.js/);
 });
 
-test("este motor continua sem mover ninguém para Hibernação", () => {
-  assert.doesNotMatch(src, /etapa: "hibernacao"/);
-  assert.doesNotMatch(src, /\.update\(\{[^}]*etapa: ['"]hibernacao['"]/);
+test("este motor só move para hibernacao (Reengajamento) numa porta: Pós-venda D+7, com UPDATE guardado por etapa e etapa_desde", () => {
+  const ocorrencias = src.match(/etapa: "hibernacao"/g) || [];
+  assert.equal(ocorrencias.length, 1, "uma única porta para a condição de Reengajamento neste motor");
+  assert.match(src, /\.update\(\{ etapa: "hibernacao", etapa_desde: new Date\(\)\.toISOString\(\) \}\)\s*\n\s*\.eq\("id", cliente\.id\)\s*\n\s*\.eq\("user_id", userId\)\s*\n\s*\.eq\("etapa", "pos_venda"\)\s*\n\s*\.eq\("etapa_desde", cliente\.etapa_desde\)/);
 });
+
+test("fusão Reengajamento: o motor antigo (e-mail 30d + repetição 180d) foi aposentado e o slug antigo nunca dispara fluxo_etapas", () => {
+  assert.doesNotMatch(src, /chave: "reengajamento"/);
+  assert.doesNotMatch(src, /etapa: "reengajamento"/);
+  assert.match(src, /etapaSlug === "reengajamento"\) \? \[\]/);
+});
+
