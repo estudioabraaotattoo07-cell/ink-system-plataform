@@ -12,7 +12,6 @@ export type Ficha = {
   nome: string | null;
   telefone: string | null;
   estudio: string | null;
-  planoSugerido: string | null;
   origemTrafego: string | null;
   estagio: string;
   temNaoRespondida: boolean;
@@ -34,12 +33,6 @@ export default function FichaCard({ ficha, permissoes }: { ficha: Ficha; permiss
   // Mais antiga primeiro (ver PipelineBoard) -- a data de solicitação
   // exibida no card é a da primeira vez que essa pessoa apareceu.
   const primeira = ficha.solicitacoes[0];
-  const planoCor =
-    ficha.planoSugerido === "Ouro" ? "#C9A84C" :
-    ficha.planoSugerido === "Prata" ? "#B8BCC4" :
-    ficha.planoSugerido === "Bronze" ? "#CD7F32" :
-    "#A09585";
-
   return (
     <div
       className="ficha-card"
@@ -66,17 +59,6 @@ export default function FichaCard({ ficha, permissoes }: { ficha: Ficha; permiss
           {ficha.estudio && <> · {ficha.estudio}</>}
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
-          {ficha.planoSugerido && (
-            <span
-              style={{
-                display: "inline-block", fontSize: 10, fontWeight: 700, padding: "3px 9px",
-                borderRadius: 999, textTransform: "uppercase", background: planoCor + "22", color: planoCor,
-                border: "1px solid " + planoCor + "55",
-              }}
-            >
-              {ficha.planoSugerido}
-            </span>
-          )}
           {ficha.origemTrafego && (
             <span
               style={{

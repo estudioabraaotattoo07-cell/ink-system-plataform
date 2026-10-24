@@ -48,8 +48,8 @@
 
   /* Tipografia -- ver app/layout.tsx (next/font). Fallback explícito
      mantém o mesmo empilhamento que a página já usava. */
-  --font-heading: var(--font-cormorant), 'Cormorant Garamond', serif;
-  --font-body: var(--font-dm-sans), 'DM Sans', sans-serif;
+  --font-heading: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'DM Sans', Arial, Helvetica, sans-serif;
 }
 
 @theme inline {

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { atualizarLicencaTenant } from "./actions";
 import { criarControleAlteracaoLicenca } from "@/lib/admin/confiabilidadeLicencas";
+import { versaoComercialVisivel } from "@/lib/comercial/versao";
 
 const controleAlteracao = criarControleAlteracaoLicenca();
 
@@ -37,7 +38,7 @@ export default function LicencaRow({ lic, podeAlterar }: { lic: Licenca; podeAlt
   return (
     <tr className="border-b border-neutral-900">
       <td className="py-2 pr-4">{lic.email}</td>
-      <td className="py-2 pr-4">{lic.plano || "—"}</td>
+      <td className="py-2 pr-4">{versaoComercialVisivel(lic.plano)}</td>
       <td className="py-2 pr-4">
         {!podeAlterar ? <span className="text-neutral-300">{status}</span> : (
         <select

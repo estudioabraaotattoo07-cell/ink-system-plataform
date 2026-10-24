@@ -1,7 +1,6 @@
 import FichaCard, { type Ficha } from "./FichaCard";
 import { type Lead } from "./LeadCard";
 import { ESTAGIOS } from "./pipelineStages";
-import { PLANOS_ATIVOS } from "@/lib/planos";
 import type { PermissoesInterfaceAdmin } from "@/lib/admin/permissoes";
 
 // Etapa mais "avançada" primeiro -- assim, se a pessoa mandar uma nova
@@ -30,10 +29,6 @@ function agruparPorFicha(leads: Lead[]): Ficha[] {
     // então a solicitação mais antiga é a "primeira da fila".
     const solicitacoes = [...solicitacoesRaw].sort((a, b) => +new Date(a.created_at) - +new Date(b.created_at));
     const maisAvancada = solicitacoes.reduce((acc, l) => (RANK[l.estagio] ?? 0) > (RANK[acc.estagio] ?? 0) ? l : acc, solicitacoes[0]);
-    // Plano sugerido pode mudar ao longo da conversa (a Aura recalcula a
-    // cada resposta do quiz) -- pega o mais recente que tiver um valor,
-    // não o primeiro.
-    const planoSugerido = [...solicitacoes].reverse().find((l) => l.plano_sugerido)?.plano_sugerido ?? null;
     // Canal de tráfego é fixado no primeiro contato -- não muda depois.
     const origemTrafego = solicitacoes.find((l) => l.origem_trafego)?.origem_trafego ?? null;
     fichas.push({
@@ -41,7 +36,6 @@ function agruparPorFicha(leads: Lead[]): Ficha[] {
       nome: solicitacoes.find((l) => l.nome)?.nome ?? null,
       telefone: solicitacoes.find((l) => l.telefone)?.telefone ?? null,
       estudio: solicitacoes.find((l) => l.estudio)?.estudio ?? null,
-      planoSugerido,
       origemTrafego,
       estagio: maisAvancada.estagio || "lead",
       temNaoRespondida: solicitacoes.some((l) => l.status !== "respondido"),
@@ -56,23 +50,11 @@ function agruparPorFicha(leads: Lead[]): Ficha[] {
 
 type Coluna = { id: string; label: string; emoji: string; fichas: Ficha[] };
 
-// A etapa "Lead" não é um pipeline de venda -- é a porta de entrada, antes
-// do processo comercial começar de verdade. Por isso, só ela é subdividida
-// em filas por interesse (Teste Grátis + um plano por vez, lidos de
-// PLANOS_ATIVOS). Assim que a ficha avança pra "Em Análise", ela vira um
-// card normal, sem rastro dessas filas -- não são etapas novas do pipeline,
-// só uma organização visual de entrada.
+// A etapa "Lead" é a porta de entrada do processo comercial. As antigas
+// filas por modalidade foram removidas; a entrada agora é única.
 function construirColunas(fichas: Ficha[]): Coluna[] {
   const leads = fichas.filter((f) => f.estagio === "lead");
-  const colunasEntrada: Coluna[] = [
-    { id: "entrada-teste", label: "Teste Grátis", emoji: "🧪", fichas: leads.filter((f) => !f.planoSugerido) },
-    ...PLANOS_ATIVOS.map((plano) => ({
-      id: `entrada-${plano.toLowerCase()}`,
-      label: plano,
-      emoji: "🎯",
-      fichas: leads.filter((f) => f.planoSugerido === plano),
-    })),
-  ];
+  const colunasEntrada: Coluna[] = [{ id: "entrada", label: "Entrada", emoji: "🧪", fichas: leads }];
 
   const colunasPipeline: Coluna[] = ESTAGIOS.filter((e) => e.id !== "lead").map((estagio) => ({
     id: estagio.id,
@@ -93,11 +75,11 @@ export default function PipelineBoard({ leads, permissoes }: { leads: Lead[]; pe
   const colunas = construirColunas(fichas);
 
   return (
-    <div style={{ display: "flex", gap: 14, overflowX: "auto", padding: "54px 4px 4px" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))", gap: 14, padding: "54px 4px 4px" }}>
       {colunas.map((coluna) => {
         const cards = coluna.fichas;
         return (
-          <div key={coluna.id} style={{ minWidth: 160, maxWidth: 160, position: "relative" }}>
+          <div key={coluna.id} style={{ minWidth: 0, width: "100%", position: "relative" }}>
             <div style={{
               position: "absolute", top: -14, left: 8, right: 8, height: 56,
               background: "#C9A84C", filter: "blur(28px)", opacity: 0.36,

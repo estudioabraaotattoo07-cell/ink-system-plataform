@@ -112,11 +112,6 @@ export default function LeadFichaModal({ ficha, permissoes, onClose }: { ficha: 
               {ficha.telefone && <> · {ficha.telefone}</>}
             </div>
             {ficha.estudio && <div style={{ fontSize: 12, color: "#A09585", marginTop: 2 }}>Estúdio: {ficha.estudio}</div>}
-            {ficha.planoSugerido && (
-              <div style={{ fontSize: 12, color: "#E8E2D9", marginTop: 6 }}>
-                Plano sugerido: <strong style={{ color: "#C9A84C" }}>{ficha.planoSugerido}</strong>
-              </div>
-            )}
           </div>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#A09585", cursor: "pointer", fontSize: 18 }}>
             ✕
@@ -251,7 +246,7 @@ function LeadFichaHistoricoItem({ lead }: { lead: Lead }) {
   return (
     <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 10, marginTop: 10, fontSize: 11, color: "#A09585", lineHeight: 1.6 }}>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <span>{lead.plano_sugerido ? `Plano sugerido: ${lead.plano_sugerido}` : lead.tipo === "suporte" ? "Suporte" : "Solicitação"}</span>
+        <span>{lead.tipo === "suporte" ? "Suporte" : "Solicitação"}</span>
         <span>{new Date(lead.created_at).toLocaleDateString("pt-BR")}</span>
       </div>
       {lead.respostas && Object.keys(lead.respostas).length > 0 && (

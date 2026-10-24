@@ -12,7 +12,6 @@ export type Lead = {
   telefone: string | null;
   estudio: string | null;
   mensagem: string | null;
-  plano_sugerido: string | null;
   respostas: Record<string, string> | null;
   status: string;
   estagio: string;
@@ -45,9 +44,6 @@ export default function LeadCard({ lead, podeResponder = true }: { lead: Lead; p
         <span className="text-neutral-500" style={{ fontSize: 10 }}>{new Date(lead.created_at).toLocaleDateString("pt-BR")}</span>
       </div>
 
-      {lead.plano_sugerido && (
-        <div className="text-neutral-400 mt-1" style={{ fontSize: 12 }}>Plano sugerido: <strong className="text-neutral-200">{lead.plano_sugerido}</strong></div>
-      )}
       {lead.mensagem && (
         <div className="text-neutral-300 mt-1 italic" style={{ fontSize: 12 }}>"{lead.mensagem}"</div>
       )}

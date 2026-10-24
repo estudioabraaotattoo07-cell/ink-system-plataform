@@ -3,6 +3,7 @@
 import { createPortal } from "react-dom";
 import TestarEnvioButton from "./TestarEnvioButton";
 import type { PermissoesInterfaceAdmin } from "@/lib/admin/permissoes";
+import { versaoComercialVisivel } from "@/lib/comercial/versao";
 
 function diasParaVencimento(dataVenc: string | null) {
   if (!dataVenc) return "—";
@@ -31,7 +32,7 @@ function Campo({ label, valor }: { label: string; valor: React.ReactNode }) {
 
 export default function ClienteFichaModal({ linha, permissoes, onClose }: { linha: LinhaCliente; permissoes: PermissoesInterfaceAdmin; onClose: () => void }) {
   const { cliente: c, chamados, extras, falhas } = linha;
-  const planoCor = c.plano === "ouro" ? "#C9A84C" : c.plano === "prata" ? "#B8BCC4" : c.plano === "bronze" ? "#CD7F32" : "#A09585";
+  const planoCor = c.plano === "1.0" || c.plano === "1.0-teste" ? "#C9A84C" : "#A09585";
   const statusCor = c.status === "ativo" ? "#27AE60" : ["suspenso", "inativo", "cancelado", "vencido"].includes(c.status) ? "#E74C3C" : c.status === "teste" ? "#4A9EBF" : "#A09585";
 
   // Portal pro <body> -- mesma correção do LeadFichaModal, pra não ficar
@@ -85,7 +86,7 @@ export default function ClienteFichaModal({ linha, permissoes, onClose }: { linh
 
         <div style={{ display: "flex", gap: 8, marginBottom: 22 }}>
           <span style={{ fontSize: 10, fontWeight: 600, padding: "4px 10px", borderRadius: 999, textTransform: "uppercase", background: planoCor + "22", color: planoCor, border: `1px solid ${planoCor}55` }}>
-            {c.plano || "—"}
+            {versaoComercialVisivel(c.plano)}
           </span>
           <span style={{ fontSize: 10, fontWeight: 600, padding: "4px 10px", borderRadius: 999, textTransform: "uppercase", background: statusCor + "22", color: statusCor, border: `1px solid ${statusCor}55` }}>
             {c.status}

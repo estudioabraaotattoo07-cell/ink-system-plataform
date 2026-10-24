@@ -1,5 +1,6 @@
 import { exigirAdmin } from "@/lib/admin/autorizacao";
 import { temPermissaoAdmin } from "@/lib/admin/permissoes";
+import Link from "next/link";
 
 const TABS = [
   { id: "pipeline", label: "Jornada", href: "/admin" },
@@ -20,7 +21,7 @@ export default async function AdminTabs({ active, pipelineBadge }: { active: "pi
     >
       <div className="flex items-center gap-2" style={{ overflowX: "auto" }}>
         {tabsVisiveis.map((t) => (
-          <a
+          <Link
             key={t.id}
             href={t.href}
             style={{
@@ -40,10 +41,10 @@ export default async function AdminTabs({ active, pipelineBadge }: { active: "pi
             {t.id === "solicitacoes" && !!pipelineBadge && (
               <span style={{ color: "#E8A838", marginLeft: 6 }}>({pipelineBadge})</span>
             )}
-          </a>
+          </Link>
         ))}
       </div>
-      <a
+      <Link
         href="/admin/logout"
         style={{
           padding: "8px 16px",
@@ -60,7 +61,7 @@ export default async function AdminTabs({ active, pipelineBadge }: { active: "pi
         }}
       >
         Sair
-      </a>
+      </Link>
     </div>
   );
 }

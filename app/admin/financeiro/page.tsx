@@ -4,22 +4,13 @@ import MarcarPagoButton from "./MarcarPagoButton";
 import CustosForm from "./CustosForm";
 import { exigirPermissao } from "@/lib/admin/autorizacao";
 import { LABORATORIO_AUTH_USER_ID } from "@/lib/admin/laboratorio";
+import { versaoComercialVisivel } from "@/lib/comercial/versao";
 
 export const dynamic = "force-dynamic";
 
 function getAdminClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
 }
-
-// Espelha PLANO_LIMITES do inq-saas (CRM Casa dos Carvalho.tsx) -- repositórios
-// separados, sem import possível entre eles, por isso duplicado aqui. Se um
-// mudar, o outro precisa ser atualizado junto.
-const PLANO_PRECOS: Record<string, { preco: number; artistasInclusos: number }> = {
-  bronze: { preco: 297, artistasInclusos: 2 },
-  prata: { preco: 497, artistasInclusos: 4 },
-  ouro: { preco: 597, artistasInclusos: 6 },
-};
-const VALOR_ARTISTA_EXTRA = 45;
 
 function cicloAtual() {
   return new Date().toISOString().slice(0, 7); // "YYYY-MM"
@@ -45,7 +36,7 @@ export default async function FinanceiroPage() {
 
   const { data: ciclosPagos, error: erroCiclos } = await sb
     .from("financeiro_ciclos")
-    .select("ink_cliente_id, status, data_pagamento")
+    .select("ink_cliente_id, status, data_pagamento, valor_total_previsto")
     .eq("ciclo", ciclo);
 
   const { data: custos, error: erroCustos } = await sb
@@ -60,25 +51,21 @@ export default async function FinanceiroPage() {
   for (const a of artistas ?? []) {
     artistasPorUser.set(a.user_id, (artistasPorUser.get(a.user_id) ?? 0) + 1);
   }
-  const ciclosPorCliente = new Map<string, { status: string; data_pagamento: string | null }>();
+  const ciclosPorCliente = new Map<string, { status: string; data_pagamento: string | null; valor_total_previsto: number | null }>();
   for (const c of ciclosPagos ?? []) {
-    ciclosPorCliente.set(c.ink_cliente_id, { status: c.status, data_pagamento: c.data_pagamento });
+    ciclosPorCliente.set(c.ink_cliente_id, { status: c.status, data_pagamento: c.data_pagamento, valor_total_previsto: c.valor_total_previsto });
   }
 
   const linhas = (clientes ?? []).map((c) => {
-    const planoInfo = PLANO_PRECOS[(c.plano || "").toLowerCase()];
-    const valorPlano = planoInfo?.preco ?? 0;
-    const totalArtistas = artistasPorUser.get(c.auth_user_id) ?? 0;
-    const qtdExtra = planoInfo ? Math.max(0, totalArtistas - planoInfo.artistasInclusos) : 0;
-    const valorExtra = qtdExtra * VALOR_ARTISTA_EXTRA;
-    const valorTotal = valorPlano + valorExtra;
     const cicloInfo = ciclosPorCliente.get(c.id);
+    const totalArtistas = artistasPorUser.get(c.auth_user_id) ?? 0;
+    const valorTotal = cicloInfo?.valor_total_previsto ?? null;
     const pago = cicloInfo?.status === "pago";
-    return { ...c, valorPlano, totalArtistas, qtdExtra, valorExtra, valorTotal, pago, dataPagamento: cicloInfo?.data_pagamento };
+    return { ...c, totalArtistas, valorTotal, pago, dataPagamento: cicloInfo?.data_pagamento };
   });
 
-  const totalPrevisto = linhas.reduce((s, l) => s + l.valorTotal, 0);
-  const totalPago = linhas.filter((l) => l.pago).reduce((s, l) => s + l.valorTotal, 0);
+  const totalPrevisto = linhas.reduce((s, l) => s + (l.valorTotal ?? 0), 0);
+  const totalPago = linhas.filter((l) => l.pago).reduce((s, l) => s + (l.valorTotal ?? 0), 0);
   const totalCustos = (custos ?? []).reduce((s, c) => s + Number(c.valor_mensal), 0);
 
   const th = { background: "#0A0A0A", borderBottom: "1px solid rgba(201,168,76,0.45)", padding: "10px 14px", fontSize: 10, letterSpacing: ".09em", textTransform: "uppercase" as const, color: "#C9A84C", fontWeight: 600, textAlign: "left" as const };
@@ -106,7 +93,7 @@ export default async function FinanceiroPage() {
       )}
 
       <div style={{ fontSize: 11, color: "#6B5E54", marginBottom: 16 }}>
-        Ciclo atual: <strong style={{ color: "#A09585" }}>{ciclo}</strong> — valores aqui são <strong>previstos</strong>, calculados a partir do plano + artistas extras de cada cliente. Não há cobrança automática ainda; marcar como pago é manual, até o gateway de pagamento entrar.
+        Ciclo atual: <strong style={{ color: "#A09585" }}>{ciclo}</strong> — valores previstos vêm do ciclo financeiro registrado. Não há cobrança automática ainda; marcar como pago é manual, até o gateway de pagamento entrar.
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 24 }}>
@@ -131,7 +118,7 @@ export default async function FinanceiroPage() {
         <table style={{ width: "100%", borderCollapse: "collapse", whiteSpace: "nowrap" }}>
           <thead>
             <tr>
-              {["Estúdio", "Plano", "Valor plano", "Artistas extra", "Valor extra", "Total previsto", "Status", "Ação"].map((h) => (
+              {["Estúdio", "Versão", "Valor registrado", "Artistas", "Valor extra", "Total previsto", "Status", "Ação"].map((h) => (
                 <th key={h} style={th}>{h}</th>
               ))}
             </tr>
@@ -140,25 +127,25 @@ export default async function FinanceiroPage() {
             {linhas.map((l) => (
               <tr key={l.id}>
                 <td style={td}>{l.nome_estudio || "—"} <span style={{ color: "#6B5E54" }}>/{l.slug}</span></td>
-                <td style={td}>{l.plano || "—"}</td>
-                <td style={td}>R${l.valorPlano.toFixed(2)}</td>
-                <td style={td}>{l.qtdExtra > 0 ? `${l.qtdExtra} (${l.totalArtistas} de ${PLANO_PRECOS[(l.plano || "").toLowerCase()]?.artistasInclusos ?? "—"} inclusos)` : "—"}</td>
-                <td style={td}>{l.valorExtra > 0 ? `R$${l.valorExtra.toFixed(2)}` : "—"}</td>
-                <td style={{ ...td, fontWeight: 700 }}>R${l.valorTotal.toFixed(2)}</td>
+                <td style={td}>{versaoComercialVisivel(l.plano)}</td>
+                <td style={td}>{l.valorTotal === null ? "—" : `R$${l.valorTotal.toFixed(2)}`}</td>
+                <td style={td}>{l.totalArtistas || "—"}</td>
+                <td style={td}>—</td>
+                <td style={{ ...td, fontWeight: 700 }}>{l.valorTotal === null ? "—" : `R$${l.valorTotal.toFixed(2)}`}</td>
                 <td style={td}>
                   <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase", display: "inline-block", background: l.pago ? "#27AE6022" : "#A0958522", color: l.pago ? "#27AE60" : "#A09585", border: `1px solid ${l.pago ? "#27AE6055" : "#A0958555"}` }}>
                     {l.pago ? "Pago" : "Previsto"}
                   </span>
                 </td>
                 <td style={td}>
-                  <MarcarPagoButton
+                  {l.valorTotal === null ? <span style={{ color: "#6B5E54", fontSize: 11 }}>Valor não registrado</span> : <MarcarPagoButton
                     inkClienteId={l.id}
                     ciclo={ciclo}
-                    valorPlano={l.valorPlano}
-                    qtdArtistasExtra={l.qtdExtra}
-                    valorArtistasExtra={l.valorExtra}
+                    valorPlano={l.valorTotal}
+                    qtdArtistasExtra={0}
+                    valorArtistasExtra={0}
                     jaPago={l.pago}
-                  />
+                  />}
                 </td>
               </tr>
             ))}
