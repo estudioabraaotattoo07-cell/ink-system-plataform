@@ -26,7 +26,8 @@ export default function AdminLoginPage() {
       setCarregando(false);
       return;
     }
-    router.push("/admin/verificar");
+    const dados = await res.json().catch(() => null);
+    router.push(dados?.destino === "/admin" ? "/admin" : "/admin/verificar");
   }
 
   return (

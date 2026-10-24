@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { criarClienteAdministrativo } from "@/lib/admin/autorizacao";
 import { enviarCodigoAdmin } from "@/lib/admin/dosFatores";
+import { dispensa2FAParaAdmin } from "@/lib/admin/dispensa2fa";
 
 // Primeiro fator: login real do Supabase (mesma conta do Laboratório) +
 // checagem de que este auth_user_id está em ink_admin_usuarios (ativo).
@@ -32,6 +33,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Esta conta não tem permissão administrativa." }, { status: 403 });
   }
 
+  if (dispensa2FAParaAdmin(data.user.id)) {
+    return NextResponse.json({ ok: true, destino: "/admin" });
+  }
+
   try {
     await enviarCodigoAdmin(data.user.id, email);
   } catch (e) {
@@ -44,5 +49,5 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, destino: "/admin/verificar" });
 }

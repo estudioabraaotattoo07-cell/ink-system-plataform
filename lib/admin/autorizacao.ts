@@ -4,6 +4,7 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { cookie2FAValido } from "@/lib/admin/cookie2fa";
+import { dispensa2FAParaAdmin } from "@/lib/admin/dispensa2fa";
 import { papelAdminValido, temPermissaoAdmin, type PapelAdmin, type PermissaoAdmin } from "@/lib/admin/permissoes";
 
 export type AdminAtual = {
@@ -13,7 +14,7 @@ export type AdminAtual = {
 };
 
 // Único caminho de entrada: sessão real do Supabase + linha ativa em
-// ink_admin_usuarios + segundo fator confirmado. A checagem do 2FA aqui
+// ink_admin_usuarios + segundo fator confirmado ou dispensa restrita. A checagem aqui
 // (não só no middleware) é defesa em profundidade -- cada ação
 // administrativa se protege por conta própria, sem confiar cegamente que o
 // portão de entrada já cuidou de tudo.
@@ -34,7 +35,8 @@ export async function obterAdminAtual(): Promise<AdminAtual | null> {
   }
 
   const cookieStore = await cookies();
-  const segundoFatorOk = await cookie2FAValido(auth.user.id, cookieStore.get("ink_admin_2fa")?.value);
+  const segundoFatorOk = dispensa2FAParaAdmin(auth.user.id)
+    || await cookie2FAValido(auth.user.id, cookieStore.get("ink_admin_2fa")?.value);
   if (!segundoFatorOk) return null;
 
   return {

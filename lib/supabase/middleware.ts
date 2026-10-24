@@ -7,6 +7,7 @@ import {
   type ClienteSupabaseMinimo,
 } from "@/lib/acesso/avaliarAcesso";
 import { cookie2FAValido } from "@/lib/admin/cookie2fa";
+import { dispensa2FAParaAdmin } from "@/lib/admin/dispensa2fa";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -80,9 +81,16 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
+    const dispensa2FA = dispensa2FAParaAdmin(user.id);
+    if (dispensa2FA && path === "/admin/verificar") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
+      return NextResponse.redirect(url);
+    }
+
     // Segundo fator: exigido para qualquer rota do Admin fora da própria
-    // verificação.
-    if (!isAdminVerificacao) {
+    // verificação, salvo para a conta explicitamente autorizada.
+    if (!isAdminVerificacao && !dispensa2FA) {
       const cookie2fa = request.cookies.get("ink_admin_2fa")?.value;
       const segundoFatorOk = await cookie2FAValido(user.id, cookie2fa);
       if (!segundoFatorOk) {
