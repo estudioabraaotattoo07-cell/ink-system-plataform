@@ -1,19 +1,6 @@
-import CrmClient from "../(protected)/app/[slug]/CrmClientLoader";
-import { buildSeed, DEMO_USER_ID } from "@/lib/demo/seed";
-import DemoGate from "./DemoGate";
+import { redirect } from "next/navigation";
 
 export default function DemoPage() {
-  const seed = buildSeed("art-1", "art-2");
-
-  return (
-    <DemoGate>
-      <CrmClient
-        demoMode
-        demoSeed={seed}
-        cliente={{ plano: "completo", slug: "demo" }}
-        userId={DEMO_USER_ID}
-        userEmail="demo@inksystem.com.br"
-      />
-    </DemoGate>
-  );
+  // Preserva favoritos e links antigos sem oferecer um CRM fictício.
+  redirect("/conhecer");
 }

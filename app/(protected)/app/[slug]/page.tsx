@@ -29,5 +29,7 @@ export default async function AppClientePage({ params }: { params: Promise<{ slu
   // slug de outro estúdio pela URL, cai fora.
   if (cliente.slug !== slug) redirect("/app/" + cliente.slug);
 
+  // Compatibilidade temporária: não remover antes da homologação do acesso
+  // comercial ao CRM Mãe em outro domínio.
   return <CrmClient cliente={cliente} userId={user.id} userEmail={user.email ?? ""} />;
 }

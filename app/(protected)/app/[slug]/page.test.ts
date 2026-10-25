@@ -31,6 +31,16 @@ const fonte = readFileSync(CAMINHO_PAGE, "utf8");
 const fonteCrmClient = readFileSync(CAMINHO_CRM_CLIENT, "utf8");
 const fonteDemoPage = readFileSync(CAMINHO_DEMO_PAGE, "utf8");
 
+test("sem corte automático para outro domínio antes da homologação", () => {
+  assert.doesNotMatch(fonte, /destinoCrmMae|CRM_MAE_AUTH_HANDOFF_READY|inq-saas\.vercel\.app/);
+  assert.match(fonte, /return <CrmClient cliente=\{cliente\}/);
+});
+test("/demo encaminha para a página comercial e não carrega o CRM fictício", () => {
+  assert.match(fonteDemoPage, /redirect\("\/conhecer"\)/);
+  assert.doesNotMatch(fonteDemoPage, /CrmClient|buildSeed|DemoGate|demoMode/);
+  assert.doesNotMatch(fonteCrmClient, /demoMode|demoSeed|createMockClient/);
+});
+
 test("consulta a ink_clientes usa seleção explícita de coluna (slug, plano), não select(\"*\")", () => {
   assert.match(fonte, /\.from\("ink_clientes"\)\s*\n?\s*\.select\("slug, plano"\)/);
 });
@@ -90,9 +100,8 @@ test("prop cliente de CrmClient restrito a Pick<ClienteInk, \"slug\" | \"plano\"
   assert.doesNotMatch(fonteCrmClient, /cliente:\s*ClienteInk;/);
 });
 
-test("nenhum cast ou supressão de tipo usado para contornar o erro (page.tsx inteiro e demo/page.tsx inteiro, mais o trecho de CrmClient.tsx efetivamente tocado por esta correção)", () => {
-  // page.tsx e demo/page.tsx são pequenos e inteiramente escopo desta
-  // correção -- checagem no arquivo inteiro é válida pra ambos.
+test("nenhum cast ou supressão de tipo usado para contornar o erro (page.tsx e demo/page.tsx, mais o trecho de CrmClient.tsx efetivamente tocado)", () => {
+  // Ambas as páginas são pequenas e inteiramente escopo desta correção.
   for (const [nome, texto] of [["page.tsx", fonte], ["demo/page.tsx", fonteDemoPage]] as const) {
     assert.doesNotMatch(texto, /as\s+ClienteInk/, `${nome} não pode usar "as ClienteInk"`);
     assert.doesNotMatch(texto, /as\s+any\b/, `${nome} não pode usar "as any"`);
@@ -112,19 +121,4 @@ test("nenhum cast ou supressão de tipo usado para contornar o erro (page.tsx in
   assert.doesNotMatch(trechoCrmClient, /as\s+any\b/, "CrmClient.tsx (trecho editado) não pode usar \"as any\"");
   assert.doesNotMatch(trechoCrmClient, /@ts-ignore/, "CrmClient.tsx (trecho editado) não pode usar \"@ts-ignore\"");
   assert.doesNotMatch(trechoCrmClient, /@ts-expect-error/, "CrmClient.tsx (trecho editado) não pode usar \"@ts-expect-error\"");
-});
-
-test("demo/page.tsx passa cliente como literal inline, só com plano e slug -- exatamente o contrato de CrmClient, sem variável intermediária", () => {
-  assert.match(fonteDemoPage, /cliente=\{\{\s*plano:\s*"completo",\s*slug:\s*"demo"\s*\}\}/);
-});
-
-test("demo/page.tsx não envia nome_estudio nem status a CrmClient (campos não lidos por nenhum consumidor)", () => {
-  assert.doesNotMatch(fonteDemoPage, /nome_estudio/);
-  assert.doesNotMatch(fonteDemoPage, /status:/);
-});
-
-test("demo/page.tsx não usa nenhuma variável/constante intermediária para escapar da checagem de propriedade excedente", () => {
-  assert.doesNotMatch(fonteDemoPage, /CLIENTE_DEMO/);
-  assert.doesNotMatch(fonteDemoPage, /const\s+\w+\s*:\s*\{[^}]*nome_estudio/);
-  assert.doesNotMatch(fonteDemoPage, /cliente=\{[A-Za-z_][A-Za-z0-9_]*\}/); // cliente={identificador} -- só o literal inline é aceito
 });
