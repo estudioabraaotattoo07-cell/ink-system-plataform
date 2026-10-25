@@ -43,7 +43,11 @@ test("UI de licenças não consulta nem apresenta infraestrutura sem permissão"
 
 test("aba financeira só é renderizada quando o papel possui permissão", () => {
   const tabs = ler("app/admin/AdminTabs.tsx");
-  assert.match(tabs, /temPermissaoAdmin\(admin\.papel, "financeiro\.visualizar"\)/);
+  assert.match(tabs, /temPermissaoAdmin\(papel, "financeiro\.visualizar"\)/);
+  assert.doesNotMatch(tabs, /exigirAdmin\(/);
+  for (const pagina of ["app/admin/page.tsx", "app/admin/financeiro/page.tsx", "app/admin/relacionamento/page.tsx", "app/admin/licencas/page.tsx"]) {
+    assert.match(ler(pagina), /<AdminTabs[^>]*papel=\{admin\.papel\}/);
+  }
 });
 
 test("UI operacional recebe permissões do servidor e oculta mutações proibidas", () => {

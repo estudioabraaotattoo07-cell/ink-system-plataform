@@ -5,6 +5,7 @@ import CustosForm from "./CustosForm";
 import { exigirPermissao } from "@/lib/admin/autorizacao";
 import { LABORATORIO_AUTH_USER_ID } from "@/lib/admin/laboratorio";
 import { versaoComercialVisivel } from "@/lib/comercial/versao";
+import { criarMedidorAdmin } from "@/lib/admin/perf";
 
 export const dynamic = "force-dynamic";
 
@@ -17,35 +18,40 @@ function cicloAtual() {
 }
 
 export default async function FinanceiroPage() {
-  await exigirPermissao("financeiro.visualizar");
+  const medidor = criarMedidorAdmin("admin.financeiro");
+  const admin = await exigirPermissao("financeiro.visualizar", medidor);
   const sb = getAdminClient();
   const ciclo = cicloAtual();
 
-  const { data: clientes, error: erroClientes } = await sb
-    .from("ink_clientes")
-    .select("id, nome_estudio, slug, plano, auth_user_id, status")
-    .eq("status", "ativo")
-    .neq("auth_user_id", LABORATORIO_AUTH_USER_ID)
-    .order("nome_estudio");
+  const [clientesResult, ciclosResult, custosResult] = await Promise.all([
+    medidor.medir("financeiro.clientes", () => sb
+      .from("ink_clientes")
+      .select("id, nome_estudio, slug, plano, auth_user_id, status")
+      .eq("status", "ativo")
+      .neq("auth_user_id", LABORATORIO_AUTH_USER_ID)
+      .order("nome_estudio")),
+    medidor.medir("financeiro.ciclos", () => sb
+      .from("financeiro_ciclos")
+      .select("ink_cliente_id, status, data_pagamento, valor_total_previsto")
+      .eq("ciclo", ciclo)),
+    medidor.medir("financeiro.custos", () => sb
+      .from("financeiro_custos_fixos")
+      .select("id, nome, valor_mensal")
+      .eq("ativo", true)
+      .order("criado_em")),
+  ]);
+  const { data: clientes, error: erroClientes } = clientesResult;
+  const { data: ciclosPagos, error: erroCiclos } = ciclosResult;
+  const { data: custos, error: erroCustos } = custosResult;
 
   const userIds = (clientes ?? []).map((c) => c.auth_user_id).filter(Boolean);
 
   const { data: artistas, error: erroArtistas } = userIds.length
-    ? await sb.from("artistas").select("user_id").eq("ativo", true).in("user_id", userIds)
+    ? await medidor.medir("financeiro.artistas", () => sb.from("artistas").select("user_id").eq("ativo", true).in("user_id", userIds))
     : { data: [], error: null };
 
-  const { data: ciclosPagos, error: erroCiclos } = await sb
-    .from("financeiro_ciclos")
-    .select("ink_cliente_id, status, data_pagamento, valor_total_previsto")
-    .eq("ciclo", ciclo);
-
-  const { data: custos, error: erroCustos } = await sb
-    .from("financeiro_custos_fixos")
-    .select("id, nome, valor_mensal")
-    .eq("ativo", true)
-    .order("criado_em");
-
   const erro = erroClientes || erroArtistas || erroCiclos || erroCustos;
+  const marcoProcessamento = medidor.marco();
 
   const artistasPorUser = new Map<string, number>();
   for (const a of artistas ?? []) {
@@ -67,6 +73,8 @@ export default async function FinanceiroPage() {
   const totalPrevisto = linhas.reduce((s, l) => s + (l.valorTotal ?? 0), 0);
   const totalPago = linhas.filter((l) => l.pago).reduce((s, l) => s + (l.valorTotal ?? 0), 0);
   const totalCustos = (custos ?? []).reduce((s, c) => s + Number(c.valor_mensal), 0);
+  medidor.registrar("financeiro.processamento", marcoProcessamento);
+  medidor.finalizar(erro ? "erro" : "ok");
 
   const th = { background: "#0A0A0A", borderBottom: "1px solid rgba(201,168,76,0.45)", padding: "10px 14px", fontSize: 10, letterSpacing: ".09em", textTransform: "uppercase" as const, color: "#C9A84C", fontWeight: 600, textAlign: "left" as const };
   const td = { background: "#0A0A0A", borderBottom: "1px solid rgba(201,168,76,0.18)", padding: "12px 14px", fontSize: 12, color: "#E8E2D9", verticalAlign: "middle" as const };
@@ -84,7 +92,7 @@ export default async function FinanceiroPage() {
         </span>
       </div>
 
-      <AdminTabs active="financeiro" />
+      <AdminTabs active="financeiro" papel={admin.papel} />
 
       {erro && (
         <div className="mb-6 text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-4 py-3">

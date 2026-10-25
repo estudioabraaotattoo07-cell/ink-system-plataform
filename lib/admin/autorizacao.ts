@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { cookie2FAValido } from "@/lib/admin/cookie2fa";
 import { dispensa2FAParaAdmin } from "@/lib/admin/dispensa2fa";
 import { papelAdminValido, temPermissaoAdmin, type PapelAdmin, type PermissaoAdmin } from "@/lib/admin/permissoes";
+import type { MedidorAdmin } from "@/lib/admin/perf";
 
 export type AdminAtual = {
   id: string;
@@ -18,25 +19,34 @@ export type AdminAtual = {
 // (não só no middleware) é defesa em profundidade -- cada ação
 // administrativa se protege por conta própria, sem confiar cegamente que o
 // portão de entrada já cuidou de tudo.
-export async function obterAdminAtual(): Promise<AdminAtual | null> {
+export async function obterAdminAtual(medidor?: MedidorAdmin): Promise<AdminAtual | null> {
   const supabase = await createClient();
-  const { data: auth, error: erroAuth } = await supabase.auth.getUser();
+  const { data: auth, error: erroAuth } = medidor
+    ? await medidor.medir("auth.getUser", () => supabase.auth.getUser())
+    : await supabase.auth.getUser();
   if (erroAuth || !auth.user) return null;
 
-  const { data: admin, error: erroAdmin } = await supabase
+  const consultarAdmin = () => supabase
     .from("ink_admin_usuarios")
     .select("id, auth_user_id, papel")
     .eq("auth_user_id", auth.user.id)
     .eq("ativo", true)
     .maybeSingle();
+  const { data: admin, error: erroAdmin } = medidor
+    ? await medidor.medir("auth.adminAtivo", consultarAdmin)
+    : await consultarAdmin();
 
   if (erroAdmin || !admin || !papelAdminValido(admin.papel)) {
     return null;
   }
 
   const cookieStore = await cookies();
-  const segundoFatorOk = dispensa2FAParaAdmin(auth.user.id)
-    || await cookie2FAValido(auth.user.id, cookieStore.get("ink_admin_2fa")?.value);
+  const dispensa2FA = medidor
+    ? medidor.medirSync("auth.dispensa2FA", () => dispensa2FAParaAdmin(auth.user.id))
+    : dispensa2FAParaAdmin(auth.user.id);
+  const segundoFatorOk = dispensa2FA || (medidor
+    ? await medidor.medir("auth.cookie2FA", () => cookie2FAValido(auth.user.id, cookieStore.get("ink_admin_2fa")?.value))
+    : await cookie2FAValido(auth.user.id, cookieStore.get("ink_admin_2fa")?.value));
   if (!segundoFatorOk) return null;
 
   return {
@@ -46,15 +56,18 @@ export async function obterAdminAtual(): Promise<AdminAtual | null> {
   };
 }
 
-export async function exigirAdmin(): Promise<AdminAtual> {
-  const admin = await obterAdminAtual();
+export async function exigirAdmin(medidor?: MedidorAdmin): Promise<AdminAtual> {
+  const admin = await obterAdminAtual(medidor);
   if (!admin) throw new Error("Acesso administrativo nao autorizado.");
   return admin;
 }
 
-export async function exigirPermissao(permissao: PermissaoAdmin): Promise<AdminAtual> {
-  const admin = await exigirAdmin();
-  if (temPermissaoAdmin(admin.papel, permissao)) return admin;
+export async function exigirPermissao(permissao: PermissaoAdmin, medidor?: MedidorAdmin): Promise<AdminAtual> {
+  const admin = await exigirAdmin(medidor);
+  const permitido = medidor
+    ? medidor.medirSync("auth.rbac", () => temPermissaoAdmin(admin.papel, permissao))
+    : temPermissaoAdmin(admin.papel, permissao);
+  if (permitido) return admin;
   try {
     const sb = criarClienteAdministrativo();
     await sb.from("ink_admin_auditoria").insert({

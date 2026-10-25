@@ -9,8 +9,17 @@ import {
 import { cookie2FAValido } from "@/lib/admin/cookie2fa";
 import { dispensa2FAParaAdmin } from "@/lib/admin/dispensa2fa";
 import { copiarCookiesResposta } from "@/lib/supabase/cookiesResposta";
+import { criarMedidorAdmin, type RotaAdminPerf } from "@/lib/admin/perf";
 
 export async function updateSession(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+  const tab = request.nextUrl.searchParams.get("tab");
+  const rota: RotaAdminPerf = path === "/admin"
+    ? tab === "solicitacoes" ? "admin.solicitacoes" : tab === "clientes" ? "admin.clientes" : "admin.jornada"
+    : path === "/admin/relacionamento" ? "admin.relacionamento"
+    : path === "/admin/financeiro" ? "admin.financeiro"
+    : path === "/admin/licencas" ? "admin.licencas" : "admin.outra";
+  const medidor = criarMedidorAdmin(rota);
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -40,13 +49,12 @@ export async function updateSession(request: NextRequest) {
   // exceção pro Edge Runtime.
   let user: Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"] = null;
   try {
-    const resultado = await supabase.auth.getUser();
+    const resultado = await medidor.medir("middleware.getUser", () => supabase.auth.getUser());
     user = resultado.data.user;
   } catch {
     user = null;
   }
 
-  const path = request.nextUrl.pathname;
   const {
     protegida: isRotaProtegida,
     suspensa: isRotaSuspenso,
@@ -61,8 +69,10 @@ export async function updateSession(request: NextRequest) {
   const isAdminVerificacao =
     path === "/admin/verificar" || path === "/admin/verificar/confirmar" || path === "/admin/verificar/reenviar";
   const isAdminProtegida = path.startsWith("/admin") && !isAdminPublica;
-  const redirecionar = (url: URL) =>
-    copiarCookiesResposta(supabaseResponse, NextResponse.redirect(url));
+  const redirecionar = (url: URL) => {
+    medidor.finalizar("redirecionado");
+    return copiarCookiesResposta(supabaseResponse, NextResponse.redirect(url));
+  };
 
   if (isAdminProtegida) {
     if (!user) {
@@ -71,12 +81,12 @@ export async function updateSession(request: NextRequest) {
       return redirecionar(url);
     }
 
-    const { data: admin, error: erroAdmin } = await supabase
+    const { data: admin, error: erroAdmin } = await medidor.medir("middleware.adminAtivo", () => supabase
       .from("ink_admin_usuarios")
       .select("id")
       .eq("auth_user_id", user.id)
       .eq("ativo", true)
-      .maybeSingle();
+      .maybeSingle());
     if (erroAdmin || !admin) {
       const url = request.nextUrl.clone();
       url.pathname = "/admin/login";
@@ -84,7 +94,7 @@ export async function updateSession(request: NextRequest) {
       return redirecionar(url);
     }
 
-    const dispensa2FA = dispensa2FAParaAdmin(user.id);
+    const dispensa2FA = medidor.medirSync("middleware.dispensa2FA", () => dispensa2FAParaAdmin(user.id));
     if (dispensa2FA && path === "/admin/verificar") {
       const url = request.nextUrl.clone();
       url.pathname = "/admin";
@@ -95,7 +105,7 @@ export async function updateSession(request: NextRequest) {
     // verificação, salvo para a conta explicitamente autorizada.
     if (!isAdminVerificacao && !dispensa2FA) {
       const cookie2fa = request.cookies.get("ink_admin_2fa")?.value;
-      const segundoFatorOk = await cookie2FAValido(user.id, cookie2fa);
+      const segundoFatorOk = await medidor.medir("middleware.cookie2FA", () => cookie2FAValido(user.id, cookie2fa));
       if (!segundoFatorOk) {
         const url = request.nextUrl.clone();
         url.pathname = "/admin/verificar";
@@ -138,5 +148,6 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  medidor.finalizar("ok");
   return supabaseResponse;
 }

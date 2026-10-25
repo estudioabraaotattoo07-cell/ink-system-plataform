@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import AdminTabs from "../AdminTabs";
 import { exigirPermissao } from "@/lib/admin/autorizacao";
 import { LABORATORIO_AUTH_USER_ID } from "@/lib/admin/laboratorio";
+import { criarMedidorAdmin } from "@/lib/admin/perf";
 import {
   fluxosPorPublico,
   type PublicoFluxoAdmin,
@@ -32,14 +33,15 @@ function dataHora(valor: string | null) {
 }
 
 export default async function RelacionamentoAdminPage() {
-  await exigirPermissao("relacionamento.visualizar");
+  const medidor = criarMedidorAdmin("admin.relacionamento");
+  const admin = await exigirPermissao("relacionamento.visualizar", medidor);
   const sb = getAdminClient();
 
-  const { data: contaLaboratorio } = await sb
+  const { data: contaLaboratorio } = await medidor.medir("relacionamento.laboratorio", () => sb
     .from("ink_contas_comerciais")
     .select("id")
     .eq("auth_user_id", LABORATORIO_AUTH_USER_ID)
-    .maybeSingle();
+    .maybeSingle());
 
   let consultaMensagens = sb
     .from("ink_mensagens_comerciais")
@@ -47,13 +49,16 @@ export default async function RelacionamentoAdminPage() {
     .order("criado_em", { ascending: false })
     .limit(100);
   if (contaLaboratorio?.id) consultaMensagens = consultaMensagens.neq("conta_id", contaLaboratorio.id);
-  const { data: mensagens, error } = await consultaMensagens;
+  const { data: mensagens, error } = await medidor.medir("relacionamento.mensagens", () => consultaMensagens);
 
+  const marcoProcessamento = medidor.marco();
   const totais = {
     programadas: (mensagens ?? []).filter((m) => m.status === "programado").length,
     enviadas: (mensagens ?? []).filter((m) => ["enviado", "entregue", "clicado"].includes(m.status)).length,
     falhas: (mensagens ?? []).filter((m) => m.status === "falhou").length,
   };
+  medidor.registrar("relacionamento.processamento", marcoProcessamento);
+  medidor.finalizar(error ? "erro" : "ok");
 
   return (
     <main className="min-h-screen text-neutral-100 p-4 md:p-8" style={{ background: "radial-gradient(ellipse 900px 500px at 0% -10%, rgba(139,92,222,0.22), transparent 65%), #0A0A0A" }}>
@@ -63,7 +68,7 @@ export default async function RelacionamentoAdminPage() {
         <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "#C9A84C" }}>Painel do Administrador</span>
       </header>
 
-      <AdminTabs active="relacionamento" />
+      <AdminTabs active="relacionamento" papel={admin.papel} />
 
       <section style={{ marginBottom: 26 }}>
         <div style={{ color: "#C9A84C", fontSize: 12, textTransform: "uppercase", letterSpacing: ".09em" }}>Relacionamento</div>

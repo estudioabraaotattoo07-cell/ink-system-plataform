@@ -6,6 +6,7 @@ import { exigirPermissao } from "@/lib/admin/autorizacao";
 import { temPermissaoAdmin } from "@/lib/admin/permissoes";
 import { LABORATORIO_AUTH_USER_ID } from "@/lib/admin/laboratorio";
 import { obterConfiguracaoInfraSegura } from "./actions";
+import { criarMedidorAdmin } from "@/lib/admin/perf";
 
 export const dynamic = "force-dynamic";
 
@@ -14,18 +15,22 @@ function getAdminClient() {
 }
 
 export default async function LicencasPage() {
-  const admin = await exigirPermissao("licencas.visualizar");
+  const medidor = criarMedidorAdmin("admin.licencas");
+  const admin = await exigirPermissao("licencas.visualizar", medidor);
   const sb = getAdminClient();
   const podeVerInfra = temPermissaoAdmin(admin.papel, "infraestrutura.visualizar");
   const podeAlterarLicenca = temPermissaoAdmin(admin.papel, "licencas.alterar");
 
-  const cfg = podeVerInfra ? await obterConfiguracaoInfraSegura() : null;
-
-  const { data: licencas, error: erroLicencas } = await sb
-    .from("licencas")
-    .select("id, email, plano, status, data_inicio, data_vencimento")
-    .neq("user_id", LABORATORIO_AUTH_USER_ID)
-    .order("created_at", { ascending: false });
+  const [cfg, licencasResult] = await Promise.all([
+    podeVerInfra ? medidor.medir("licencas.configuracaoSegura", () => obterConfiguracaoInfraSegura()) : Promise.resolve(null),
+    medidor.medir("licencas.lista", () => sb
+      .from("licencas")
+      .select("id, email, plano, status, data_inicio, data_vencimento")
+      .neq("user_id", LABORATORIO_AUTH_USER_ID)
+      .order("created_at", { ascending: false })),
+  ]);
+  const { data: licencas, error: erroLicencas } = licencasResult;
+  medidor.finalizar(erroLicencas ? "erro" : "ok");
 
   return (
     <main
@@ -43,7 +48,7 @@ export default async function LicencasPage() {
           Configuração central de infraestrutura — afeta todos os CRMs dos estúdios-clientes.
         </div>
       </div>
-      <AdminTabs active="licencas" />
+      <AdminTabs active="licencas" papel={admin.papel} />
 
       {podeVerInfra && cfg ? (
         <ChavesForm configuracao={cfg} />
