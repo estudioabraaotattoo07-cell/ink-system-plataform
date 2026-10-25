@@ -1511,7 +1511,7 @@ export default function CrmClient({
   const [fluxoEditLocal, setFluxoEditLocal] = useState<any | null>(null);
   const [fluxoSlugAberto, setFluxoSlugAberto] = useState<string | null>(null);
   const [fluxoSalvando, setFluxoSalvando] = useState(false);
-  // ── CAMPANHAS_SAZONAIS_ETAPAS (Mães/Pais/Namorados/Aniversário/Natal/Ano Novo) ──
+  // ── CAMPANHAS_SAZONAIS_ETAPAS (Mães/Pais/Namorados/Aniversário/Natal; Ano Novo é do CRM inq-saas) ──
   const [campSazEtapas, setCampSazEtapas] = useState<any[]>([]);
   const [campSazEditandoId, setCampSazEditandoId] = useState<string | null>(null);
   const [campSazEditLocal, setCampSazEditLocal] = useState<any | null>(null);
@@ -8130,7 +8130,6 @@ export default function CrmClient({
                   { slug: "aniversario", label: "Aniversário do Cliente", emoji: "🎂", desc: "Data de nascimento de cada cliente · 50% de desconto em piercing, até 3 joias com aplicação" },
                   { slug: "aniversario_artista", label: "Aniversário do Artista", emoji: "🎉", desc: "Data de nascimento de cada artista (cadastrada na ficha dele) · promoção divulgada pra toda a base de clientes" },
                   { slug: "natal", label: "Natal", emoji: "🎄", desc: "25 de dezembro · só felicitações do casal, sem venda" },
-                  { slug: "ano_novo", label: "Ano Novo", emoji: "🎆", desc: "1º de janeiro · só felicitações do casal, sem venda" },
                 ];
                 const salvarCampSazEtapa = async (etapa: any) => {
                   setCampSazSalvando(true);
