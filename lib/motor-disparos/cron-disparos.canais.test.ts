@@ -124,9 +124,9 @@ async function executarMotor(f: Record<string, any[]>) {
 const corpoTexto = (c: Chamada) => JSON.stringify(c.corpo ?? "");
 const zenvia = (ch: Chamada[]) => ch.filter((c) => c.host === "api.zenvia.com");
 const emails = (ch: Chamada[]) => ch.filter((c) => c.host === "api.resend.com");
+// Aniversário (cliente e artista) saiu deste motor: a campanha "aniversario" com canal e-mail NÃO sai mais (ver cron-disparos.aniversarioRemovido.test.ts).
 const SO_EMAILS_DE_EMAIL = [
   "fluxo@exemplo.com | Etapa e-mail — Estudio",
-  "niver@exemplo.com | Parabéns e-mail — Estudio",
 ];
 
 test("harness válido: o motor real roda de ponta a ponta e lê fluxo, campanhas e personalizações", async () => {

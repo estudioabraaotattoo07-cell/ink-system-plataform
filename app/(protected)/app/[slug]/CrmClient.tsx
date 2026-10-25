@@ -8083,8 +8083,6 @@ export default function CrmClient({
                   { slug: "dia_maes", label: "Dia das Mães", emoji: "🌸", desc: "2º domingo de maio · tatuagem mãe + filho(a) até 15cm cada — filho(a) paga a dele, mãe ganha a dela" },
                   { slug: "dia_pais", label: "Dia dos Pais", emoji: "👨‍👦", desc: "2º domingo de agosto · tatuagem pai + filho(a) até 15cm cada — filho(a) paga a dele, pai ganha a dele" },
                   { slug: "dia_namorados", label: "Dia dos Namorados", emoji: "💝", desc: "12 de junho · tatuagem-presente até 15cm com 30% de desconto" },
-                  { slug: "aniversario", label: "Aniversário do Cliente", emoji: "🎂", desc: "Data de nascimento de cada cliente · 50% de desconto em piercing, até 3 joias com aplicação" },
-                  { slug: "aniversario_artista", label: "Aniversário do Artista", emoji: "🎉", desc: "Data de nascimento de cada artista (cadastrada na ficha dele) · promoção divulgada pra toda a base de clientes" },
                 ];
                 const salvarCampSazEtapa = async (etapa: any) => {
                   setCampSazSalvando(true);
