@@ -8,6 +8,7 @@ import {
 } from "@/lib/acesso/avaliarAcesso";
 import { cookie2FAValido } from "@/lib/admin/cookie2fa";
 import { dispensa2FAParaAdmin } from "@/lib/admin/dispensa2fa";
+import { copiarCookiesResposta } from "@/lib/supabase/cookiesResposta";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -22,7 +23,7 @@ export async function updateSession(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({ request });
+          supabaseResponse = copiarCookiesResposta(supabaseResponse, NextResponse.next({ request }));
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           );
@@ -60,12 +61,14 @@ export async function updateSession(request: NextRequest) {
   const isAdminVerificacao =
     path === "/admin/verificar" || path === "/admin/verificar/confirmar" || path === "/admin/verificar/reenviar";
   const isAdminProtegida = path.startsWith("/admin") && !isAdminPublica;
+  const redirecionar = (url: URL) =>
+    copiarCookiesResposta(supabaseResponse, NextResponse.redirect(url));
 
   if (isAdminProtegida) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/admin/login";
-      return NextResponse.redirect(url);
+      return redirecionar(url);
     }
 
     const { data: admin, error: erroAdmin } = await supabase
@@ -78,14 +81,14 @@ export async function updateSession(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = "/admin/login";
       url.searchParams.set("erro", "sem_permissao");
-      return NextResponse.redirect(url);
+      return redirecionar(url);
     }
 
     const dispensa2FA = dispensa2FAParaAdmin(user.id);
     if (dispensa2FA && path === "/admin/verificar") {
       const url = request.nextUrl.clone();
       url.pathname = "/admin";
-      return NextResponse.redirect(url);
+      return redirecionar(url);
     }
 
     // Segundo fator: exigido para qualquer rota do Admin fora da própria
@@ -96,7 +99,7 @@ export async function updateSession(request: NextRequest) {
       if (!segundoFatorOk) {
         const url = request.nextUrl.clone();
         url.pathname = "/admin/verificar";
-        return NextResponse.redirect(url);
+        return redirecionar(url);
       }
     }
   }
@@ -104,7 +107,7 @@ export async function updateSession(request: NextRequest) {
   if (isRotaProtegida && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return redirecionar(url);
   }
 
   if (user && (isRotaProtegida || isRotaSuspenso || isRotaTesteEncerrado)) {
@@ -131,7 +134,7 @@ export async function updateSession(request: NextRequest) {
     if (decisao.destino) {
       const url = request.nextUrl.clone();
       url.pathname = decisao.destino;
-      return NextResponse.redirect(url);
+      return redirecionar(url);
     }
   }
 

@@ -44,9 +44,8 @@ export default async function AdminTabs({ active, pipelineBadge }: { active: "pi
           </Link>
         ))}
       </div>
-      <Link
-        href="/admin/logout"
-        style={{
+      <form action="/admin/logout" method="post" style={{ marginBottom: 6 }}>
+        <button type="submit" style={{
           padding: "8px 16px",
           fontSize: 12,
           fontWeight: 600,
@@ -56,12 +55,11 @@ export default async function AdminTabs({ active, pipelineBadge }: { active: "pi
           textDecoration: "none",
           border: "1px solid rgba(192,57,43,0.35)",
           borderRadius: 999,
-          marginBottom: 6,
           whiteSpace: "nowrap",
-        }}
-      >
-        Sair
-      </Link>
+          background: "transparent",
+          cursor: "pointer",
+        }}>Sair</button>
+      </form>
     </div>
   );
 }
