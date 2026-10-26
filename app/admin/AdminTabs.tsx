@@ -1,5 +1,6 @@
 import { temPermissaoAdmin, type PapelAdmin } from "@/lib/admin/permissoes";
 import Link from "next/link";
+import CapacidadeResendPainel from "./CapacidadeResendPainel";
 
 const TABS = [
   { id: "pipeline", label: "Jornada", href: "/admin" },
@@ -13,6 +14,8 @@ const TABS = [
 export default function AdminTabs({ active, pipelineBadge, papel }: { active: "pipeline" | "solicitacoes" | "clientes" | "relacionamento" | "financeiro" | "licencas"; pipelineBadge?: number; papel: PapelAdmin }) {
   const tabsVisiveis = TABS.filter((tab) => tab.id !== "financeiro" || temPermissaoAdmin(papel, "financeiro.visualizar"));
   return (
+    <>
+    <CapacidadeResendPainel />
     <div
       className="mb-8 flex items-center gap-2"
       style={{ borderBottom: "1px solid rgba(201,168,76,0.18)", justifyContent: "space-between" }}
@@ -59,5 +62,6 @@ export default function AdminTabs({ active, pipelineBadge, papel }: { active: "p
         }}>Sair</button>
       </form>
     </div>
+    </>
   );
 }

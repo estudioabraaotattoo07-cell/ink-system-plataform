@@ -29,16 +29,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const admin = await exigirPermissao("painel.visualizar", medidor);
   const permissoes = permissoesInterfaceAdmin(admin.papel);
   const sbAdmin = getAdminClient();
-  const hojeStr = new Date().toISOString().slice(0, 10);
-  const usoHojePromise = medidor.medir("painel.mensageriaHoje", () => sbAdmin.from("mensageria_diario").select("emails_enviados").neq("user_id", LABORATORIO_AUTH_USER_ID).eq("dia", hojeStr));
   let conteudo: ReactNode;
   let pipelineBadge = 0;
   let erro: { message: string } | null = null;
-  let usoHojeResult: Awaited<typeof usoHojePromise>;
 
   if (abaAtiva === "pipeline") {
-    const [usoResult, contasResult, jornadasResult, documentosResult, eventosResult, mensagensResult, avaliacoesResult] = await Promise.all([
-      usoHojePromise,
+    const [contasResult, jornadasResult, documentosResult, eventosResult, mensagensResult, avaliacoesResult] = await Promise.all([
       medidor.medir("jornada.contas", () => sbAdmin.from("ink_contas_comerciais").select("id, auth_user_id, nome, email, whatsapp, etapa, origem, criado_em, atualizado_em").order("atualizado_em", { ascending: false })),
       medidor.medir("jornada.jornadas", () => sbAdmin.from("ink_jornada_comercial").select(CAMPOS_JORNADA)),
       medidor.medir("jornada.documentos", () => sbAdmin.from("ink_identidades_documentais").select("conta_id, tipo, ultimos_quatro, comparacao_status")),
@@ -46,7 +42,6 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       medidor.medir("jornada.mensagens", () => sbAdmin.from("ink_mensagens_comerciais").select("id, conta_id, codigo, nome, canal, status, agendado_em, criado_em").order("criado_em", { ascending: false })),
       medidor.medir("jornada.avaliacoes", () => sbAdmin.from("ink_avaliacoes_comerciais").select("id, conta_id, nota, pontos_positivos, dificuldades, sugestoes, solicita_suporte, criado_em").order("criado_em", { ascending: false })),
     ]);
-    usoHojeResult = usoResult;
     const consultas = [contasResult, jornadasResult, documentosResult, eventosResult, mensagensResult, avaliacoesResult];
     erro = erro || consultas.find((c) => c.error)?.error || null;
     const contas = contasResult.data ?? [];
@@ -73,12 +68,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     medidor.registrar("jornada.processamento", marcoProcessamento);
     conteudo = <div className="mb-8"><JornadaCompradoresBoard compradores={compradores} /></div>;
   } else if (abaAtiva === "solicitacoes") {
-    const [usoResult, leadsResult, contaLaboratorioResult] = await Promise.all([
-      usoHojePromise,
+    const [leadsResult, contaLaboratorioResult] = await Promise.all([
       medidor.medir("solicitacoes.leads", () => sbAdmin.from("ink_leads").select(CAMPOS_LEAD).order("created_at", { ascending: false })),
       medidor.medir("solicitacoes.laboratorio", () => sbAdmin.from("ink_contas_comerciais").select("id").eq("auth_user_id", LABORATORIO_AUTH_USER_ID).maybeSingle()),
     ]);
-    usoHojeResult = usoResult;
     erro = erro || leadsResult.error || contaLaboratorioResult.error || null;
     const marcoProcessamento = medidor.marco();
     const leads = (leadsResult.data ?? []) as Lead[];
@@ -88,15 +81,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     conteudo = <div className="mb-8"><PipelineBoard leads={leadsVisiveis} permissoes={permissoes} /></div>;
   } else {
     const dataTrintaDiasAtras = new Date(); dataTrintaDiasAtras.setUTCDate(dataTrintaDiasAtras.getUTCDate() - 30); const trintaDiasAtras = dataTrintaDiasAtras.toISOString().slice(0, 10);
-    const [usoDiarioResult, clientesResult, chamadosResult, statsResult, usoResult, falhasResult] = await Promise.all([
-      usoHojePromise,
+    const [clientesResult, chamadosResult, statsResult, usoResult, falhasResult] = await Promise.all([
       medidor.medir("clientes.clientes", () => sbAdmin.from("ink_clientes").select(CAMPOS_CLIENTE).neq("auth_user_id", LABORATORIO_AUTH_USER_ID).order("criado_em", { ascending: false })),
       medidor.medir("clientes.chamados", () => sbAdmin.from("ink_chamados").select("ink_cliente_id, status")),
       medidor.medir("clientes.stats", () => sbAdmin.from("site_stats").select("user_id, visitas, cliques").neq("user_id", LABORATORIO_AUTH_USER_ID).gte("dia", trintaDiasAtras)),
       medidor.medir("clientes.uso", () => sbAdmin.from("mensageria_uso").select("user_id, emails_comprados").neq("user_id", LABORATORIO_AUTH_USER_ID).eq("ano_mes", new Date().toISOString().slice(0, 7))),
       medidor.medir("clientes.falhas", () => sbAdmin.from("mensageria_falhas").select("user_id, canal, motivo, criado_em").neq("user_id", LABORATORIO_AUTH_USER_ID).gte("criado_em", trintaDiasAtras).order("criado_em", { ascending: false })),
     ]);
-    usoHojeResult = usoDiarioResult;
     const consultas = [clientesResult, chamadosResult, statsResult, usoResult, falhasResult]; erro = erro || consultas.find((c) => c.error)?.error || null;
     const marcoProcessamento = medidor.marco();
     const chamadosPorCliente = new Map<string, { total: number; abertos: number }>(); for (const chamado of chamadosResult.data ?? []) { const atual = chamadosPorCliente.get(chamado.ink_cliente_id) ?? { total: 0, abertos: 0 }; atual.total++; if (chamado.status === "aberto") atual.abertos++; chamadosPorCliente.set(chamado.ink_cliente_id, atual); }
@@ -110,9 +101,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     conteudo = <><div className="mb-8"><div style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "#C9A84C", marginBottom: 10 }}>Ranking de visitas nos sites (últimos 30 dias)</div>{ranking.length === 0 ? <div className="text-sm text-neutral-500">Nenhuma visita registrada ainda nos últimos 30 dias.</div> : <div className="overflow-x-auto"><table className="text-sm border-collapse whitespace-nowrap"><thead><tr className="text-left text-neutral-400 border-b border-neutral-800">{["#", "Estúdio", "Visitas", "Cliques em CTA", "Conversão"].map((h) => <th key={h} className="py-2 pr-4">{h}</th>)}</tr></thead><tbody>{ranking.map((item, i) => <tr key={item.cliente.id} className="border-b border-neutral-900"><td className="py-2 pr-4 text-neutral-500">{i + 1}º</td><td className="py-2 pr-4">{item.cliente.nome_estudio || "—"} <span className="text-neutral-500">/{item.cliente.slug}</span></td><td className="py-2 pr-4">{item.visitas}</td><td className="py-2 pr-4">{item.cliques}</td><td className="py-2 pr-4">{item.visitas > 0 ? `${((item.cliques / item.visitas) * 100).toFixed(0)}%` : "—"}</td></tr>)}</tbody></table></div>}</div><ClientesTable linhas={linhasView} permissoes={permissoes} /></>;
   }
 
-  const emailsHoje = (usoHojeResult.data ?? []).reduce((s, u) => s + (u.emails_enviados || 0), 0);
-  erro = usoHojeResult.error || erro;
   medidor.finalizar(erro ? "erro" : "ok");
 
-  return <main className="min-h-screen text-neutral-100 p-8" style={{ background: "radial-gradient(ellipse 900px 500px at 0% -10%, rgba(139,92,222,0.22), transparent 65%), #0A0A0A" }}><div className="mb-8 flex items-center gap-5" style={{ justifyContent: "space-between", borderBottom: "1px solid rgba(201,168,76,0.18)", paddingBottom: 20 }}><div className="flex items-center gap-5"><img src="/logo-ink-system.png" alt="INK SYSTEM" style={{ height: 44, width: "auto", display: "block" }} /><div style={{ width: 1, height: 56, background: "linear-gradient(to bottom, transparent, #C9A84C, transparent)", boxShadow: "0 0 6px rgba(201,168,76,0.5)" }} /><span style={{ fontSize: 14, fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "#C9A84C", textShadow: "0 0 12px rgba(201,168,76,0.4)" }}>Painel do Administrador</span></div><div title="Total de todos os estúdios, hoje" style={{ display: "flex", gap: 14, background: "#0A0A0A", border: "1px solid rgba(201,168,76,0.25)", borderRadius: 999, padding: "8px 18px" }}>📧 <span style={{ fontSize: 13, fontWeight: 700, color: "#E8E2D9" }}>{emailsHoje}</span><span style={{ fontSize: 10, color: "#6B5E54" }}>hoje</span></div></div>{erro && <div className="mb-6 text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-4 py-3">Erro ao buscar dados do Supabase: {erro.message}</div>}<AdminTabs active={abaAtiva} pipelineBadge={pipelineBadge} papel={admin.papel} />{conteudo}</main>;
+  return <main className="min-h-screen text-neutral-100 p-8" style={{ background: "radial-gradient(ellipse 900px 500px at 0% -10%, rgba(139,92,222,0.22), transparent 65%), #0A0A0A" }}><div className="mb-8 flex items-center gap-5" style={{ justifyContent: "space-between", borderBottom: "1px solid rgba(201,168,76,0.18)", paddingBottom: 20 }}><div className="flex items-center gap-5"><img src="/logo-ink-system.png" alt="INK SYSTEM" style={{ height: 44, width: "auto", display: "block" }} /><div style={{ width: 1, height: 56, background: "linear-gradient(to bottom, transparent, #C9A84C, transparent)", boxShadow: "0 0 6px rgba(201,168,76,0.5)" }} /><span style={{ fontSize: 14, fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "#C9A84C", textShadow: "0 0 12px rgba(201,168,76,0.4)" }}>Painel do Administrador</span></div></div>{erro && <div className="mb-6 text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-4 py-3">Erro ao buscar dados do Supabase: {erro.message}</div>}<AdminTabs active={abaAtiva} pipelineBadge={pipelineBadge} papel={admin.papel} />{conteudo}</main>;
 }
