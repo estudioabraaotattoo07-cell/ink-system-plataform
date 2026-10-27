@@ -1,13 +1,13 @@
 import "server-only";
 
 import { criarClienteAdministrativo } from "@/lib/admin/autorizacao";
+import { observarEnvio2fa, observacao2faAtiva } from "@/lib/admin/observacaoCapacidade2fa";
 export { gerarCookie2FA, cookie2FAValido } from "@/lib/admin/cookie2fa";
 
 // Envia direto (em vez de usar dispararEmail(), que só devolve true/false)
-// para poder registrar o motivo real de uma falha -- só no log do servidor
-// (Vercel > Logs), nunca na resposta HTTP nem na tela. O chamador sempre
-// recebe só um erro genérico.
-async function enviarEmailComLogServidor(to: string, subject: string, html: string): Promise<boolean> {
+// para registrar apenas o status da falha no servidor, sem corpo da resposta,
+// credenciais ou conteúdo do 2FA. O chamador recebe erro genérico.
+async function enviarEmailComLogServidor(sb: ReturnType<typeof criarClienteAdministrativo>, to: string, subject: string, html: string): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_REMETENTE;
   if (!apiKey || !from) {
@@ -15,19 +15,27 @@ async function enviarEmailComLogServidor(to: string, subject: string, html: stri
     return false;
   }
   try {
-    const res = await fetch("https://api.resend.com/emails", {
+    const enviar = () => fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: "Bearer " + apiKey, "Content-Type": "application/json" },
       body: JSON.stringify({ from, to, subject, html }),
     });
+    const res = await observarEnvio2fa({
+      ativo: observacao2faAtiva(),
+      rpc: async (nome, args, signal) => {
+        const { data, error } = await sb.rpc(nome, args).abortSignal(signal);
+        return { data, error: error ? { code: error.code } : null };
+      },
+      enviar,
+      aviso: (codigo) => console.warn(`[admin-2fa] observacao_capacidade: ${codigo}`),
+    });
     if (!res.ok) {
-      const corpo = await res.text().catch(() => "");
-      console.error(`[admin-2fa] Resend respondeu ${res.status}: ${corpo.slice(0, 300)}`);
+      console.error(`[admin-2fa] Resend respondeu ${res.status}.`);
       return false;
     }
     return true;
-  } catch (e) {
-    console.error("[admin-2fa] falha de rede ao chamar o Resend:", e instanceof Error ? e.message : String(e));
+  } catch {
+    console.error("[admin-2fa] falha de rede ao chamar o Resend.");
     return false;
   }
 }
@@ -95,6 +103,7 @@ export async function enviarCodigoAdmin(authUserId: string, email: string): Prom
   if (error) throw new Error("Não foi possível gerar o código de verificação.");
 
   const enviado = await enviarEmailComLogServidor(
+    sb,
     email,
     "Seu código de acesso — Painel Admin",
     `<p>Seu código de verificação é <strong style="font-size:20px;letter-spacing:4px;">${codigo}</strong>.</p><p>Válido por ${VALIDADE_CODIGO_MINUTOS} minutos. Se você não pediu este código, ignore este e-mail.</p>`
