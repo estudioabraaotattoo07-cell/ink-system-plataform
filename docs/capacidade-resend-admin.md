@@ -16,9 +16,17 @@
 - A consulta automática ao painel ocorre a cada minuto enquanto a aba está
   visível. Uma nova chamada ao Resend requer pelo menos cinco minutos desde a
   última leitura persistida. A atualização manual respeita mínimo de um minuto.
-  A tabela compartilhada é o limitador de frequência entre instâncias; duas
-  instâncias concorrentes ainda podem consultar simultaneamente. Não é
-  sincronização em tempo real.
+  O início da consulta e o momento em que a resposta chegou são mantidos
+  separadamente nos metadados versionados de `observacao`; `monthly.resetsAt`
+  continua sendo exatamente o timestamp devolvido pelo Resend. Metadados v1
+  existentes continuam legíveis. A leitura nova confere novamente o registro
+  mais recente antes de inserir e descarta uma resposta cuja consulta começou
+  antes de uma leitura mais nova.
+- Essa conferência reduz sobrescritas fora de ordem, mas não é uma trava
+  transacional entre instâncias. Duas instâncias ainda podem consultar e
+  inserir ao mesmo tempo, inclusive para uma resposta repetida. Deduplicação
+  persistente e concorrência atômica exigem contrato de banco separado; não
+  estão resolvidas por este bloco.
 
 ## Contrato da tela
 
@@ -35,7 +43,9 @@
   envio usam a mesma equipe Resend. A contabilidade interna iniciou depois de
   parte do ciclo de outubro; nunca somar os dois consumos.
 - Na falha da API, a última leitura válida permanece datada e sinalizada como
-  desatualizada. Não há bloqueio de envios, decisão global nem alteração no M400.
+  desatualizada. Respostas inválidas e credencial rejeitada têm estados
+  distintos e também preservam a última leitura válida. Não há bloqueio de
+  envios, decisão global nem alteração no M400.
 - Laboratório e contas comerciais são mostrados apenas na visão de mensageria.
   Os indicadores comerciais continuam excluindo o Laboratório. Os direitos
   individuais são lidos de `licencas`; não se escrevem licenças nem quotas.

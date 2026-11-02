@@ -35,6 +35,9 @@ test("limite diário ausente não vira zero ou um limite inventado", () => {
   const uso = core.validarUsoResend({ ...exemplo, emails: { ...exemplo.emails, daily: { ...exemplo.emails.daily, limit: null } } });
   assert.equal(core.restanteOficial(uso.daily), null);
   assert.equal(core.faixaUso(uso.daily), "sem_limite");
+  const mensalSemTeto = core.validarUsoResend({ ...exemplo, emails: { ...exemplo.emails, monthly: { ...exemplo.emails.monthly, limit: null } } });
+  assert.equal(mensalSemTeto.monthly.limit, null);
+  assert.equal(core.restanteOficial(mensalSemTeto.monthly), null);
 });
 
 test("mudança de plano usa o novo limite da API sem constante comercial", () => {
@@ -53,14 +56,44 @@ test("leitura oficial é persistida e recuperada sem secret e com renovação", 
   assert.equal(row.fonte, "resend_account_usage");
   assert.equal(row.uso_mes, 201);
   assert.equal(row.limite_mensal, 3000);
-  assert.deepEqual(core.recuperarLeitura(row), { uso, capturadoEm: row.capturado_em });
+  assert.deepEqual(core.recuperarLeitura(row), { uso, capturadoEm: row.capturado_em, solicitadoEm: row.capturado_em });
   assert.doesNotMatch(row.observacao, /Bearer|RESEND_USAGE_API_KEY|re_[A-Za-z0-9]/);
 });
 
 test("payload inválido e leitura legada não são mostrados como oficiais", () => {
   assert.throws(() => core.validarUsoResend({ emails: exemplo.emails }));
   assert.throws(() => core.validarUsoResend({ ...exemplo, emails: { ...exemplo.emails, monthly: { ...exemplo.emails.monthly, used: -1 } } }));
+  assert.throws(() => core.validarUsoResend({ ...exemplo, emails: { ...exemplo.emails, monthly: { ...exemplo.emails.monthly, resets_at: "2026-11-01" } } }));
+  assert.throws(() => core.validarUsoResend({ ...exemplo, emails: { ...exemplo.emails, monthly: { ...exemplo.emails.monthly, resets_at: "2026-02-30T00:00:00Z" } } }));
+  assert.throws(() => core.validarUsoResend({ ...exemplo, emails: { ...exemplo.emails, monthly: { ...exemplo.emails.monthly, resets_at: "2026-11-01T00:00:00+24:00" } } }));
   assert.equal(core.recuperarLeitura({ capturado_em: "2026-10-26T12:00:00Z", uso_dia: 1, uso_mes: 1, limite_diario: 100, limite_mensal: 3000, observacao: null }), null);
+});
+
+test("captura local fica separada do resetsAt oficial e metadados v1 continuam legíveis", () => {
+  const uso = core.validarUsoResend(exemplo);
+  const linha = core.montarLeitura(uso, "2026-10-26T12:02:00.000Z", "2026-10-26T12:01:55.000Z");
+  const recuperada = core.recuperarLeitura(linha);
+  assert.equal(recuperada?.capturadoEm, "2026-10-26T12:02:00.000Z");
+  assert.equal(recuperada?.solicitadoEm, "2026-10-26T12:01:55.000Z");
+  assert.equal(recuperada?.uso.monthly.resetsAt, "2026-11-01T00:00:00.000Z");
+  const v1 = { ...linha, observacao: JSON.stringify({ v: 1, daily: { sent: 27, received: 1, resetsAt: uso.daily.resetsAt }, monthly: { sent: 200, received: 1, resetsAt: uso.monthly.resetsAt } }) };
+  const legada = core.recuperarLeitura(v1);
+  assert.equal(legada?.solicitadoEm, v1.capturado_em);
+  assert.deepEqual(legada?.uso, uso);
+});
+
+test("repetir resposta preserva o mesmo limite e resetsAt do provedor", () => {
+  const primeira = core.validarUsoResend(exemplo);
+  const repetida = core.validarUsoResend(exemplo);
+  assert.deepEqual(repetida, primeira);
+  assert.equal(repetida.monthly.limit, 3000);
+  assert.equal(repetida.monthly.resetsAt, "2026-11-01T00:00:00.000Z");
+});
+
+test("consulta iniciada antes de uma leitura já gravada não deve substituí-la ao chegar depois", () => {
+  const atual = { capturadoEm: "2026-10-26T12:02:00.000Z", solicitadoEm: "2026-10-26T12:01:30.000Z" };
+  assert.equal(core.leituraNaoFoiSuperada("2026-10-26T12:01:00.000Z", atual), false);
+  assert.equal(core.leituraNaoFoiSuperada("2026-10-26T12:02:01.000Z", atual), true);
 });
 
 test("servidor não usa barra SQL v1 como número oficial e protege a rota", () => {

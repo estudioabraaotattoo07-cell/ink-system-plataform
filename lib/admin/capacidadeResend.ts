@@ -24,7 +24,16 @@ function inteiro(valor: unknown): number {
 
 function instante(valor: unknown): string | null {
   if (valor === null) return null;
-  if (typeof valor !== "string" || !Number.isFinite(Date.parse(valor))) {
+  if (typeof valor !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/i.test(valor) || !Number.isFinite(Date.parse(valor))) {
+    throw new Error("Data de renovação inválida.");
+  }
+  const partes = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/.exec(valor);
+  if (!partes) throw new Error("Data de renovação inválida.");
+  const [, ano, mes, dia, hora, minuto, segundo] = partes.map(Number);
+  const fuso = /([+-])(\d{2}):(\d{2})$/.exec(valor);
+  const diasNoMes = new Date(Date.UTC(ano, mes, 0)).getUTCDate();
+  if (mes < 1 || mes > 12 || dia < 1 || dia > diasNoMes || hora > 23 || minuto > 59 || segundo > 59 ||
+      (fuso && (Number(fuso[2]) > 23 || Number(fuso[3]) > 59))) {
     throw new Error("Data de renovação inválida.");
   }
   return valor;
@@ -66,9 +75,13 @@ export type LeituraPersistida = {
   observacao: string | null;
 };
 
+export function manterUltimaLeituraValida<T>(anterior: T | null, resultado: { estado: string; nova?: T }): T | null {
+  return resultado.estado === "valida" && resultado.nova !== undefined ? resultado.nova : anterior;
+}
+
 // observacao é texto no contrato 1B. Guardamos somente metadados públicos
 // da resposta oficial, com versão, sem alterar a tabela compartilhada.
-export function montarLeitura(uso: UsoResend, capturadoEm: string) {
+export function montarLeitura(uso: UsoResend, capturadoEm: string, solicitadoEm = capturadoEm) {
   return {
     fonte: "resend_account_usage",
     capturado_em: capturadoEm,
@@ -76,7 +89,7 @@ export function montarLeitura(uso: UsoResend, capturadoEm: string) {
     uso_mes: uso.monthly.used,
     limite_diario: uso.daily.limit,
     limite_mensal: uso.monthly.limit,
-    observacao: JSON.stringify({ v: 1, daily: {
+    observacao: JSON.stringify({ v: 2, solicitadoEm, daily: {
       sent: uso.daily.sent, received: uso.daily.received, resetsAt: uso.daily.resetsAt,
     }, monthly: {
       sent: uso.monthly.sent, received: uso.monthly.received, resetsAt: uso.monthly.resetsAt,
@@ -84,11 +97,14 @@ export function montarLeitura(uso: UsoResend, capturadoEm: string) {
   };
 }
 
-export function recuperarLeitura(linha: LeituraPersistida | null): { uso: UsoResend; capturadoEm: string } | null {
-  if (!linha || !Number.isFinite(Date.parse(linha.capturado_em))) return null;
+export function recuperarLeitura(linha: LeituraPersistida | null): { uso: UsoResend; capturadoEm: string; solicitadoEm: string } | null {
+  if (!linha) return null;
   try {
+    if (!instante(linha.capturado_em)) return null;
     const metadados = objeto(JSON.parse(linha.observacao || "null"));
-    if (metadados.v !== 1) return null;
+    if (metadados.v !== 1 && metadados.v !== 2) return null;
+    const solicitadoEm = metadados.v === 2 ? instante(metadados.solicitadoEm) : linha.capturado_em;
+    if (!solicitadoEm) return null;
     const daily = objeto(metadados.daily);
     const monthly = objeto(metadados.monthly);
     const dailyUsed = inteiro(linha.uso_dia);
@@ -99,6 +115,7 @@ export function recuperarLeitura(linha: LeituraPersistida | null): { uso: UsoRes
     const monthlyReceived = inteiro(monthly.received);
     return {
       capturadoEm: linha.capturado_em,
+      solicitadoEm,
       uso: {
         daily: { used: dailyUsed, limit: linha.limite_diario === null ? null : inteiro(linha.limite_diario), sent: dailySent, received: dailyReceived, resetsAt: instante(daily.resetsAt) },
         monthly: { used: monthlyUsed, limit: linha.limite_mensal === null ? null : inteiro(linha.limite_mensal), sent: monthlySent, received: monthlyReceived, resetsAt: instante(monthly.resetsAt) },
@@ -106,5 +123,21 @@ export function recuperarLeitura(linha: LeituraPersistida | null): { uso: UsoRes
     };
   } catch {
     return null;
+  }
+}
+
+// A leitura oficial não informa quando o provedor calculou o snapshot. Usamos
+// o início da consulta como sequência local: uma resposta de consulta iniciada
+// antes da leitura já persistida não deve substituí-la só porque chegou depois.
+export function leituraNaoFoiSuperada(solicitadoEm: string, atual: { capturadoEm: string; solicitadoEm?: string } | null): boolean {
+  try {
+    instante(solicitadoEm);
+    if (!atual) return true;
+    instante(atual.capturadoEm);
+    const inicioAtual = atual.solicitadoEm ? instante(atual.solicitadoEm) : atual.capturadoEm;
+    if (!inicioAtual) return false;
+    return Date.parse(solicitadoEm) >= Date.parse(inicioAtual);
+  } catch {
+    return false;
   }
 }

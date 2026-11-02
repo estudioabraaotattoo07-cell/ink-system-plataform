@@ -6,7 +6,7 @@ import { faixaUso, restanteOficial, type UsoResend } from "@/lib/admin/capacidad
 type Conta = { userId: string; nome: string; email: string; direito: { plano: string; status: string } | null; diaConsumido: number; mesConsumido: number; mesReservado: number; mesBloqueado: number };
 type Resposta = {
   oficial: { uso: UsoResend; capturadoEm: string; fonte: "resend" } | null;
-  estado: "atualizado" | "desatualizado" | "credencial_ausente" | "erro_resend" | "erro_persistencia" | "sem_leitura";
+  estado: "atualizado" | "desatualizado" | "credencial_ausente" | "credencial_rejeitada" | "erro_resposta_invalida" | "erro_resend" | "erro_persistencia" | "sem_leitura";
   interno: {
     conferenciaContadores: { mesConsumidoFatos?: number; mesReservadoFatos?: number } | null;
     laboratorio: { diaConsumido: number; mesConsumido: number; mesReservado: number; mesBloqueado: number; enviosAceitos: number | null; falhasMes: number | null } | null;
@@ -48,7 +48,7 @@ function Janela({ titulo, janela, diaria = false }: { titulo: string; janela: Us
       </>
     )}
     <div className="mt-2 text-xs text-neutral-400">{numero(janela.used)} utilizados · {numero(janela.sent)} enviados · {numero(janela.received)} recebidos</div>
-    <div className="mt-1 text-xs text-neutral-500">Próxima renovação: {data(janela.resetsAt)}</div>
+    <div className="mt-1 text-xs text-neutral-500">Renovação informada pelo Resend: {data(janela.resetsAt)}</div>
   </div>;
 }
 
@@ -90,6 +90,8 @@ export default function CapacidadeResendPainel() {
     atualizado: "Leitura oficial sincronizada periodicamente",
     desatualizado: "Leitura oficial desatualizada",
     credencial_ausente: "Credencial administrativa Full Access não configurada",
+    credencial_rejeitada: "Credencial Resend rejeitada; última leitura válida mantida",
+    erro_resposta_invalida: "Resposta da Usage API inválida; última leitura válida mantida",
     erro_resend: "Resend indisponível; última leitura válida mantida",
     erro_persistencia: "Leitura obtida, mas persistência indisponível",
     sem_leitura: "Aguardando primeira leitura oficial",

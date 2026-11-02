@@ -2,12 +2,18 @@ import "server-only";
 
 import { criarClienteAdministrativo } from "@/lib/admin/autorizacao";
 import { LABORATORIO_AUTH_USER_ID } from "@/lib/admin/laboratorio";
-import { montarLeitura, recuperarLeitura, validarUsoResend, type LeituraPersistida, type UsoResend } from "@/lib/admin/capacidadeResend";
+import { manterUltimaLeituraValida, montarLeitura, recuperarLeitura, leituraNaoFoiSuperada, type LeituraPersistida, type UsoResend } from "@/lib/admin/capacidadeResend";
+import { consultarUsoResend } from "@/lib/admin/capacidadeResendHttp";
 
 const INTERVALO_AUTOMATICO_MS = 5 * 60_000;
 const INTERVALO_MANUAL_MINIMO_MS = 60_000;
 let proximaTentativaAposErro = 0;
-let capturaEmAndamento: Promise<{ uso: UsoResend; capturadoEm: string; erroPersistencia: boolean }> | null = null;
+type ResultadoCaptura =
+  | { estado: "valida"; uso: UsoResend; capturadoEm: string; solicitadoEm: string; erroPersistencia: boolean }
+  | { estado: "indisponivel"; motivo: "autenticacao" | "timeout" | "rede" | "http" }
+  | { estado: "invalida"; motivo: "json" | "payload" }
+  | { estado: "persistencia" };
+let capturaEmAndamento: Promise<ResultadoCaptura> | null = null;
 
 type ContaInterna = {
   userId: string;
@@ -26,27 +32,28 @@ type PainelInterno = {
   conferenciaContadores?: { mesConsumidoFatos?: number; mesReservadoFatos?: number };
 };
 
-export type EstadoCapacidade = "atualizado" | "desatualizado" | "credencial_ausente" | "erro_resend" | "erro_persistencia" | "sem_leitura";
+export type EstadoCapacidade = "atualizado" | "desatualizado" | "credencial_ausente" | "credencial_rejeitada" | "erro_resposta_invalida" | "erro_resend" | "erro_persistencia" | "sem_leitura";
 
-async function buscarUsoResend(chave: string): Promise<UsoResend> {
-  const resposta = await fetch("https://api.resend.com/usage", {
-    method: "GET",
-    headers: { Authorization: `Bearer ${chave}`, Accept: "application/json" },
-    cache: "no-store",
-    signal: AbortSignal.timeout(7_000),
-  });
-  if (!resposta.ok) throw new Error("Consulta ao Resend indisponível.");
-  return validarUsoResend(await resposta.json());
-}
-
-function capturarSemDuplicar(sb: ReturnType<typeof criarClienteAdministrativo>, chave: string) {
+function capturarSemDuplicar(sb: ReturnType<typeof criarClienteAdministrativo>, chave: string): Promise<ResultadoCaptura> {
   if (!capturaEmAndamento) {
     capturaEmAndamento = (async () => {
-      const uso = await buscarUsoResend(chave);
+      const solicitadoEm = new Date().toISOString();
+      const resultado = await consultarUsoResend(chave);
+      if (resultado.estado !== "valida") return resultado;
       const capturadoEm = new Date().toISOString();
+      const atualResult = await sb.from("mensageria_capacidade_leituras_oficiais")
+        .select("capturado_em, uso_dia, uso_mes, limite_diario, limite_mensal, observacao")
+        .eq("fonte", "resend_account_usage")
+        .order("capturado_em", { ascending: false })
+        .limit(1).maybeSingle();
+      if (atualResult.error) return { estado: "persistencia" as const };
+      const atual = recuperarLeitura((atualResult.data ?? null) as LeituraPersistida | null);
+      if (!leituraNaoFoiSuperada(solicitadoEm, atual) && atual) {
+        return { estado: "valida" as const, uso: atual.uso, capturadoEm: atual.capturadoEm, solicitadoEm: atual.solicitadoEm, erroPersistencia: false };
+      }
       const { error } = await sb.from("mensageria_capacidade_leituras_oficiais")
-        .insert(montarLeitura(uso, capturadoEm));
-      return { uso, capturadoEm, erroPersistencia: !!error };
+        .insert(montarLeitura(resultado.uso, capturadoEm, solicitadoEm));
+      return { estado: "valida" as const, uso: resultado.uso, capturadoEm, solicitadoEm, erroPersistencia: !!error };
     })().finally(() => { capturaEmAndamento = null; });
   }
   return capturaEmAndamento;
@@ -71,7 +78,7 @@ export async function consultarCapacidadeAdmin({ detalhes = false, forcar = fals
   const chave = process.env.RESEND_USAGE_API_KEY?.trim();
   const agora = Date.now();
   const idade = leitura ? agora - Date.parse(leitura.capturadoEm) : Number.POSITIVE_INFINITY;
-  let estado: EstadoCapacidade = leitura ? "atualizado" : "sem_leitura";
+  let estado: EstadoCapacidade = leitura ? "atualizado" : leituraResult.data ? "erro_resposta_invalida" : "sem_leitura";
 
   if (leituraResult.error) {
     estado = "erro_persistencia";
@@ -81,9 +88,25 @@ export async function consultarCapacidadeAdmin({ detalhes = false, forcar = fals
     if (agora < proximaTentativaAposErro) {
       estado = "erro_resend";
     } else try {
-      const { uso, capturadoEm, erroPersistencia } = await capturarSemDuplicar(sb, chave);
-      leitura = { uso, capturadoEm };
-      estado = erroPersistencia ? "erro_persistencia" : "atualizado";
+      const captura = await capturarSemDuplicar(sb, chave);
+      leitura = manterUltimaLeituraValida(leitura, {
+        estado: captura.estado,
+        nova: captura.estado === "valida" ? { uso: captura.uso, capturadoEm: captura.capturadoEm, solicitadoEm: captura.solicitadoEm } : undefined,
+      });
+      if (captura.estado === "valida") {
+        estado = captura.erroPersistencia ? "erro_persistencia" : "atualizado";
+      } else if (captura.estado === "persistencia") {
+        estado = "erro_persistencia";
+      } else if (captura.estado === "invalida") {
+        proximaTentativaAposErro = Date.now() + INTERVALO_AUTOMATICO_MS;
+        estado = "erro_resposta_invalida";
+      } else if (captura.motivo === "autenticacao") {
+        proximaTentativaAposErro = Date.now() + INTERVALO_AUTOMATICO_MS;
+        estado = "credencial_rejeitada";
+      } else {
+        proximaTentativaAposErro = Date.now() + INTERVALO_AUTOMATICO_MS;
+        estado = "erro_resend";
+      }
     } catch {
       // Nunca retornar credencial, resposta bruta nem transformar contador
       // interno em saldo oficial em caso de falha do provedor.
