@@ -9,7 +9,7 @@
 //   1. o bloco legado NÃO envia mais -- nem sessão, nem consulta, nem sem dedup, nem com canal/toggle divergentes, nem
 //      para evento cancelado, nem para uma série recorrente --, e nenhuma chamada Resend/Zenvia sai por causa dele;
 //   2. nada é gravado por ele (nenhuma chave `__confirma_*__`, nenhum histórico "confirmação ... enviado");
-//   3. o restante do motor continua funcionando (controles positivos: Avaliação Google e boas-vindas de Aguardando
+//   3. o restante do motor continua funcionando (controles positivos: NPS e-mail 1 e boas-vindas de Aguardando
 //      Agendamento) e o cron/route/vercel.json permanecem;
 //   4. estruturalmente: constante CONFIRMACAO_LEGADA_ATIVA = false gateando só esse bloco, código preservado.
 //
@@ -164,17 +164,18 @@ test("nenhum e-mail com 'está confirmada' sai do motor, em NENHUM cenário, par
 });
 
 // ── controles positivos: o restante de executarMotorDisparos() continua funcionando ─────────────────────────
-test("CONTROLE: Avaliação Google (outro bloco, mesmo loop) continua enviando -- o motor não foi desligado", async () => {
+test("CONTROLE: NPS e-mail 1 (outro bloco, mesmo loop) continua enviando -- o motor não foi desligado", async () => {
   const f = fixtures();
-  f.clientes.push({ id: "cB", user_id: "u1", nome: "Bruno Teste", email: "bruno@exemplo.com", tel: "", etapa: "tatuado", etapa_desde: TRES_DIAS_ATRAS, disparos_enviados: {}, excluido_em: null, sessao_concluida_em: TRES_DIAS_ATRAS });
+  f.clientes.push({ id: "cB", user_id: "u1", nome: "Bruno Teste", email: "bruno@exemplo.com", tel: "", etapa: "pos_venda", etapa_desde: TRES_DIAS_ATRAS, disparos_enviados: {}, excluido_em: null, sessao_concluida_em: null });
   const { resultado, chamadas } = await executarMotor(f);
   assert.equal(resultado.status, 200);
   const e = envios(chamadas);
-  assert.equal(e.length, 1, "exatamente o e-mail da Avaliação Google do cliente B; nada para o cliente A");
+  assert.equal(e.length, 1, "exatamente o NPS e-mail 1 do cliente B; nada para o cliente A");
   assert.equal(e[0].corpo.to, "bruno@exemplo.com");
   assert.doesNotMatch(String(e[0].corpo.subject), /confirmada/);
   assert.equal(resultado.body.disparos, 1);
-  assert.ok(chamadas.some((c) => c.tabela === "clientes" && c.metodo !== "GET" && /__avaliacao_google__/.test(corpoTexto(c))), "dedup do próprio bloco de Avaliação segue gravado");
+  assert.ok(chamadas.some((c) => c.tabela === "clientes" && c.metodo !== "GET" && /"avaliacao_fluxo_status":"aguardando"/.test(corpoTexto(c))), "o fluxo do NPS e-mail 1 segue gravado");
+  assert.ok(!chamadas.some((c) => c.tabela === "clientes" && c.metodo !== "GET" && /__avaliacao_google__/.test(corpoTexto(c))), "a Avaliação Google D+1 não grava mais a marca");
 });
 
 test("CONTROLE: Aguardando Agendamento (aguard_agend) é APOSENTADO neste motor -- nada é enviado nem gravado (a régua por Projeto vive no inq-saas)", async () => {
@@ -189,7 +190,7 @@ test("CONTROLE: Aguardando Agendamento (aguard_agend) é APOSENTADO neste motor 
 test("CONTROLE: com o legado desligado, cliente em sessao_agend + cliente que aciona outros blocos => só os outros blocos enviam, nada de 'confirmada'", async () => {
   const f = fixtures();
   f.clientes.push(
-    { id: "cB", user_id: "u1", nome: "Bruno Teste", email: "bruno@exemplo.com", tel: "", etapa: "tatuado", etapa_desde: TRES_DIAS_ATRAS, disparos_enviados: {}, excluido_em: null, sessao_concluida_em: TRES_DIAS_ATRAS },
+    { id: "cB", user_id: "u1", nome: "Bruno Teste", email: "bruno@exemplo.com", tel: "", etapa: "pos_venda", etapa_desde: TRES_DIAS_ATRAS, disparos_enviados: {}, excluido_em: null, sessao_concluida_em: null },
     { id: "cC", user_id: "u1", nome: "Carla Teste", email: "carla@exemplo.com", tel: "", etapa: "aguard_agend", etapa_desde: ETAPA_DESDE, disparos_enviados: {}, excluido_em: null, sessao_concluida_em: null, projetos: [] },
   );
   const { resultado, chamadas } = await executarMotor(f);

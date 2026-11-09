@@ -7,8 +7,8 @@
 //   1. o bloco D-1 antigo NÃO executa mais: não gera clientes.confirmacao_token, não
 //      envia /confirmar.html?token=, não envia para evento cancelado, não busca a
 //      agenda de amanhã, não registra "Lembrete D-1"/"Confirmação de presença D-1";
-//   2. os OUTROS disparos do motor continuam funcionando (controle positivo: e-mail
-//      da Avaliação Google, que roda no mesmo loop por cliente) e o cron não é
+//   2. os OUTROS disparos do motor continuam funcionando (controle positivo: NPS
+//      e-mail 1, que roda no mesmo loop por cliente) e o cron não é
 //      desligado (a rota/vercel.json permanecem);
 //   3. as demais réguas continuam presentes no código.
 //
@@ -47,8 +47,8 @@ function montarFixtures() {
     clientes: [
       // cliente que o bloco D-1 legado atenderia (etapa sessao_agend, evento amanhã, e-mail válido)
       { id: "cA", user_id: "u-dono", nome: "Maria Teste", email: "maria@exemplo.com", tel: "", etapa: "sessao_agend", etapa_desde: new Date().toISOString(), disparos_enviados: {}, excluido_em: null, confirmacao_token: null, sessao_concluida_em: null },
-      // cliente do controle positivo: sessão concluída há 3 dias => e-mail de Avaliação Google (outro disparo, mesmo loop)
-      { id: "cB", user_id: "u-dono", nome: "Bruno Teste", email: "bruno@exemplo.com", tel: "", etapa: "tatuado", etapa_desde: tresDiasAtras, disparos_enviados: {}, excluido_em: null, sessao_concluida_em: tresDiasAtras },
+      // cliente do controle positivo: em pós-venda há 3 dias => NPS e-mail 1 (outro disparo, mesmo loop)
+      { id: "cB", user_id: "u-dono", nome: "Bruno Teste", email: "bruno@exemplo.com", tel: "", etapa: "pos_venda", etapa_desde: tresDiasAtras, disparos_enviados: {}, excluido_em: null, sessao_concluida_em: null },
     ],
     agenda: [
       // um evento cancelado E um agendado amanhã para o mesmo cliente: o legado pegava "o primeiro" (.limit(1)) sem filtrar cancelado
@@ -155,12 +155,12 @@ test("D-1 legado NÃO executa: o motor não consulta mais a agenda de amanhã e 
   assert.deepEqual(dedupD1, []);
 });
 
-test("CONTROLE POSITIVO -- outros disparos preservados: a Avaliação Google (mesmo loop por cliente) ainda envia e grava o dedup", async () => {
+test("CONTROLE POSITIVO -- outros disparos preservados: o NPS e-mail 1 (mesmo loop por cliente) ainda envia e grava o fluxo", async () => {
   const { chamadas } = await executarMotorComFetchFalso();
   const emailAvaliacao = chamadas.find((c) => /api\.resend\.com/.test(c.url) && /bruno@exemplo\.com/.test(corpoTexto(c)));
-  assert.ok(emailAvaliacao, "o e-mail de avaliação do Bruno deve continuar sendo enviado pelo motor");
-  const dedup = chamadas.find((c) => c.tabela === "clientes" && c.metodo !== "GET" && /__avaliacao_google__/.test(corpoTexto(c)));
-  assert.ok(dedup, "o dedup da avaliação continua sendo gravado");
+  assert.ok(emailAvaliacao, "o NPS e-mail 1 do Bruno deve continuar sendo enviado pelo motor");
+  assert.ok(chamadas.some((c) => c.tabela === "clientes" && c.metodo !== "GET" && /"avaliacao_fluxo_status":"aguardando"/.test(corpoTexto(c))), "o NPS e-mail 1 grava o fluxo 'aguardando'");
+  assert.ok(!chamadas.some((c) => c.tabela === "clientes" && c.metodo !== "GET" && /__avaliacao_google__/.test(corpoTexto(c))), "a Avaliação Google D+1 não grava mais a marca");
 });
 
 test("bloco removido do fluxo por UMA constante e nada além: D1_LEGADO_ATIVO=false gateia só o bloco D-1; réguas e o resto seguem presentes", () => {
@@ -170,7 +170,7 @@ test("bloco removido do fluxo por UMA constante e nada além: D1_LEGADO_ATIVO=fa
   assert.match(src, /if \(D1_LEGADO_ATIVO && temDisparosPrata && cfg\.fluxo_confirmacao_presenca_ativa !== false && \(cliente\.etapa === "sessao_agend" \|\| cliente\.etapa === "cons_agendada"\)\) \{/);
   // vizinhos e demais disparos ainda no arquivo, sem a nova constante
   for (const marcador of [
-    "// ── NOVAS ETAPAS SEM AUTOMAÇÃO", "// ── AVALIAÇÃO GOOGLE", "// ── PÓS-VENDA → REENGAJAMENTO — D+7", "// ── PRECISA REMARCAR",
+    "// ── NOVAS ETAPAS SEM AUTOMAÇÃO", "// ── AVALIAÇÃO GOOGLE", "// ── AVALIAÇÃO NPS + CONVITE GOOGLE", "// ── PÓS-VENDA → REENGAJAMENTO — D+7", "// ── PRECISA REMARCAR",
     "dispararMensagemEtapaSimples", "export async function executarMotorDisparos",
   ]) assert.ok(src.includes(marcador), `faltou: ${marcador}`);
   const seguinte = src.slice(src.indexOf("// ── NOVAS ETAPAS SEM AUTOMAÇÃO"));

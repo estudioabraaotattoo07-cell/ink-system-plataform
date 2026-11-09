@@ -7,7 +7,7 @@
 //      Resend + Zenvia falsos), não apaga mais Cliente da Lixeira após 30 dias
 //      nem Agenda/Financeiro/pendências/tráfego por causa dela;
 //   2. os demais disparos do motor continuam funcionando (controle positivo:
-//      Avaliação Google) e a limpeza de api_rate_limits segue ativa;
+//      NPS e-mail 1) e a limpeza de api_rate_limits segue ativa;
 //   3. a cópia do CRM (CrmClient.tsx) não tem mais exclusão definitiva de
 //      Cliente, e o reset "Apagar Dados Operacionais" não executa nenhum DELETE;
 //   4. os deletes normais de evento de Agenda e lançamento de Financeiro
@@ -44,8 +44,8 @@ function montarFixtures() {
     clientes: [
       // na Lixeira há 40 dias: o bloco antigo apagaria esta ficha e tudo ligado a ela
       { id: "cLixeira", user_id: "u-dono", nome: "Lixeira Teste", email: "lixeira@exemplo.com", tel: "", etapa: "lead", etapa_desde: quarentaDiasAtras, disparos_enviados: {}, excluido_em: quarentaDiasAtras, sessao_concluida_em: null },
-      // controle positivo: sessão concluída há 3 dias => e-mail de Avaliação Google
-      { id: "cB", user_id: "u-dono", nome: "Bruno Teste", email: "bruno@exemplo.com", tel: "", etapa: "tatuado", etapa_desde: tresDiasAtras, disparos_enviados: {}, excluido_em: null, sessao_concluida_em: tresDiasAtras },
+      // controle positivo: em pós-venda há 3 dias => NPS e-mail 1
+      { id: "cB", user_id: "u-dono", nome: "Bruno Teste", email: "bruno@exemplo.com", tel: "", etapa: "pos_venda", etapa_desde: tresDiasAtras, disparos_enviados: {}, excluido_em: null, sessao_concluida_em: null },
     ],
     agenda: [{ id: 201, cliente_id: "cLixeira", user_id: "u-dono", data: "2026-08-01", hora: "10:00", status: "agendado", tipo: "sess_ana" }],
     financeiro: [{ id: 301, cliente_id: "cLixeira", user_id: "u-dono", valor: 500, tipo: "entrada" }],
@@ -152,12 +152,12 @@ test("cron: a ficha na Lixeira não recebe disparo (o loop continua lendo só ex
   assert.equal(envios.some((e) => /lixeira@exemplo\.com/.test(corpoTexto(e))), false);
 });
 
-test("CONTROLE POSITIVO -- demais rotinas preservadas: Avaliação Google envia e grava dedup; limpeza de rate limit roda", async () => {
+test("CONTROLE POSITIVO -- demais rotinas preservadas: NPS e-mail 1 envia e grava o fluxo; limpeza de rate limit roda", async () => {
   const { chamadas } = await executarMotorComFetchFalso();
   const emailAvaliacao = chamadas.find((c) => /api\.resend\.com/.test(c.url) && /bruno@exemplo\.com/.test(corpoTexto(c)));
-  assert.ok(emailAvaliacao, "o e-mail de avaliação do Bruno deve continuar sendo enviado");
-  const dedup = chamadas.find((c) => c.tabela === "clientes" && c.metodo !== "GET" && /__avaliacao_google__/.test(corpoTexto(c)));
-  assert.ok(dedup, "o dedup da avaliação continua sendo gravado");
+  assert.ok(emailAvaliacao, "o NPS e-mail 1 do Bruno deve continuar sendo enviado");
+  assert.ok(chamadas.some((c) => c.tabela === "clientes" && c.metodo !== "GET" && /"avaliacao_fluxo_status":"aguardando"/.test(corpoTexto(c))), "o NPS e-mail 1 grava o fluxo 'aguardando'");
+  assert.ok(!chamadas.some((c) => c.tabela === "clientes" && c.metodo !== "GET" && /__avaliacao_google__/.test(corpoTexto(c))), "a Avaliação Google D+1 não grava mais a marca");
   assert.ok(chamadas.some((c) => c.tabela === "api_rate_limits" && c.metodo === "DELETE"), "limpeza de api_rate_limits preservada");
 });
 
