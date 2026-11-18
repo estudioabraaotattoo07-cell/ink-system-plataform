@@ -11,7 +11,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { avaliarAcesso, decidirRespostaAcesso, type ClienteSupabaseMinimo } from "@/lib/acesso/avaliarAcesso";
+import { avaliarAcesso, decidirRespostaAcesso, lerLegadosAutorizados, type ClienteSupabaseMinimo } from "@/lib/acesso/avaliarAcesso";
 import { rewriteUserIdParam, forceUserIdOnBody } from "@/lib/acesso/isolamentoTenant";
 import { autorizarRequisicaoProxy } from "@/lib/acesso/proxyAutorizacao";
 
@@ -37,7 +37,10 @@ async function getTenantUserId(): Promise<{ userId: string } | { error: string; 
   // interface própria. A assinatura interna de avaliarAcesso() continua
   // 100% tipada (zero "any"); só este ponto de fronteira precisa da
   // conversão.
-  const resultado = await avaliarAcesso(supabase as unknown as ClienteSupabaseMinimo, user.id);
+  // B2-C1: autorização legada EXPLÍCITA (SHA-256 do auth_user_id) vem só da configuração de servidor; o navegador não participa.
+  const resultado = await avaliarAcesso(supabase as unknown as ClienteSupabaseMinimo, user.id, new Date(), {
+    legadosAutorizadosSha256: lerLegadosAutorizados(process.env.ACESSO_LEGADO_AUTH_USER_SHA256),
+  });
   return decidirRespostaAcesso({ id: user.id }, resultado);
 }
 

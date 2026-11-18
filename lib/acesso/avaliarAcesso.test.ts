@@ -31,7 +31,7 @@ type RespostaInkClientes = {
   } | null;
   error: { message: string } | null;
 };
-type RespostaLicencas = { data: { status: string | null } | null; error: { message: string } | null };
+type RespostaLicencas = { data: { status: string | null; data_vencimento?: string | null } | null; error: { message: string } | null };   // B2-C1: o portão agora também lê licencas.data_vencimento
 
 /**
  * Cliente Supabase falso. Cobre só o que avaliarAcesso() usa:
@@ -103,7 +103,7 @@ test("2. usuário sem ink_clientes -> bloqueado, sem_ink_clientes", async () => 
 test("3. ink_clientes ativo + licença ativa -> permitido, com slug", async () => {
   const sb = criarSbFalso({
     inkClientes: { data: { status: "ativo", slug: "estudio-x" }, error: null },
-    licencas: { data: { status: "ativo" }, error: null },
+    licencas: { data: { status: "ativo", data_vencimento: "2099-01-01" }, error: null },   // B2-C1: "permitido" exige concessão comprovada (licença com vencimento vigente)
   });
   const r = await avaliarAcesso(sb, USER_ID);
   assert.equal(r.permitido, true);
@@ -156,10 +156,10 @@ test("10. ink_clientes ativo + licença 'bloqueada' -> bloqueado, licenca_nao_at
   assertBloqueadoComercial(r, "licenca_nao_ativa");
 });
 
-test("11. conta paga ativa permanece permitida sem aplicar vencimento do trial", async () => {
+test("11. conta paga (licença com vencimento vigente) permanece permitida sem aplicar o vencimento do TRIAL de ink_clientes", async () => {
   const sb = criarSbFalso({
     inkClientes: { data: { status: "ativo", slug: "x", periodo: "mensal", plano: "1.0", data_vencimento: "2020-01-01T00:00:00Z" }, error: null },
-    licencas: { data: { status: "ativo" }, error: null },
+    licencas: { data: { status: "ativo", data_vencimento: "2099-01-01" }, error: null },
   });
   const r = await avaliarAcesso(sb, USER_ID);
   assert.equal(r.permitido, true);
@@ -239,7 +239,7 @@ test("15. falha na consulta de licencas -> falhaTecnica:true", async () => {
 test("16. normalização: espaços e caixa diferente ainda libera ('  Ativo ' / 'ATIVO')", async () => {
   const sb = criarSbFalso({
     inkClientes: { data: { status: "  Ativo ", slug: "x" }, error: null },
-    licencas: { data: { status: "ATIVO" }, error: null },
+    licencas: { data: { status: "ATIVO", data_vencimento: "2099-01-01" }, error: null },
   });
   const r = await avaliarAcesso(sb, USER_ID);
   assert.equal(r.permitido, true);

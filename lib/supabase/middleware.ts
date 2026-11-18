@@ -4,6 +4,7 @@ import {
   avaliarAcesso,
   classificarRota,
   decidirRedirecionamento,
+  lerLegadosAutorizados,
   type ClienteSupabaseMinimo,
 } from "@/lib/acesso/avaliarAcesso";
 import { cookie2FAValido } from "@/lib/admin/cookie2fa";
@@ -133,7 +134,10 @@ export async function updateSession(request: NextRequest) {
     // gerado neste projeto) contra qualquer interface própria. A
     // assinatura interna de avaliarAcesso() continua 100% tipada (zero
     // "any"); só este ponto de fronteira precisa da conversão.
-    const resultado = await avaliarAcesso(supabase as unknown as ClienteSupabaseMinimo, user.id);
+    // B2-C1: autorização legada EXPLÍCITA (SHA-256 do auth_user_id) vem só da configuração de servidor; o navegador não participa.
+    const resultado = await avaliarAcesso(supabase as unknown as ClienteSupabaseMinimo, user.id, new Date(), {
+      legadosAutorizadosSha256: lerLegadosAutorizados(process.env.ACESSO_LEGADO_AUTH_USER_SHA256),
+    });
     const decisao = decidirRedirecionamento(
       resultado,
       isRotaProtegida,
