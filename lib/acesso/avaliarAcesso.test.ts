@@ -375,9 +375,8 @@ test("21. /admin não é classificada como protegida nem suspensa (independente 
 });
 
 // ---------------------------------------------------------------------
-// decidirRespostaAcesso() -- contrato HTTP do proxy (401/403/503), movido
-// pra cá pelo mesmo motivo: app/rest/v1/[...path]/route.ts importa
-// "next/headers", que também não resolve fora do bundler do Next.js.
+// decidirRespostaAcesso() -- contrato HTTP de autorização preservado
+// para consumidores de acesso comercial, independentemente do CRM removido.
 // Cobre os cenários 22-24.
 
 test("22. sem usuário autenticado -> 401", () => {

@@ -27,7 +27,7 @@ conferência autorizada da contratação.
 | Identidade e sessão | Supabase Auth |
 | Jornada, teste, documentos e cobrança | `ink-system-plataform` |
 | Direito de uso e vencimento | tabela `licencas` |
-| Operação privada do estúdio | `inq-saas` (CRM Mãe; corte de navegação pendente) |
+| Operação privada do estúdio | `inq-saas` (CRM Mãe; integração de acesso pendente) |
 | Situação do pagamento | Asaas, recebida por webhook validado |
 
 ## Limite entre os projetos
@@ -47,9 +47,11 @@ autenticada, o direito de acesso e os dados somente do próprio estúdio.
 `ink-system-1.0` será descontinuado após a transição, mas não deve ser excluído
 enquanto houver links, deploys ou integrações dependentes. O CRM demonstrativo
 fictício da Plataforma foi removido; `/demo` encaminha para `/conhecer`.
-O CRM operacional em `app/(protected)/app/[slug]` permanece exclusivamente como
-compatibilidade temporária para compradores que já acessam a Plataforma.
-Não é a fonte definitiva e só sairá após homologação do acesso à Mãe.
+A cópia operacional do CRM foi excluída da Plataforma. `/app/[slug]` mantém
+sessão e isolamento do próprio slug, mas mostra somente uma mensagem genérica
+de indisponibilidade temporária. Não há CRM alternativo nem transferência de
+sessão para outro domínio. A antiga API `/rest/v1/*` responde 503, sem proxy
+ou acesso ao banco, para todos os métodos.
 
 ## Contrato para o corte de navegação
 
@@ -59,13 +61,14 @@ a sessão no `localStorage` de seu próprio domínio. Um redirecionamento HTTP
 para `inq-saas.vercel.app` não transfere a sessão entre essas origens.
 Não há chave de redirecionamento automático ativa ou preparada nesta etapa.
 O segundo login na Mãe também não foi aprovado como experiência comercial
-definitiva. Até definir e homologar essa experiência, `/app/[slug]` continua
-entregando o CRM local, sem mudança para compradores existentes.
+definitiva. Até definir e homologar essa experiência, `/app/[slug]` responde
+com a indisponibilidade temporária descrita acima.
 
 O fluxo mantido é: cadastro comercial idempotente → confirmação de e-mail →
 login na Plataforma → RPC `ink_ativar_primeiro_acesso` → `/app` → validação de
 `ink_clientes` e `licencas` no middleware → resolução do próprio `auth_user_id`
-e slug → CRM. A ativação não deve ser repetida com semântica de novo teste.
+e slug → indisponibilidade temporária. A ativação não deve ser repetida com
+semântica de novo teste.
 
 Contrato pendente na Mãe: aceitar de forma segura a sessão ou realizar um
 handoff de uso único protegido, sem colocar access token, refresh token ou

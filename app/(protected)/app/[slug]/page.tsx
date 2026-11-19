@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
-import CrmClient from "./CrmClientLoader";
+import Link from "next/link";
 
 export default async function AppClientePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -11,15 +11,11 @@ export default async function AppClientePage({ params }: { params: Promise<{ slu
 
   if (!user) redirect("/login");
 
-  // Seleção explícita, não "*" -- só as colunas realmente consumidas neste
-  // arquivo (cliente.slug, linha abaixo) e em CrmClient.tsx (cliente.plano,
-  // única propriedade lida lá). Ver auditoria de hardening de ink_clientes:
-  // qualquer coluna a mais aqui teria que ser espelhada no GRANT SELECT por
-  // coluna da migration de permissões, então este select é o contrato real
-  // do que este caminho precisa do banco.
+  // A identidade e o isolamento do slug continuam no servidor. Esta rota
+  // não carrega dados operacionais nem encaminha a sessão para outro domínio.
   const { data: cliente } = await supabase
     .from("ink_clientes")
-    .select("slug, plano")
+    .select("slug")
     .eq("auth_user_id", user.id)
     .single();
 
@@ -29,7 +25,11 @@ export default async function AppClientePage({ params }: { params: Promise<{ slu
   // slug de outro estúdio pela URL, cai fora.
   if (cliente.slug !== slug) redirect("/app/" + cliente.slug);
 
-  // Compatibilidade temporária: não remover antes da homologação do acesso
-  // comercial ao CRM Mãe em outro domínio.
-  return <CrmClient cliente={cliente} userId={user.id} userEmail={user.email ?? ""} />;
+  return (
+    <main className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center">
+      <h1 className="text-2xl font-semibold">Acesso temporariamente indisponível</h1>
+      <p>Estamos preparando o acesso ao seu ambiente. Tente novamente mais tarde.</p>
+      <Link href="/" className="underline">Voltar ao início</Link>
+    </main>
+  );
 }

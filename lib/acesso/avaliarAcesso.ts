@@ -2,12 +2,9 @@
 //
 // Fonte única da decisão de acesso comercial ao CRM. Não é uma função pura
 // -- consulta o Supabase (ink_clientes + licencas) através do cliente já
-// construído pelo chamador. middleware roda em Edge Runtime (via
-// lib/supabase/middleware.ts) e o proxy roda em Node.js (via
-// app/rest/v1/[...path]/route.ts) -- cada um já monta seu próprio cliente
-// com @supabase/ssr antes de chamar esta função; este módulo nunca cria
-// cliente nem importa nada exclusivo de um runtime, por isso é seguro
-// para os dois.
+// construído pelo chamador. O middleware em lib/supabase/middleware.ts
+// aplica este contrato às rotas de acesso, inclusive durante a indisponibilidade
+// temporária. Este módulo nunca cria cliente nem importa runtime específico.
 //
 // Regra central: acesso só é permitido quando AMBAS as tabelas tiverem
 // status exatamente "ativo" (normalização só de espaços externos e
@@ -56,8 +53,7 @@ export type ResultadoAcesso =
 // @supabase/ssr nem @supabase/supabase-js -- qualquer cliente (Edge ou
 // Node) que exponha essa forma serve, sem acoplar o módulo a um pacote
 // ou runtime específico. Os clientes reais construídos em
-// lib/supabase/middleware.ts e app/rest/v1/[...path]/route.ts satisfazem
-// essa forma estruturalmente (têm esses métodos, e mais).
+// lib/supabase/middleware.ts satisfaz essa forma estruturalmente.
 interface LinhaInkCliente {
   status: string | null;
   slug: string;

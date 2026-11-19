@@ -8,10 +8,6 @@
 //      nem Agenda/Financeiro/pendências/tráfego por causa dela;
 //   2. os demais disparos do motor continuam funcionando (controle positivo:
 //      NPS e-mail 1) e a limpeza de api_rate_limits segue ativa;
-//   3. a cópia do CRM (CrmClient.tsx) não tem mais exclusão definitiva de
-//      Cliente, e o reset "Apagar Dados Operacionais" não executa nenhum DELETE;
-//   4. os deletes normais de evento de Agenda e lançamento de Financeiro
-//      continuam existindo.
 //
 // Rodar com: node --test lib/motor-disparos/cron-disparos.lixeiraSemAutoexclusao.test.ts
 
@@ -25,7 +21,6 @@ process.env.SUPABASE_SERVICE_KEY = "fake-service-key";
 const OWNER_EMAIL = "estudioabraaotattoo07@gmail.com";
 const { executarMotorDisparos } = await import("./cron-disparos.js");
 const srcCron = readFileSync(new URL("./cron-disparos.js", import.meta.url), "utf8");
-const srcCrm = readFileSync(new URL("../../app/(protected)/app/[slug]/CrmClient.tsx", import.meta.url), "utf8");
 
 type Chamada = { metodo: string; url: string; tabela: string | null; corpo: any };
 
@@ -169,41 +164,4 @@ test("cron (fonte): o bloco de autoexclusão de 30 dias não existe mais", () =>
     assert.doesNotMatch(srcCron, new RegExp(`from\\("${t}"\\)\\.delete\\(`), `o cron não pode apagar ${t}`);
   }
   assert.match(srcCron, /from\("api_rate_limits"\)\.delete\(\)/);
-});
-
-// ── 2. Cópia do CRM (CrmClient.tsx) ──────────────────────────────────────────
-
-test("CRM: não existe mais exclusão definitiva de Cliente (deleteClientDefinitivo removida)", () => {
-  assert.doesNotMatch(srcCrm, /deleteClientDefinitivo/);
-  assert.doesNotMatch(srcCrm, /from\("clientes"\)\.delete\(/, "nenhum DELETE direto em clientes");
-  assert.doesNotMatch(srcCrm, /dbDelete\("clientes"/, "nem pelo helper genérico");
-  for (const t of ["agenda", "financeiro", "agendamentos_pendentes", "eventos_trafego"]) {
-    assert.doesNotMatch(srcCrm, new RegExp(`from\\("${t}"\\)\\.delete\\(\\)\\.eq\\("cliente_id"`), `nenhum DELETE de ${t} por cliente_id`);
-  }
-});
-
-test("CRM: Lixeira mostra só Restaurar -- sem 'Excluir agora', sem 'Desfazer' do contador, sem 'restam N dias'", () => {
-  const inicio = srcCrm.indexOf("{/* ── MODAL LIXEIRA ── */}");
-  assert.ok(inicio >= 0);
-  const trecho = srcCrm.slice(inicio, srcCrm.indexOf('lixeiraTab === "orfaos"', inicio));
-  assert.doesNotMatch(trecho, /Excluir agora/);
-  assert.doesNotMatch(trecho, /Desfazer/);
-  assert.doesNotMatch(trecho, /restam/);
-  assert.doesNotMatch(trecho, /lixeiraExcluindo/);
-  assert.match(trecho, /update\(\{ excluido_em: null \}\)/, "Restaurar continua funcionando");
-  assert.match(trecho, />\s*Restaurar\s*</);
-});
-
-test("CRM: reset 'Apagar Dados Operacionais' bloqueado antes de qualquer DELETE", () => {
-  assert.doesNotMatch(srcCrm, /\.delete\(\)\.eq\("user_id"/, "nenhum DELETE em massa por user_id");
-  assert.doesNotMatch(srcCrm, /MODAL RESET DE FÁBRICA/);
-  assert.doesNotMatch(srcCrm, /confirmReset|resetUndo|resetTimer/);
-  assert.match(srcCrm, /onClick=\{\(\) => setShowAviso\(AVISO_RESET_BLOQUEADO\)\}/);
-  assert.match(srcCrm, /const AVISO_RESET_BLOQUEADO = "Apagar dados operacionais está indisponível\. Para remover um Cliente de teste, utilize a Lixeira do CRM\. Clientes reais não podem ser excluídos definitivamente\.";/);
-});
-
-test("CRM: deletes normais preservados -- evento individual de Agenda e lançamento individual de Financeiro", () => {
-  assert.match(srcCrm, /async function dbDelete\(table: string, id: any/);
-  assert.match(srcCrm, /dbDelete\("agenda", editingEvent\.id\)/);
-  assert.match(srcCrm, /dbDelete\("financeiro", f\.id\)/);
 });

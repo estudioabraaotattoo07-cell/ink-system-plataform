@@ -167,10 +167,5 @@ test("CÓDIGO: nenhuma data-âncora nem texto de fábrica de Ano Novo ou Natal r
   assert.doesNotMatch(src, /slug === "dia_namorados"/, "Dia dos Namorados saiu deste motor (CRM inq-saas)");
   assert.doesNotMatch(src, /^\s*dia_namorados:/m);
   assert.doesNotMatch(src, /Dia 12 de junho é Dia dos Namorados/);
-  const crm = readFileSync(new URL("../../app/(protected)/app/[slug]/CrmClient.tsx", import.meta.url), "utf8");
-  assert.doesNotMatch(crm, /slug: "ano_novo"/, "o CRM antigo não oferece mais configurar Ano Novo");
-  assert.doesNotMatch(crm, /slug: "natal"/, "o CRM antigo não oferece mais configurar Natal");
-  for (const s of ["dia_maes", "dia_pais", "dia_namorados"]) assert.match(crm, new RegExp(`slug: "${s}"`), s);
-  assert.doesNotMatch(crm, /slug: "aniversario"/, "o CRM antigo não oferece mais configurar Aniversário do Cliente (é do CRM inq-saas)");
-  assert.doesNotMatch(crm, /slug: "aniversario_artista"/, "o CRM antigo não oferece mais Aniversário do Artista (retirado)");
+
 });
