@@ -8,6 +8,7 @@ import { gerarTokenImplantacao, hashTokenImplantacao, tokenImplantacaoExpiraEm }
 import { montarUrlComplementacao, rotacionarTokenReenvio } from "@/lib/implantacao/reenvioDocumental";
 import { eventoComunicacaoReenvio } from "@/lib/implantacao/comunicacaoReenvio";
 import { avaliarAptidaoAprovacao, type ResultadoAptidaoAprovacao } from "@/lib/implantacao/aptidaoAprovacao";
+import { FINALIDADE_INSTITUCIONAL } from "@/lib/comercial/politicaEnvioCentral";
 
 function getAdminClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
@@ -28,7 +29,7 @@ async function enviarEmail(to: string, subject: string, html: string) {
       "Content-Type": "application/json",
       "X-Internal-Service-Key": process.env.INTERNAL_SERVICE_SECRET || "",
     },
-    body: JSON.stringify({ to, subject, html }),
+    body: JSON.stringify({ to, subject, html, finalidade: FINALIDADE_INSTITUCIONAL }),   // PS-4: e-mails operacionais do Admin (resposta/aviso ao destinatário): institucional explícito
   }).catch(() => null);
   if (!resp || !resp.ok) return { ok: false, error: "Não foi possível enviar o e-mail agora. Tenta de novo em instantes." };
   return { ok: true };
@@ -61,7 +62,7 @@ export async function responderLead(leadId: string, resposta: string) {
       "Content-Type": "application/json",
       "X-Internal-Service-Key": process.env.INTERNAL_SERVICE_SECRET || "",
     },
-    body: JSON.stringify({ to: lead.email, subject: assunto, html: corpo }),
+    body: JSON.stringify({ to: lead.email, subject: assunto, html: corpo, finalidade: FINALIDADE_INSTITUCIONAL }),
   }).catch(() => null);
 
   if (!respEmail || !respEmail.ok) {
@@ -358,7 +359,7 @@ export async function testarEnvioTenant(clienteId: string) {
       "Content-Type": "application/json",
       "X-Internal-Service-Key": process.env.INTERNAL_SERVICE_SECRET || "",
     },
-    body: JSON.stringify({ from: remetente, to: cliente.email, subject: `Teste de envio — ${cliente.nome_estudio || "INK SYSTEM"}`, html }),
+    body: JSON.stringify({ from: remetente, to: cliente.email, subject: `Teste de envio — ${cliente.nome_estudio || "INK SYSTEM"}`, html, finalidade: FINALIDADE_INSTITUCIONAL }),
   }).catch((e) => null);
 
   if (!resp) return { ok: false, error: "Erro de conexão ao tentar enviar." };

@@ -3,6 +3,7 @@ import { MENSAGENS_POR_CODIGO, type CodigoMensagemComercial } from "./mensagensC
 import { montarReguaComercial } from "./reguaComercial";
 import { montarEmailComercial } from "./templatesEmail";
 import { enviarPeloMotorCentral, type NomeRemetenteCorporativo } from "./emailCentral";
+import { POLITICA_FILA_COMERCIAL, PoliticaEnvioCentralError } from "./politicaEnvioCentral";
 
 type ContaComercialComJornada = {
   id: string;
@@ -26,6 +27,11 @@ function clienteAdmin() {
 }
 
 export async function processarFilaComercial(agora = new Date()) {
+  // POLÍTICA (coordenação, 18/11/2026): a régua comercial NÃO é institucional e a Plataforma ainda não tem oposição própria => PAUSADA. Retorna ANTES de qualquer acesso ao banco ou à rede:
+  // não agenda, não reserva, não envia, não consome tentativa e não altera o status de nenhuma linha. Reativar exige decisão de produto e um caminho comercial legítimo na Mãe.
+  if (!POLITICA_FILA_COMERCIAL.envioPermitido) {
+    return { programados: 0, encontrados: 0, enviados: 0, falhas: 0, pausadoPorPolitica: true as const, motivo: POLITICA_FILA_COMERCIAL.motivo };
+  }
   const sb = clienteAdmin();
   const { data: contas, error: erroContas } = await sb
     .from("ink_contas_comerciais")
@@ -108,12 +114,17 @@ export async function processarFilaComercial(agora = new Date()) {
         assinatura: "Ink System | Assinaturas",
         suporte: "Ink System | Suporte",
       };
-      const provedorId = await enviarPeloMotorCentral(item.destinatario, email.assunto, email.html, nomesPorGrupo[item.grupo]);
+      const provedorId = await enviarPeloMotorCentral(item.destinatario, email.assunto, email.html, nomesPorGrupo[item.grupo], "comercial");   // declarado como COMERCIAL (verdade): a chave de serviço o recusa
       await sb.from("ink_mensagens_comerciais").update({
         status: "enviado", enviado_em: new Date().toISOString(), provedor: "resend", provedor_id: provedorId, ultimo_erro: null,
       }).eq("id", item.id);
       enviados += 1;
     } catch (erro) {
+      if (erro instanceof PoliticaEnvioCentralError) {
+        // Recusa por POLÍTICA (não é falha técnica): devolve a linha à fila SEM consumir a tentativa e sem marcá-la como falha.
+        await sb.from("ink_mensagens_comerciais").update({ status: "programado", tentativas: item.tentativas || 0, ultimo_erro: erro.codigo }).eq("id", item.id);
+        continue;
+      }
       const podeTentarNovamente = tentativa < 3;
       await sb.from("ink_mensagens_comerciais").update({
         status: podeTentarNovamente ? "programado" : "falhou",

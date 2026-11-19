@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { expiracaoAcessoInicial, gerarTokenAcessoInicial, hashTokenAcessoInicial, montarUrlAcessoInicial } from "@/lib/comercial/acessoInicial";
 import { validarCadastroTeste } from "@/lib/comercial/cadastroTeste";
 import { enviarPeloMotorCentral } from "@/lib/comercial/emailCentral";
+import { FINALIDADE_INSTITUCIONAL } from "@/lib/comercial/politicaEnvioCentral";
 import { MENSAGENS_COMERCIAIS } from "@/lib/comercial/mensagensComerciais";
 import { montarEmailComercial } from "@/lib/comercial/templatesEmail";
 
@@ -165,6 +166,7 @@ export async function POST(req: NextRequest) {
           emailAcesso.assunto,
           emailAcesso.html,
           "Ink System | Acesso e Segurança",
+          FINALIDADE_INSTITUCIONAL,   // e-mail de acesso pedido pelo próprio destinatário (transacional): institucional explícito
         );
         await Promise.all([
           sb.from("ink_mensagens_comerciais").update({
