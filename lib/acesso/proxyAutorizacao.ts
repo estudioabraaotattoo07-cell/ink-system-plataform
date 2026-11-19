@@ -34,7 +34,10 @@
 // nunca inspecionando o objeto diretamente.
 const ALLOWLIST_METODOS_POR_TABELA: Readonly<Record<string, ReadonlySet<string>>> = {
   agenda: new Set(["GET", "POST", "PATCH", "DELETE"]),
-  agendamentos_pendentes: new Set(["PATCH", "DELETE"]),
+  // PS-3: a decisão do agendamento pendente é SERVIDORA (operação `decidir_agendamento_pendente` do CRM Mãe); nenhuma tela escreve mais nesta tabela por aqui, e a migration de
+  // endurecimento retira UPDATE de `authenticated`. Defesa em profundidade: só leitura (lista de pendências e Lixeira) e DELETE (Lixeira). PATCH e POST seguem BLOQUEADOS.
+  // O tenant é imposto pelo servidor em todo request (rewriteUserIdParam: apaga TODO user_id do navegador e fixa user_id=eq.<sessão>); ver proxyRotaTenant.test.ts.
+  agendamentos_pendentes: new Set(["GET", "DELETE"]),
   artistas: new Set(["GET", "POST", "PATCH", "DELETE"]),
   campanhas: new Set(["GET", "POST", "PATCH", "DELETE"]),
   campanhas_sazonais_etapas: new Set(["GET", "POST", "PATCH", "DELETE"]),

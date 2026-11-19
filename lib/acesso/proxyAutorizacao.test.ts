@@ -54,7 +54,7 @@ test("A. tabela permitida + método permitido -> autorizado", () => {
 // público, não estado interno.
 const MATRIZ_ESPERADA: Record<string, readonly string[]> = {
   agenda: ["GET", "POST", "PATCH", "DELETE"],
-  agendamentos_pendentes: ["PATCH", "DELETE"],
+  agendamentos_pendentes: ["GET", "DELETE"],
   artistas: ["GET", "POST", "PATCH", "DELETE"],
   campanhas: ["GET", "POST", "PATCH", "DELETE"],
   campanhas_sazonais_etapas: ["GET", "POST", "PATCH", "DELETE"],
@@ -100,9 +100,32 @@ test("B. configuracoes (sem DELETE na matriz) + DELETE -> bloqueado com 405", ()
   assert.deepEqual(resultado, { autorizado: false, status: 405, error: "Metodo nao permitido para esta tabela" });
 });
 
-test("B2. agendamentos_pendentes (sem GET/POST na matriz) + GET -> bloqueado", () => {
-  const resultado = autorizarRequisicaoProxy("agendamentos_pendentes", "GET", new URLSearchParams());
-  assert.equal(resultado.autorizado, false);
+test("B2. agendamentos_pendentes (sem POST/PATCH na matriz) + POST -> bloqueado", () => {
+  const resultado = autorizarRequisicaoProxy("agendamentos_pendentes", "POST", new URLSearchParams());
+  assert.deepEqual(resultado, { autorizado: false, status: 405, error: "Metodo nao permitido para esta tabela" });
+});
+
+test("B2b. PS-3: agendamentos_pendentes: GET e DELETE autorizados; PATCH e POST -> 405 (defesa em profundidade)", () => {
+  const PARAMS = [new URLSearchParams(), new URLSearchParams("select=*"), new URLSearchParams("id=eq.1&select=id,status")];
+  for (const params of PARAMS) {
+    assert.deepEqual(autorizarRequisicaoProxy("agendamentos_pendentes", "PATCH", params), { autorizado: false, status: 405, error: "Metodo nao permitido para esta tabela" });
+    assert.deepEqual(autorizarRequisicaoProxy("agendamentos_pendentes", "DELETE", new URLSearchParams("id=eq.1")), { autorizado: true });
+  }
+  assert.equal(metodoPermitidoParaTabela("agendamentos_pendentes", "PATCH"), false);
+  assert.equal(metodoPermitidoParaTabela("agendamentos_pendentes", "DELETE"), true);
+  assert.equal(metodoPermitidoParaTabela("agendamentos_pendentes", "GET"), true, "leitura liberada (lista de pendências e Lixeira); o tenant é imposto pelo servidor");
+  for (const params of PARAMS) assert.deepEqual(autorizarRequisicaoProxy("agendamentos_pendentes", "GET", params), { autorizado: true });
+  assert.equal(autorizarRequisicaoProxy("agendamentos_pendentes", "GET", new URLSearchParams("select=*,clientes(*)")).autorizado, false, "select com embedding continua recusado");
+  assert.equal(metodoPermitidoParaTabela("agendamentos_pendentes", "POST"), false);
+  for (const outro of ["HEAD", "OPTIONS", "PUT", "TRACE", "get", "Delete", "patch", ""]) assert.equal(metodoPermitidoParaTabela("agendamentos_pendentes", outro), false, `método ${JSON.stringify(outro)}`);
+  for (const variante of ["agendamentos_pendentes/", "AGENDAMENTOS_PENDENTES", "Agendamentos_Pendentes", " agendamentos_pendentes", "agendamentos_pendentes%00", "agendamentos_pendentes/x"]) assert.equal(autorizarRequisicaoProxy(variante, "PATCH", new URLSearchParams()).autorizado, false, variante);
+});
+
+test("B2c. PATCH NÃO foi bloqueado globalmente: continua permitido exatamente nas tabelas que já o tinham (exceto agendamentos_pendentes) e continua negado onde nunca existiu", () => {
+  const comPatch = ["agenda", "artistas", "campanhas", "campanhas_sazonais_etapas", "clientes", "configuracoes", "financeiro", "fluxo_etapas", "origens", "pipeline_etapas"];
+  for (const t of comPatch) assert.equal(metodoPermitidoParaTabela(t, "PATCH"), true, t);
+  for (const t of ["equipamentos", "eventos_trafego", "historico", "saidas", "agendamentos_pendentes"]) assert.equal(metodoPermitidoParaTabela(t, "PATCH"), false, t);
+  assert.equal(autorizarRequisicaoProxy.length, 3, "a decisão não recebe corpo nem cabeçalhos: nenhuma exceção baseada em dados do navegador");
 });
 
 test("B3. eventos_trafego (sem POST/PATCH na matriz) + POST -> bloqueado", () => {

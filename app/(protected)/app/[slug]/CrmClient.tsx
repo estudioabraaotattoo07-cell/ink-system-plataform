@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { API_CRM_MAE, classificarRespostaDecisao, classificarRespostaFallback, solicitacaoIdDecisaoAgendamentoPendente, textoResultadoEmail, type ResultadoEmailDecisao } from "@/lib/comercial/decisaoAgendamentoPendente";
 import { jsPDF } from "jspdf";
 
 // ─── SUPABASE ─────────────────────────────────────────────────────────────────
@@ -1878,23 +1879,65 @@ export default function CrmClient({
     try {
       const pendente = agendamentosPendentes.find((p: any) => p.id === id);
       if (!pendente) { setProcessandoDecisao(false); setDecisaoPendente(null); return; }
-      const novoStatus = acao === "aprovar" ? "aprovado" : "recusado";
-      await sb.from("agendamentos_pendentes").update({ status: novoStatus, decidido_em: new Date().toISOString() }).eq("id", id);
-      if (pendente.cliente_email && resendApiKey && emailRemetente) {
-        const dataFmt = pendente.data_solicitada ? String(pendente.data_solicitada).split("-").reverse().join("/") : "";
-        const msg = acao === "aprovar"
-          ? "Olá, " + pendente.cliente_nome + "! Seu agendamento com " + (pendente.profissional_nome || "nosso time") + " foi confirmado para " + dataFmt + (pendente.hora_solicitada ? " às " + pendente.hora_solicitada : "") + ". Te esperamos no estúdio!"
-          : "Olá, " + pendente.cliente_nome + "! Recebemos seu pedido de agendamento, mas o horário solicitado não pôde ser confirmado. Vamos te ligar em breve para combinar uma nova data.";
-        const html = "<div style='font-family:Arial,sans-serif;font-size:14px;line-height:1.8;color:#222;max-width:600px'>" + msg + "</div>";
-        try {
-          await fetch("/api/resend", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ apiKey: resendApiKey, from: (nomeRemetente || studioName || "INK SYSTEM") + " <" + emailRemetente + ">", to: pendente.cliente_email, subject: acao === "aprovar" ? "Agendamento confirmado — " + (studioName || "INK SYSTEM") : "Sobre seu agendamento — " + (studioName || "INK SYSTEM"), html })
-          });
-        } catch {}
-      }
-      await addLog((acao === "aprovar" ? "✅ Agendamento aprovado" : "❌ Agendamento recusado") + " — " + pendente.cliente_nome + (pendente.profissional_nome ? " com " + pendente.profissional_nome : ""));
+      // P3 / PS-3 -- a decisão é SERVIDORA (mesmo contrato do CRM Mãe): o navegador só envia a REFERÊNCIA (pendente_id) e a ação. O servidor registra a transição de status de forma atômica
+      // (esta tela NÃO escreve mais em agendamentos_pendentes), prova o destinatário em `clientes.email`, monta assunto/HTML, recalcula o solicitacao_id e envia pelo motor comercial.
+      // Nada que o navegador sabe sobre e-mail, texto, chave ou solicitacao_id é enviado nem considerado nesse caminho.
+      let resultadoEmail: ResultadoEmailDecisao = "enviado";
+      let sufixoLogEmail = "";
+      try {
+        const { data: sessaoDecisao } = await createBrowserSupabaseClient().auth.getSession();
+        const tokenDecisao = sessaoDecisao.session?.access_token;
+        const respDecisao = await fetch(API_CRM_MAE + "/api/resend", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(tokenDecisao ? { Authorization: "Bearer " + tokenDecisao } : {}) },
+          body: JSON.stringify({ operacao: "decidir_agendamento_pendente", pendente_id: id, acao })
+        });
+        const dDecisao: unknown = await respDecisao.json().catch(() => ({}));
+        const desfecho = classificarRespostaDecisao(respDecisao.status, dDecisao);
+        if (desfecho.tipo === "contradicao") {
+          setShowAviso("Esta solicitação já foi decidida de outra forma. A lista será atualizada.");
+          await carregarAgendamentosPendentes();
+          setProcessandoDecisao(false); setDecisaoPendente(null);
+          return;
+        }
+        if (desfecho.tipo === "fallback_comercial") {
+          // ÚNICO caso de envio comercial genérico: o servidor registrou a decisão mas NÃO conseguiu provar o destinatário (ex.: pendência antiga sem cliente vinculado). O envio segue pelo
+          // caminho comercial padrão (P3: oposição obrigatória no servidor). 401, 409, 429, 5xx e falhas de infraestrutura NUNCA caem aqui. A decisão JÁ está registrada: nada abaixo a desfaz,
+          // e o envio NUNCA é repetido automaticamente. O resultado do e-mail é classificado e informado à parte (nunca "enviado" sem 2xx).
+          if (!pendente.cliente_email) {
+            resultadoEmail = "sem_email";
+          } else {
+            try {
+              const dataFmt = pendente.data_solicitada ? String(pendente.data_solicitada).split("-").reverse().join("/") : "";
+              const msg = acao === "aprovar"
+                ? "Olá, " + pendente.cliente_nome + "! Seu agendamento com " + (pendente.profissional_nome || "nosso time") + " foi confirmado para " + dataFmt + (pendente.hora_solicitada ? " às " + pendente.hora_solicitada : "") + ". Te esperamos no estúdio!"
+                : "Olá, " + pendente.cliente_nome + "! Recebemos seu pedido de agendamento, mas o horário solicitado não pôde ser confirmado. Vamos te ligar em breve para combinar uma nova data.";
+              const html = "<div style='font-family:Arial,sans-serif;font-size:14px;line-height:1.8;color:#222;max-width:600px'>" + msg + "</div>";
+              const respEmail = await fetch(API_CRM_MAE + "/api/resend", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", ...(tokenDecisao ? { Authorization: "Bearer " + tokenDecisao } : {}) },
+                body: JSON.stringify({ to: pendente.cliente_email, subject: acao === "aprovar" ? "Agendamento confirmado — " + (studioName || "INK SYSTEM") : "Sobre seu agendamento — " + (studioName || "INK SYSTEM"), html, solicitacao_id: await solicitacaoIdDecisaoAgendamentoPendente(acao, pendente.id) })
+              });
+              const dEmail: unknown = await respEmail.json().catch(() => ({}));
+              resultadoEmail = classificarRespostaFallback(respEmail.status, dEmail);
+            } catch { resultadoEmail = "erro"; }
+          }
+          const textoEmail = textoResultadoEmail(resultadoEmail);
+          sufixoLogEmail = textoEmail.sufixoLog;
+          if (textoEmail.aviso) setShowAviso(textoEmail.aviso);
+        } else if (desfecho.tipo === "falha" && !desfecho.decisaoRegistrada) {
+          setShowAviso("Não foi possível registrar a decisão agora. Tente novamente.");
+          setProcessandoDecisao(false); setDecisaoPendente(null);
+          return;
+        } else if (desfecho.tipo === "falha") {
+          // Falha técnica da operação principal COM decisaoRegistrada:true: a decisão está registrada (não se reverte, a pendência sai da lista), mas o servidor não confirmou o e-mail.
+          // NÃO é "enviado", NÃO há fallback comercial e NÃO há retry: só informamos e registramos no histórico.
+          const textoNaoConfirmado = textoResultadoEmail("nao_confirmado");
+          sufixoLogEmail = textoNaoConfirmado.sufixoLog;
+          if (textoNaoConfirmado.aviso) setShowAviso(textoNaoConfirmado.aviso);
+        }
+      } catch { setShowAviso("Erro de conexão ao decidir o agendamento. Tente novamente."); setProcessandoDecisao(false); setDecisaoPendente(null); return; }
+      await addLog((acao === "aprovar" ? "✅ Agendamento aprovado" : "❌ Agendamento recusado") + " — " + pendente.cliente_nome + (pendente.profissional_nome ? " com " + pendente.profissional_nome : "") + sufixoLogEmail);
       setAgendamentosPendentes(prev => prev.filter((p: any) => p.id !== id));
     } catch {}
     setProcessandoDecisao(false);
