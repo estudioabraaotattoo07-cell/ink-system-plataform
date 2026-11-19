@@ -11,8 +11,21 @@ import { cookie2FAValido } from "@/lib/admin/cookie2fa";
 import { dispensa2FAParaAdmin } from "@/lib/admin/dispensa2fa";
 import { copiarCookiesResposta } from "@/lib/supabase/cookiesResposta";
 import { criarMedidorAdmin, type RotaAdminPerf } from "@/lib/admin/perf";
+import { diagnosticarAmbienteSupabase } from "@/lib/supabase/ambiente";
 
 export async function updateSession(request: NextRequest) {
+  // Diagnóstico de configuração: se faltar variável do Supabase, registra QUAIS (só nomes) e em qual ambiente/branch/commit o código está rodando, e responde 503 explícito em vez de estourar 500.
+  const ambiente = diagnosticarAmbienteSupabase({
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    VERCEL_ENV: process.env.VERCEL_ENV,
+    VERCEL_GIT_COMMIT_REF: process.env.VERCEL_GIT_COMMIT_REF,
+    VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA,
+  });
+  if (!ambiente.ok) {
+    console.error("[ambiente] variáveis do Supabase ausentes:", JSON.stringify(ambiente));
+    return new NextResponse("Configuração de ambiente incompleta.", { status: 503 });
+  }
   const path = request.nextUrl.pathname;
   const tab = request.nextUrl.searchParams.get("tab");
   const rota: RotaAdminPerf = path === "/admin"
