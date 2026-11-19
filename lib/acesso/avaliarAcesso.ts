@@ -6,7 +6,16 @@
 // aplica este contrato às rotas de acesso, inclusive durante a indisponibilidade
 // temporária. Este módulo nunca cria cliente nem importa runtime específico.
 //
-// Regra central: acesso só é permitido quando AMBAS as tabelas tiverem
+// B2-C1 (2026-11-18) -- `status = ativo` NÃO é mais prova suficiente de DIREITO COMERCIAL. Uma conta nova criada estruturalmente pelo provisionamento (plano "1.0", status "ativo", sem
+// vencimento) não pode operar até receber uma CONCESSÃO legítima. Depois dos status, o acesso exige UMA destas provas, e só estas:
+//   (a) TRIAL VIGENTE: plano "1.0-teste" ou período "teste" em ink_clientes, com data_vencimento (data e hora) ainda no futuro -- regra já existente, preservada;
+//   (b) LICENÇA COM VENCIMENTO VIGENTE: licencas.data_vencimento válida e >= hoje (data UTC; mesma convenção do acessoCrm do CRM Mãe);
+//   (c) AUTORIZAÇÃO LEGADA EXPLÍCITA: o auth_user_id da SESSÃO (nunca dado do navegador) tem o SHA-256 listado na configuração de servidor `ACESSO_LEGADO_AUTH_USER_SHA256`. Vale SÓ para licença
+//       sem vencimento e NÃO mascara vencimento real. Nenhum UUID, e-mail ou dado pessoal fica no código; a lista é cadastrada pela coordenação no ambiente.
+// Nada mais concede acesso: plano ("Ouro"), franquia_ilimitada, slug, conta_id nulo ou período mensal NÃO são prova e nem são lidos para decidir.
+// Sem vencimento e sem autorização legada => bloqueio `sem_concessao_comercial` (a tela /suspenso genérica já cobre). Vencimento ausente da resposta ou malformado => falha técnica (fail-closed).
+//
+// Regra base preservada: acesso só é permitido quando AMBAS as tabelas tiverem
 // status exatamente "ativo" (normalização só de espaços externos e
 // caixa -- nunca sinônimo). ink_clientes representa a condição
 // estrutural/operacional da conta; licencas representa o direito
@@ -36,12 +45,15 @@ export type MotivoBloqueio =
   | "ink_clientes_nao_ativo"
   | "sem_licenca"
   | "licenca_nao_ativa"
-  | "teste_expirado";
+  | "teste_expirado"
+  | "sem_concessao_comercial"
+  | "licenca_vencida";
 
 export type MotivoErro =
   | "erro_consulta_ink_clientes"
   | "erro_consulta_licencas"
-  | "teste_vencimento_invalido";
+  | "teste_vencimento_invalido"
+  | "licenca_vencimento_invalido";
 
 export type ResultadoAcesso =
   | { permitido: true; slug: string }
@@ -64,6 +76,53 @@ interface LinhaInkCliente {
 
 interface LinhaLicenca {
   status: string | null;
+  data_vencimento: string | null;
+}
+
+/** Configuração de servidor para o portão. `legadosAutorizadosSha256` = SHA-256 (hex minúsculo) do auth_user_id de cada conta legada preservada de forma explícita. Vazio por padrão. */
+export interface OpcoesAcesso {
+  legadosAutorizadosSha256?: ReadonlySet<string>;
+}
+
+/** Nome da variável de ambiente (SOMENTE servidor) com a lista de SHA-256 separados por vírgula. */
+export const VARIAVEL_ACESSO_LEGADO = "ACESSO_LEGADO_AUTH_USER_SHA256";
+
+/** Lê o valor bruto da variável: só entradas com 64 hex são aceitas (qualquer outra coisa é ignorada); no máximo 20; nunca lança. */
+export function lerLegadosAutorizados(valorBruto: string | null | undefined): ReadonlySet<string> {
+  const saida = new Set<string>();
+  if (typeof valorBruto !== "string") return saida;
+  for (const parte of valorBruto.split(",")) {
+    const h = parte.trim().toLowerCase();
+    if (/^[0-9a-f]{64}$/.test(h)) saida.add(h);
+    if (saida.size >= 20) break;
+  }
+  return saida;
+}
+
+async function sha256Hex(texto: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(texto));
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** O auth_user_id (da SESSÃO) consta da autorização legada explícita? Nunca lança: qualquer erro => false. */
+async function contaLegadaAutorizada(userId: string, legados: ReadonlySet<string> | undefined): Promise<boolean> {
+  try {
+    if (!legados || legados.size === 0 || typeof userId !== "string" || userId.trim() === "") return false;
+    return legados.has(await sha256Hex(userId.trim().toLowerCase()));
+  } catch {
+    return false;
+  }
+}
+
+// Data de vencimento da LICENÇA: "AAAA-MM-DD" ou timestamp ISO, com data real no calendário. Devolve "AAAA-MM-DD" ou null.
+const DATA_LICENCA = /^(\d{4})-(\d{2})-(\d{2})(?:[T ].*)?$/;
+function dataLicencaValida(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const m = DATA_LICENCA.exec(v.trim());
+  if (!m) return null;
+  const [ano, mes, dia] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const d = new Date(Date.UTC(ano, mes - 1, dia));
+  return d.getUTCFullYear() === ano && d.getUTCMonth() === mes - 1 && d.getUTCDate() === dia ? `${m[1]}-${m[2]}-${m[3]}` : null;
 }
 
 interface ErroConsulta {
@@ -127,7 +186,8 @@ function avaliarVencimentoTeste(
 export async function avaliarAcesso(
   supabase: ClienteSupabaseMinimo,
   userId: string,
-  agora: Date = new Date()
+  agora: Date = new Date(),
+  opcoes: OpcoesAcesso = {}
 ): Promise<ResultadoAcesso> {
   const { data: cliente, error: erroCliente } = await supabase
     .from("ink_clientes")
@@ -155,7 +215,7 @@ export async function avaliarAcesso(
 
   const { data: licenca, error: erroLicenca } = await supabase
     .from("licencas")
-    .select<LinhaLicenca>("status")
+    .select<LinhaLicenca>("status, data_vencimento")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -169,6 +229,24 @@ export async function avaliarAcesso(
     return { permitido: false, falhaTecnica: false, motivo: "licenca_nao_ativa" };
   }
 
+  // B2-C1: status ativo nas duas tabelas ainda NÃO é direito comercial. Exige uma prova (a), (b) ou (c) -- ver o cabeçalho.
+  // (a) trial vigente: o vencimento (data e hora) de ink_clientes já foi validado acima (expirado/inconsistente já saiu).
+  if (clienteEmTeste(cliente)) return { permitido: true, slug: cliente.slug };
+
+  // (b)/(c): vencimento da licença. `undefined` (coluna ausente da resposta) e valor malformado => falha técnica; `null` = sem vencimento.
+  const vencimentoBruto = (licenca as { data_vencimento?: unknown }).data_vencimento;
+  if (vencimentoBruto === null) {
+    return (await contaLegadaAutorizada(userId, opcoes.legadosAutorizadosSha256))
+      ? { permitido: true, slug: cliente.slug }
+      : { permitido: false, falhaTecnica: false, motivo: "sem_concessao_comercial" };
+  }
+  const vencimento = dataLicencaValida(vencimentoBruto);
+  if (vencimento === null || Number.isNaN(agora.getTime())) {
+    return { permitido: false, falhaTecnica: true, motivo: "licenca_vencimento_invalido" };
+  }
+  if (vencimento < agora.toISOString().slice(0, 10)) {
+    return { permitido: false, falhaTecnica: false, motivo: "licenca_vencida" };
+  }
   return { permitido: true, slug: cliente.slug };
 }
 

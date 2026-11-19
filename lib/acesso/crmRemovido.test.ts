@@ -83,7 +83,9 @@ test("preserva portão de acesso, trial, login local, Admin e integrações inde
   const middleware = ler("lib/supabase/middleware.ts");
   assert.match(layout, /supabase\.auth\.getUser\(\)/);
   assert.match(middleware, /avaliarAcesso\(/);
-  assert.match(ler("app/(protected)/app/page.tsx"), /rpc\("ink_ativar_primeiro_acesso"\)/);
+  for (const caminho of ["app/(protected)/app/page.tsx", "app/primeiro-acesso/route.ts"]) {
+    assert.doesNotMatch(ler(caminho), /\.rpc\(|\.(?:insert|update|upsert|delete)\(/);
+  }
   assert.match(ler("app/login/page.tsx"), /signInWithPassword/);
   assert.match(ler("app/admin/page.tsx"), /exigirPermissao\("painel.visualizar"/);
   const config = ler("next.config.ts");

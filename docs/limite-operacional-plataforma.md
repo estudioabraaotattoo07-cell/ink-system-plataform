@@ -6,8 +6,10 @@ O histórico Git registra a remoção; não há cópia alternativa ou feature fl
 
 ## Resposta transitória
 
-- `/app` mantém a resolução autenticada do próprio estúdio e a ativação
-  idempotente do primeiro acesso, sem alterar os contratos de trial/licença.
+- `/primeiro-acesso` apenas autentica e encaminha para `/app` ou `/login`.
+  Não consulta tabelas, não chama RPC e não cria direitos comerciais.
+- `/app` mantém a resolução autenticada do próprio estúdio, sem ativação de
+  trial ou chamada de RPC. O middleware aplica o portão comercial B2.
 - `/app/[slug]` mantém sessão, portão comercial e validação do próprio slug;
   apresenta somente indisponibilidade temporária, sem dados operacionais.
 - `/rest/v1/*` mantém apenas uma resposta HTTP 503 genérica, `no-store` e
@@ -27,6 +29,11 @@ imagens na landing descrevem o produto comercializado. Não são interfaces
 privadas de operação do estúdio.
 
 Os contratos de acesso em `lib/acesso/avaliarAcesso.ts` permanecem válidos.
+O B2 exige trial vigente, licença com vencimento vigente ou autorização
+legada explícita por hash do usuário da sessão, somente no servidor. Status
+ativo, plano Ouro e franquia ilimitada não concedem acesso por si. A autorização
+legada não mascara licença vencida nem renova trial.
+
 As rotinas compartilhadas de mensageria/cron e os contratos SQL históricos não
 foram removidos nem alterados. Nenhuma migration é necessária para esta purga.
 

@@ -65,10 +65,13 @@ definitiva. Até definir e homologar essa experiência, `/app/[slug]` responde
 com a indisponibilidade temporária descrita acima.
 
 O fluxo mantido é: cadastro comercial idempotente → confirmação de e-mail →
-login na Plataforma → RPC `ink_ativar_primeiro_acesso` → `/app` → validação de
-`ink_clientes` e `licencas` no middleware → resolução do próprio `auth_user_id`
-e slug → indisponibilidade temporária. A ativação não deve ser repetida com
-semântica de novo teste.
+login na Plataforma → `/primeiro-acesso` (somente encaminhamento) → `/app` →
+portão comercial B2 no middleware → resolução do próprio `auth_user_id` e slug
+→ indisponibilidade temporária. Nenhuma etapa do login chama RPC, concede
+direitos ou inicia/renova trial. O portão exige trial vigente, vencimento de
+licença vigente ou autorização legada explícita por hash da identidade da
+sessão, lido somente da configuração do servidor. Apenas status ativo, plano
+Ouro ou franquia ilimitada não comprovam concessão.
 
 Contrato pendente na Mãe: aceitar de forma segura a sessão ou realizar um
 handoff de uso único protegido, sem colocar access token, refresh token ou
@@ -80,8 +83,11 @@ não implementa endpoints novos de handoff nesta etapa.
 
 ## Trial real e franquia de e-mail
 
-A RPC `ink_ativar_primeiro_acesso` inicia o período de sete dias uma única vez
-para a identidade autenticada. A jornada comercial persiste
+O contrato histórico da migration `202608210007_primeiro_acesso_teste.sql`
+define ativação de sete dias e franquia de 30 e-mails. No B2 aprovado, o login
+não depende dessa RPC nem executa ativação automática; qualquer ativação
+explícita exige etapa própria, sem alteração dessas regras nesta limpeza.
+A jornada comercial persiste
 `teste_iniciado_em`, `teste_termina_em`, `limite_email_teste` (30) e
 `emails_teste_usados`, vinculados a `conta_id`. A migration
 `supabase/migrations/202608210007_primeiro_acesso_teste.sql` define a franquia
